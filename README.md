@@ -22,9 +22,14 @@ prioritized action list.
 ## How It Works
 
 1. The user submits a public website URL.
-2. The server fetches the page and passes its HTML and response metadata to the
-   scanner engine.
-3. The scanner evaluates the page against the built-in rules.
+ SiteScannerPro is a practical website health analysis service for businesses,
+ freelancers, creators, and web agencies. Enter a public website address and get
+ a clear overview of what can be improved across SEO, performance, security,
+ accessibility, and code quality.
+
+ No guesswork. No complicated technical dashboard. Just useful findings,
+ prioritized issues, and recommendations you can act on.
+
 4. Premium users can request an additional AI report through the backend.
 5. The frontend presents scores, severity levels, affected areas, and fixes.
 
@@ -33,12 +38,12 @@ prioritized action list.
 - React 19 and TypeScript
 - Vite with an Express server
 - Cheerio for HTML inspection
-- Google Gemini for premium analysis
-- Stripe Checkout for payments
-- Nodemailer for contact messages
-- Tailwind CSS and Motion for the interface
-
-## Requirements
+ - Discover issues that may affect search visibility
+ - Identify performance problems that can frustrate visitors
+ - Review important security and HTTPS signals
+ - Find accessibility improvements for a more inclusive website
+ - Understand technical issues without reading thousands of lines of code
+ - Share a clear starting point with your developer or agency
 
 - Node.js 18 or newer
 - npm
