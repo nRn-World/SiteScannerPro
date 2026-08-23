@@ -1,161 +1,97 @@
 # SiteScannerPro
 
-SiteScannerPro is a focused website analysis platform for developers, agencies,
-and small businesses. Enter a public website URL to receive actionable feedback
-on SEO, performance, security, accessibility, and code quality.
+## See what is holding your website back
 
-The product combines deterministic rule-based checks with an optional AI-powered
-premium report. It is designed to turn a technical website review into a clear,
-prioritized action list.
+SiteScannerPro is a practical website health analysis service for businesses, freelancers, creators, and web agencies. Enter a public website address and get a clear overview of what can be improved across SEO, performance, security, accessibility, and code quality.
 
-## Features
+No guesswork. No complicated technical dashboard. Just useful findings, prioritized issues, and recommendations you can act on.
 
-- Fast website scans with a structured score and issue list
-- Rule-based checks for SEO, performance, security, accessibility, and code
-- AI-assisted premium reports with technical recommendations
-- Scan history stored locally in the browser
-- Swedish-first interface and report output
-- Stripe Checkout support for the one-time Premium plan
-- Contact form support through the server API
-- Responsive React interface with a Vite development workflow
+## Why SiteScannerPro?
 
-## How It Works
+Most website owners know their site should perform better, but do not know where to start. SiteScannerPro turns a technical website review into a report that is easy to understand and useful for planning the next improvement.
 
-1. The user submits a public website URL.
- SiteScannerPro is a practical website health analysis service for businesses,
- freelancers, creators, and web agencies. Enter a public website address and get
- a clear overview of what can be improved across SEO, performance, security,
- accessibility, and code quality.
+### Make better website decisions
 
- No guesswork. No complicated technical dashboard. Just useful findings,
- prioritized issues, and recommendations you can act on.
+- Discover issues that may affect search visibility
+- Identify performance problems that can frustrate visitors
+- Review important security and HTTPS signals
+- Find accessibility improvements for a more inclusive website
+- Understand technical issues without reading thousands of lines of code
+- Share a clear starting point with your developer or agency
 
-4. Premium users can request an additional AI report through the backend.
-5. The frontend presents scores, severity levels, affected areas, and fixes.
+## Built for
 
-## Tech Stack
+### Business owners
 
-- React 19 and TypeScript
-- Vite with an Express server
-- Cheerio for HTML inspection
- - Discover issues that may affect search visibility
- - Identify performance problems that can frustrate visitors
- - Review important security and HTTPS signals
- - Find accessibility improvements for a more inclusive website
- - Understand technical issues without reading thousands of lines of code
- - Share a clear starting point with your developer or agency
+Understand whether your website is helping or hurting your online presence, without needing to be a technical expert.
 
-- Node.js 18 or newer
-- npm
+### Freelancers and agencies
 
-The standard rule-based scan does not require any external API keys.
+Create a fast first assessment for prospects and turn website findings into a clear improvement plan for your clients.
 
-Optional integrations:
+### Marketing teams
 
-- Gemini API key for premium AI analysis
-- Stripe credentials for the Premium checkout
-- SMTP credentials for contact form delivery
+Use consistent website health insights to prioritize SEO, performance, and conversion work.
 
-## Local Development
+### Developers
 
-Install dependencies:
+Quickly spot common issues before a deeper audit, redesign, or deployment.
 
-```bash
-npm install
-```
+## What the analysis covers
 
-Create a local environment file from the example:
+### SEO
 
-```bash
-copy .env.example .env
-```
+Review essential page structure and metadata signals that influence how a site can be understood by search engines.
 
-No environment variables are required for the standard scanner. To enable the
-optional integrations, add the relevant values to `.env`:
+### Performance
 
-```env
-# Optional: enables the premium AI report
-GEMINI_API_KEY=your_gemini_api_key
+Highlight page and resource choices that may contribute to slower load times or a less responsive visitor experience.
 
-# Optional: enables Stripe Checkout
-STRIPE_SECRET_KEY=your_stripe_secret_key
-APP_URL=http://localhost:3000
+### Security
 
-# Optional: enables email delivery from the contact form
-EMAIL_USER=your_smtp_username
-EMAIL_PASS=your_smtp_app_password
-CONTACT_RECEIVER_EMAIL=you@example.com
-```
+Surface important security and transport signals that deserve attention.
 
-You can start the application immediately after `npm install` and use the
-standard scan without creating a `.env` file.
+### Accessibility
 
-Start the application:
+Find common barriers that can make a website harder to use for visitors with different needs.
 
-```bash
-npm run dev
-```
+### Code quality
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Identify technical patterns and implementation issues that may affect the reliability and maintainability of a website.
 
-## Production Build
+## Simple, transparent access
 
-Run the type check and create an optimized frontend build:
+### Free scan
 
-```bash
-npm run lint
-npm run build
-```
+Run a standard website health scan and see the most important findings across the core categories.
 
-To serve the production build, set `NODE_ENV=production` and run:
+### SiteScannerPro Premium
 
-```bash
-npm start
-```
+Unlock a deeper report with AI-assisted analysis, more detailed explanations, and practical technical recommendations.
 
-## API Endpoints
+Premium access is offered as a one-time purchase. There is no forced monthly subscription for the current offer.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/scan-free` | Run the standard rule-based scan |
-| `POST` | `/api/scan-premium` | Generate an AI-assisted premium report |
-| `POST` | `/api/create-checkout-session` | Create a Stripe Checkout session |
+## How it works
 
-The scan endpoints accept a JSON body with a `url` property.
+1. Enter the address of a public website.
+2. SiteScannerPro reviews the page and evaluates its technical signals.
+3. Receive an overall score and category-based results.
+4. Use the prioritized recommendations to decide what to improve next.
 
-## Security Notes
+## A clearer path to a better website
 
-SiteScannerPro is intended for public website analysis. Before production use,
-add URL validation, SSRF protection, request timeouts, rate limiting, response
-size limits, and authentication for premium access. Keep all API keys in
-environment variables and never expose server credentials in the browser.
+SiteScannerPro helps you move from “something feels wrong” to a concrete list of improvements. Use it before a redesign, during a marketing review, or as a quick health check for a website you manage.
 
-AI output should be treated as guidance and reviewed by a qualified developer
-before changes are deployed to a production website.
+## Important information
 
-## Project Structure
+SiteScannerPro provides automated analysis and recommendations. Results are intended as a starting point and should be reviewed by a qualified developer before production changes are made. A scan cannot replace a complete security, accessibility, legal, or performance audit.
 
-```text
-src/
-  components/       React UI components
-  controllers/      HTTP request handlers
-  middleware/       Express middleware
-  routes/           API route definitions
-  rules/            Deterministic scanning rules and types
-  services/         Scanner and supporting services
-  App.tsx           Frontend application shell
-server.ts           Express and Vite server entry point
-```
+## Get started
 
-## Commercial Use
+Visit the SiteScannerPro website to run a scan, explore Premium access, and contact the team about website analysis services.
 
-This repository is released under the Creative Commons Attribution-
-NonCommercial 4.0 International Public License. Commercial use requires
-separate written permission from the copyright holder.
+For support and business enquiries: **bynrnworld@gmail.com**
 
 ## License
 
-Copyright (c) 2026 SiteScannerPro
-
-Licensed under the Creative Commons Attribution-NonCommercial 4.0 International
-Public License. See [LICENSE](LICENSE) for the complete terms.
+SiteScannerPro is released under the Creative Commons Attribution-NonCommercial 4.0 International Public License. Commercial use requires separate written permission from the copyright holder. See [LICENSE](LICENSE) for the complete license terms.
