@@ -42,8 +42,13 @@ prioritized action list.
 
 - Node.js 18 or newer
 - npm
-- A Gemini API key for premium AI analysis
-- Stripe credentials for live payments
+
+The standard rule-based scan does not require any external API keys.
+
+Optional integrations:
+
+- Gemini API key for premium AI analysis
+- Stripe credentials for the Premium checkout
 - SMTP credentials for contact form delivery
 
 ## Local Development
@@ -60,13 +65,25 @@ Create a local environment file from the example:
 copy .env.example .env
 ```
 
-Configure the required values in `.env`:
+No environment variables are required for the standard scanner. To enable the
+optional integrations, add the relevant values to `.env`:
 
 ```env
+# Optional: enables the premium AI report
 GEMINI_API_KEY=your_gemini_api_key
+
+# Optional: enables Stripe Checkout
 STRIPE_SECRET_KEY=your_stripe_secret_key
 APP_URL=http://localhost:3000
+
+# Optional: enables email delivery from the contact form
+EMAIL_USER=your_smtp_username
+EMAIL_PASS=your_smtp_app_password
+CONTACT_RECEIVER_EMAIL=you@example.com
 ```
+
+You can start the application immediately after `npm install` and use the
+standard scan without creating a `.env` file.
 
 Start the application:
 
