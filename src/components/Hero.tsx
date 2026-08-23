@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, ArrowRight, Lock } from 'lucide-react';
+import { TranslationSet } from '../i18n/translations';
 
 interface HeroProps {
   url: string;
@@ -8,9 +9,10 @@ interface HeroProps {
   onScan: (e: React.FormEvent) => void;
   error: string | null;
   isScanning: boolean;
+  t: TranslationSet;
 }
 
-const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning }) => {
+const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning, t }) => {
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -20,17 +22,17 @@ const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning }) =
     >
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-white tech-border font-mono text-xs font-bold uppercase mb-8">
         <Lock className="w-4 h-4" />
-        <span>Säker & anonym analys</span>
+        <span>{t.hero.secure}</span>
       </div >
       
       <h1 className="text-[12vw] md:text-[7vw] font-display font-bold uppercase leading-[0.85] tracking-tighter mb-8">
-        Analysera.<br/>
-        <span className="text-accent">Säkra.</span><br/>
-        Optimera.
+        {t.hero.title[0]}<br/>
+        <span className="text-accent">{t.hero.title[1]}</span><br/>
+        {t.hero.title[2]}
       </h1 >
       
       <p className="font-mono text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
-        Ange din webbadress för en heltäckande, AI-driven analys av kodkvalitet, säkerhet, prestanda och SEO.
+        {t.hero.description}
       </p>
 
       <form onSubmit={onScan} className="flex flex-col md:flex-row gap-4 max-w-3xl">
@@ -42,7 +44,7 @@ const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning }) =
             type="text"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://din-hemsida.se"
+            placeholder={t.hero.urlPlaceholder}
             className="w-full tech-border bg-white pl-14 pr-6 py-5 text-xl font-mono outline-none focus:ring-4 focus:ring-accent/20 transition-all"
             required
           />
@@ -51,7 +53,7 @@ const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning }) =
           type="submit"
           className="bg-ink text-paper px-10 py-5 font-display font-bold text-xl uppercase tracking-widest tech-shadow flex items-center justify-center gap-3 hover:bg-ink/90"
         >
-          Skanna <ArrowRight className="w-6 h-6" />
+          {t.hero.scan} <ArrowRight className="w-6 h-6" />
         </button>
       </form>
 
@@ -72,27 +74,27 @@ const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning }) =
           <div className="w-12 h-12 bg-ink text-paper flex items-center justify-center tech-border mb-6">
             <span className="font-bold">1</span>
           </div >
-          <h3 className="font-display font-bold uppercase text-xl mb-4">Skanna</h3>
+          <h3 className="font-display font-bold uppercase text-xl mb-4">{t.hero.steps[0].title}</h3>
           <p className="font-mono text-sm text-ink/70 leading-relaxed">
-            Vår motor hämtar din DOM-struktur och analyserar koden i realtid utan att påverka din Core Web Vitals.
+            {t.hero.steps[0].description}
           </p>
         </div >
         <div className="bg-white tech-border p-8 tech-shadow">
           <div className="w-12 h-12 bg-accent text-white flex items-center justify-center tech-border mb-6">
             <span className="font-bold">2</span>
           </div >
-          <h3 className="font-display font-bold uppercase text-xl mb-4">AI-Analys</h3>
+          <h3 className="font-display font-bold uppercase text-xl mb-4">{t.hero.steps[1].title}</h3>
           <p className="font-mono text-sm text-ink/70 leading-relaxed">
-            Gemini 3.1 Pro utvärderar säkerhet, prestanda och SEO med sub-millisekunds latens i nätverksrendering.
+            {t.hero.steps[1].description}
           </p>
         </div >
         <div className="bg-white tech-border p-8 tech-shadow">
           <div className="w-12 h-12 bg-ink text-paper flex items-center justify-center tech-border mb-6">
             <span className="font-bold">3</span>
           </div >
-          <h3 className="font-display font-bold uppercase text-xl mb-4">Åtgärda</h3>
+          <h3 className="font-display font-bold uppercase text-xl mb-4">{t.hero.steps[2].title}</h3>
           <p className="font-mono text-sm text-ink/70 leading-relaxed">
-            Få en prioriterad lista med exakta kodändringar för att injicera E-E-A-T-signaler och stänga säkerhetshål.
+            {t.hero.steps[2].description}
           </p>
         </div >
       </div >

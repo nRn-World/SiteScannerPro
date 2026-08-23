@@ -1,5 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { TranslationSet } from '../../i18n/translations';
 
 interface MetricBoxProps {
   score: number;
@@ -7,9 +8,10 @@ interface MetricBoxProps {
   icon: LucideIcon;
   onClick: () => void;
   isActive: boolean;
+  t: TranslationSet;
 }
 
-const MetricBox: React.FC<MetricBoxProps> = ({ score, label, icon: Icon, onClick, isActive }) => {
+const MetricBox: React.FC<MetricBoxProps> = ({ score, label, icon: Icon, onClick, isActive, t }) => {
   const scoreColor = score >= 90 ? 'text-green-500' : score >= 50 ? 'text-yellow-500' : 'text-red-500';
   const activeClass = isActive ? 'ring-4 ring-accent bg-paper scale-[1.02] z-10' : 'hover:bg-paper/50 hover:scale-[1.02]';
   
@@ -30,7 +32,7 @@ const MetricBox: React.FC<MetricBoxProps> = ({ score, label, icon: Icon, onClick
           {score}
         </span>
         <span className={`font-mono text-[10px] uppercase mt-2 transition-opacity ${isActive ? 'text-accent font-bold opacity-100' : 'text-ink/40 opacity-0 group-hover:opacity-100'}`}>
-          {isActive ? 'Visar detaljer' : 'Klicka för detaljer'}
+          {isActive ? t.dashboard.details : t.dashboard.clickForDetails}
         </span>
       </div >
     </button>

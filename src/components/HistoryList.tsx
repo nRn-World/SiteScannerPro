@@ -1,5 +1,6 @@
 import React from 'react';
 import { History, Globe } from 'lucide-react';
+import { TranslationSet } from '../i18n/translations';
 
 interface HistoryItem {
   url: string;
@@ -9,22 +10,23 @@ interface HistoryItem {
 
 interface HistoryListProps {
   history: HistoryItem[];
+  t: TranslationSet;
 }
 
-const HistoryList: React.FC<HistoryListProps> = ({ history }) => {
+const HistoryList: React.FC<HistoryListProps> = ({ history, t }) => {
   if (history.length === 0) return null;
 
   return (
     <div className="mt-32 max-w-5xl">
       <div className="flex items-center gap-3 mb-8">
         <History className="w-6 h-6 text-accent" />
-        <h2 className="text-2xl md:text-3xl font-display font-bold uppercase">Tidigare Skanningar</h2>
+        <h2 className="text-2xl md:text-3xl font-display font-bold uppercase">{t.history.title}</h2>
       </div >
       <div className="bg-white tech-border overflow-hidden">
         <div className="grid grid-cols-12 gap-4 p-4 bg-paper border-b-2 border-ink font-mono text-xs font-bold uppercase">
-          <div className="col-span-6 md:col-span-8">Mål</div >
-          <div className="col-span-3 md:col-span-2 text-right">Poäng</div >
-          <div className="col-span-3 md:col-span-2 text-right">Datum</div >
+          <div className="col-span-6 md:col-span-8">{t.history.target}</div >
+          <div className="col-span-3 md:col-span-2 text-right">{t.history.score}</div >
+          <div className="col-span-3 md:col-span-2 text-right">{t.history.date}</div >
         </div >
         {history.map((item, idx) => (
           <div key={idx} className="grid grid-cols-12 gap-4 p-4 border-b border-paper/50 font-mono text-sm hover:bg-paper/30 transition-colors items-center">

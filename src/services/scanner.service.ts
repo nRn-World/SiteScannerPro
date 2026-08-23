@@ -40,10 +40,10 @@ export class ScannerService {
     // Map categories to metric keys
     const categoryToMetric: Record<string, keyof ScanMetrics> = {
       'SEO': 'seo',
-      'Prestanda': 'performance',
-      'Säkerhet': 'security',
-      'Tillgänglighet': 'accessibility',
-      'Kodfel': 'code'
+      'Performance': 'performance',
+      'Security': 'security',
+      'Accessibility': 'accessibility',
+      'Code': 'code'
     };
 
     // Deduct points based on severity

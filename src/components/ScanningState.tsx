@@ -1,14 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Activity } from 'lucide-react';
+import { TranslationSet } from '../i18n/translations';
 
 interface ScanningStateProps {
   url: string;
   scanStep: number;
   scanSteps: string[];
+  t: TranslationSet;
 }
 
-const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps }) => {
+const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps, t }) => {
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -64,7 +66,7 @@ const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps 
       
       <div className="mt-8 font-mono text-sm uppercase tracking-widest text-ink/50 flex items-center gap-2">
         <Activity className="w-4 h-4 animate-pulse text-accent" />
-        Mål: {url}
+        {t.scanning.target} {url}
       </div >
     </motion.div>
   );

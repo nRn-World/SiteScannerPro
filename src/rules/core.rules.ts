@@ -64,13 +64,13 @@ export const SEO_RULES: ScannerRule[] = [
 export const PERFORMANCE_RULES: ScannerRule[] = [
   {
     name: 'Load Time Check',
-    category: 'Prestanda',
+    category: 'Performance',
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
       const loadTime = context.loadTime;
       if (loadTime > 2000) {
         issues.push({
-          category: 'Prestanda',
+          category: 'Performance',
           severity: 'High',
           title: 'Långsam svarstid',
           description: `Servern tog ${loadTime}ms att svara.`,
@@ -78,7 +78,7 @@ export const PERFORMANCE_RULES: ScannerRule[] = [
         });
       } else if (loadTime > 1000) {
         issues.push({
-          category: 'Prestanda',
+          category: 'Performance',
           severity: 'Medium',
           title: 'Något långsam svarstid',
           description: `Servern tog ${loadTime}ms att svara.`,
@@ -93,12 +93,12 @@ export const PERFORMANCE_RULES: ScannerRule[] = [
 export const SECURITY_RULES: ScannerRule[] = [
   {
     name: 'HTTPS Check',
-    category: 'Säkerhet',
+    category: 'Security',
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
       if (!context.isHttps) {
         issues.push({
-          category: 'Säkerhet',
+          category: 'Security',
           severity: 'High',
           title: 'Okrypterad anslutning',
           description: 'Sidan använder HTTP istället för HTTPS.',
@@ -110,12 +110,12 @@ export const SECURITY_RULES: ScannerRule[] = [
   },
   {
     name: 'HSTS Check',
-    category: 'Säkerhet',
+    category: 'Security',
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
       if (!context.headers.get('strict-transport-security')) {
         issues.push({
-          category: 'Säkerhet',
+          category: 'Security',
           severity: 'Low',
           title: 'Saknad HSTS-header',
           description: 'Sidan tvingar inte webbläsare att använda HTTPS (HSTS).',
@@ -128,14 +128,14 @@ export const SECURITY_RULES: ScannerRule[] = [
   },
   {
     name: 'Clickjacking Protection Check',
-    category: 'Säkerhet',
+    category: 'Security',
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
       const hasXFrame = context.headers.get('x-frame-options');
       const hasCSP = context.headers.get('content-security-policy');
       if (!hasXFrame && !hasCSP) {
         issues.push({
-          category: 'Säkerhet',
+          category: 'Security',
           severity: 'Low',
           title: 'Risk för Clickjacking',
           description: 'Sidan saknar skydd mot att bäddas in i iframes.',
@@ -151,7 +151,7 @@ export const SECURITY_RULES: ScannerRule[] = [
 export const ACCESSIBILITY_RULES: ScannerRule[] = [
   {
     name: 'Alt Text Check',
-    category: 'Tillgänglighet',
+    category: 'Accessibility',
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
@@ -168,7 +168,7 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
 
       if (imagesWithoutAlt > 0) {
         issues.push({
-          category: 'Tillgänglighet',
+          category: 'Accessibility',
           severity: 'Medium',
           title: 'Saknade Alt-texter',
           description: `${imagesWithoutAlt} bilder saknar alt-attribut.`,
@@ -181,13 +181,13 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
   },
   {
     name: 'Language Attribute Check',
-    category: 'Tillgänglighet',
+    category: 'Accessibility',
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       if (!$('html').attr('lang')) {
         issues.push({
-          category: 'Tillgänglighet',
+          category: 'Accessibility',
           severity: 'Low',
           title: 'Saknat språkattribut',
           description: 'HTML-taggen saknar lang-attribut.',
@@ -203,7 +203,7 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
 export const CODE_QUALITY_RULES: ScannerRule[] = [
   {
     name: 'Inline Style Check',
-    category: 'Kodfel',
+    category: 'Code',
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
@@ -211,7 +211,7 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
       if (inlineStyles > 0) {
         const firstInlineStyle = $.html($('[style]').first());
         issues.push({
-          category: 'Kodfel',
+          category: 'Code',
           severity: 'Low',
           title: 'Inline CSS används',
           description: `Hittade ${inlineStyles} element med inline-styles. Detta gör koden svårare att underhålla och kan leda till sämre formaterad kod.`,
@@ -224,7 +224,7 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
   },
   {
     name: 'Deprecated HTML Tags Check',
-    category: 'Kodfel',
+    category: 'Code',
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
@@ -232,7 +232,7 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
       if (deprecatedTags > 0) {
         const firstDeprecated = $.html($('font, center, strike, marquee').first());
         issues.push({
-          category: 'Kodfel',
+          category: 'Code',
           severity: 'Medium',
           title: 'Föråldrade HTML-taggar',
           description: 'Sidan använder föråldrade taggar (t.ex. <font>, <center>). Detta är ett dåligt kodmönster.',
@@ -245,7 +245,7 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
   },
   {
     name: 'Render Blocking JS Check',
-    category: 'Kodfel',
+    category: 'Code',
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
@@ -253,7 +253,7 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
       if (scriptsWithoutDefer > 0) {
         const firstScript = $.html($('script[src]:not([defer]):not([async])').first());
         issues.push({
-          category: 'Kodfel',
+          category: 'Code',
           severity: 'Medium',
           title: 'Render-blockerande JavaScript',
           description: `Hittade ${scriptsWithoutDefer} script-taggar utan 'defer' eller 'async'. Detta är ett osäkert/ineffektivt kodmönster för prestanda.`,
