@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-paper: #F4F4F0;
+  --color-ink: #0A0A0A;
+  --color-accent: #FF4E00;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Technical / Brutalist Utilities */
+.tech-border {
+  border: 2px solid var(--color-ink);
+}
+
+.tech-border-b {
+  border-bottom: 2px solid var(--color-ink);
+}
+
+.tech-shadow {
+  box-shadow: 6px 6px 0px 0px var(--color-ink);
+  transition: all 0.15s ease-out;
+}
+
+.tech-shadow:hover {
+  box-shadow: 2px 2px 0px 0px var(--color-ink);
+  transform: translate(4px, 4px);
+}
+
+.tech-shadow:active {
+  box-shadow: 0px 0px 0px 0px var(--color-ink);
+  transform: translate(6px, 6px);
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+@media print {
+  body {
+    background-color: white;
+  }
+  header, footer, button, .pointer-events-none {
+    display: none !important;
+  }
+  .tech-shadow {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  .tech-border {
+    border: 1px solid #ccc !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

@@ -1,0 +1,248 @@
+import React, { useState, useEffect } from 'react';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
+import { AnimatePresence } from 'motion/react';
+import { Activity, Crown } from 'lucide-react';
+
+import Header from './components/Header';
+import Hero from './components/Hero';
+import ContactForm from './components/ContactForm';
+import Dashboard from './components/Dashboard';
+import ScanningState from './components/ScanningState';
+import Paywall from './components/Paywall';
+import FeatureList from './components/FeatureList';
+import HistoryList from './components/HistoryList';
+import DataFlowBackground from './components/DataFlowBackground';
+import { ScanResult } from './rules/types';
+
+interface ScanHistoryItem {
+  url: string;
+  date: string;
+  score: number;
+}
+
+export default function App() {
+  const [url, setUrl] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState(0);
+  const [result, setResult] = useState<ScanResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [isPremium, setIsPremium] = useState(false);
+  const [scanCount, setScanCount] = useState(0);
+  const [showPaywall, setShowPaywall] = useState(false);
+  
+  const [view, setView] = useState<'home' | 'about' | 'contact' | 'api' | 'pricing' | 'terms' | 'privacy' | 'cookies'>('home');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
+
+  const scanSteps = [
+    "INITIERAR ANSLUTNING...",
+    "HÄMTAR DOM-STRUKTUR...",
+    "ANALYSERAR KODKVALITET...",
+    "SÖKER EFTER SÄKERHETSBRISTER...",
+    "UTVÄRDERAR SEO-MÄTVÄRDEN...",
+    "SAMMANSTÄLLER RAPPORT..."
+  ];
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      localStorage.setItem('siteScannerPremium', 'true');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    setIsPremium(localStorage.getItem('siteScannerPremium') === 'true');
+    setScanCount(parseInt(localStorage.getItem('siteScannerScans') || '0', 10));
+    
+    const savedHistory = localStorage.getItem('siteScannerHistory');
+    if (savedHistory) {
+      try {
+        setScanHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Could not parse history", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isScanning) {
+      interval = setInterval(() => {
+        setScanStep((prev) => (prev < scanSteps.length - 1 ? prev + 1 : prev));
+      }, 1500);
+    } else {
+      setScanStep(0);
+    }
+    return () => clearInterval(interval);
+  }, [isScanning, scanSteps]);
+
+  const handleScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url) return;
+
+    // Note: Paywall logic can be re-enabled here if desired
+    // if (!isPremium && scanCount >= 1) {
+    //   setShowPaywall(true);
+    //   return;
+    // }
+
+    let targetUrl = url;
+    if (!/^https?:\/\//i.test(targetUrl)) {
+      targetUrl = 'https://' + targetUrl;
+    }
+
+    setIsScanning(true);
+    setError(null);
+    setResult(null);
+    setSelectedCategory(null);
+
+    try {
+      let data: ScanResult;
+
+      if (!isPremium) {
+        const res = await fetch('/api/scan-free', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetUrl })
+        });
+        
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Ett fel uppstod vid analysen.");
+        }
+        
+        data = await res.json();
+      } else {
+        // SECURE: Call our backend instead of direct Gemini API
+        const res = await fetch('/api/scan-premium', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetUrl })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "AI-analysen misslyckades.");
+        }
+        data = await res.json();
+      }
+
+      setResult(data);
+      
+      const newHistoryItem: ScanHistoryItem = {
+        url: targetUrl,
+        date: new Date().toISOString(),
+        score: data.overallScore
+      };
+      
+      const updatedHistory = [newHistoryItem, ...scanHistory].slice(0, 10);
+      setScanHistory(updatedHistory);
+      localStorage.setItem('siteScannerHistory', JSON.stringify(updatedHistory));
+      
+      if (!isPremium) {
+        const newCount = scanCount + 1;
+        setScanCount(newCount);
+        localStorage.setItem('siteScannerScans', newCount.toString());
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Kunde inte analysera webbplatsen.");
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      const res = await fetch('/api/create-checkout-session', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        alert('Ett fel uppstod: ' + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Kunde inte ansluta till betalningsservern.');
+    }
+  };
+
+  return (
+    <HelmetProvider>
+      <div className="min-h-screen flex flex-col selection:bg-accent selection:text-white">
+        <Helmet>
+          <title>SiteScanner Pro_ | AI-Driven Webbanalys</title>
+          <meta name="description" content="Ange din webbadress för en heltäckande, AI-driven analys av kodkvalitet, säkerhet, prestanda och SEO." />
+          <link rel="canonical" href="https://sitescanner.pro" />
+        </Helmet>
+
+        <Header view={view} setView={setView} isPremium={isPremium} />
+        <DataFlowBackground />
+
+        <main className="flex-1 max-w-7xl mx-auto px-6 py-12 md:py-24 w-full relative z-10">
+          <AnimatePresence mode="wait">
+            {showPaywall && (
+              <Paywall 
+                onClose={() => setShowPaywall(false)} 
+                onCheckout={handleCheckout} 
+              />
+            )}
+          </AnimatePresence>
+
+          {view === 'home' && (
+            <>
+              {!result && !isScanning && (
+                <Hero 
+                  url={url} 
+                  setUrl={setUrl} 
+                  onScan={handleScan} 
+                  error={error} 
+                  isScanning={isScanning} 
+                />
+              )}
+
+              {isScanning && (
+                <ScanningState 
+                  url={url} 
+                  scanStep={scanStep} 
+                  scanSteps={scanSteps} 
+                />
+              )}
+
+              {result && !isScanning && (
+                <Dashboard 
+                  result={result} 
+                  url={url} 
+                  selectedCategory={selectedCategory} 
+                  setSelectedCategory={setSelectedCategory} 
+                />
+              )}
+
+              {!result && !isScanning && (
+                <>
+                  <FeatureList />
+                  <HistoryList history={scanHistory} />
+                </>
+              )}
+            </>
+          )}
+
+          {view === 'contact' && (
+            <ContactForm 
+              onSuccess={() => { setError(null); }} 
+              onError={(msg) => setError(msg)} 
+            />
+          )}
+
+          {view === 'about' && (
+            <div className="max-w-3xl mx-auto text-center space-y-8">
+              <h2 className="text-5xl font-display font-bold uppercase">Om oss</h2>
+              <p className="font-mono text-lg text-ink/70">
+                Vi är specialister på automatiserad webbanalys och säkerhet. SiteScanner Pro kombinerar kraftfulla skanningsmotorer med avancerad AI för att ge dig djupgående insikter i din webbplats hälsa.
+              </p>
+            </div>
+          )}
+        </main>
+      </div>
+    </HelmetProvider>
+  );
+}
