@@ -34,6 +34,7 @@ jobs:
         run: npm run build
         env:
           VITE_PUBLIC_BASE: /SiteScannerPro/
+          VITE_API_BASE: https://sitescanner-pro.onrender.com
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
