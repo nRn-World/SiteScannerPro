@@ -14,6 +14,7 @@ import HistoryList from './components/HistoryList';
 import DataFlowBackground from './components/DataFlowBackground';
 import { ScanResult } from './rules/types';
 import { getLanguage, LANGUAGE_STORAGE_KEY, Language, normalizeCategory, translations } from './i18n/translations';
+import { apiUrl } from './api';
 
 interface ScanHistoryItem {
   url: string;
@@ -71,7 +72,7 @@ export default function App() {
     const sessionId = urlParams.get('session_id');
 
     if (sessionId) {
-      fetch('/api/verify-session', {
+      fetch(apiUrl('/api/verify-session'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId })
@@ -133,7 +134,7 @@ export default function App() {
       let data: ScanResult;
 
       if (!isPremium) {
-        const res = await fetch('/api/scan-free', {
+        const res = await fetch(apiUrl('/api/scan-free'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: targetUrl })
@@ -146,7 +147,7 @@ export default function App() {
         data = await res.json();
       } else {
         // Pro-djupläge: kräver giltig licens-token
-        const res = await fetch('/api/scan-premium', {
+        const res = await fetch(apiUrl('/api/scan-premium'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -190,7 +191,7 @@ export default function App() {
 
   const handleCheckout = async () => {
     try {
-      const res = await fetch('/api/create-checkout-session', { method: 'POST' });
+      const res = await fetch(apiUrl('/api/create-checkout-session'), { method: 'POST' });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
