@@ -32,6 +32,8 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+        env:
+          VITE_PUBLIC_BASE: /SiteScannerPro/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
