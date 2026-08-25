@@ -275,11 +275,21 @@ export default function App() {
           )}
 
           {view === 'about' && (
-            <div className="max-w-3xl mx-auto text-center space-y-8">
-              <h2 className="text-5xl font-display font-bold uppercase">{t.about.title}</h2>
-              <p className="font-mono text-lg text-ink/70">
-                {t.about.description}
+            <div className="max-w-3xl mx-auto space-y-10">
+              <h2 className="text-5xl font-display font-bold uppercase text-center">{t.about.title}</h2>
+              <p className="font-mono text-lg text-ink/70 leading-relaxed text-center">
+                {t.about.lead}
               </p>
+              {t.about.sections.map((section) => (
+                <div key={section.heading} className="space-y-3">
+                  <h3 className="text-xl font-display font-bold uppercase tracking-wide border-b-2 border-ink pb-2">
+                    {section.heading}
+                  </h3>
+                  <p className="font-mono text-sm text-ink/70 leading-relaxed">
+                    {section.body}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
         </main>
