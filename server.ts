@@ -8,8 +8,18 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  const allowedOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
+    const origin = req.headers.origin;
+    if (allowedOrigins.length === 0) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    } else if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-license-token');
     if (req.method === 'OPTIONS') {
