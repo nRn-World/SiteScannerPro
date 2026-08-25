@@ -7,7 +7,8 @@ import {
   Zap, 
   ShieldAlert, 
   Globe as GlobeIcon, 
-  AlertTriangle 
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import MetricBox from './ui/MetricBox';
 import SeverityBadge from './ui/SeverityBadge';
@@ -20,10 +21,11 @@ interface DashboardProps {
   url: string;
   selectedCategory: string | null;
   setSelectedCategory: (category: string | null) => void;
+  onUpgradeClick: () => void;
   t: TranslationSet;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, setSelectedCategory, t }) => {
+const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, setSelectedCategory, onUpgradeClick, t }) => {
   const filteredIssues = selectedCategory 
     ? result.issues.filter(issue => issue.category === selectedCategory)
     : result.issues;
@@ -113,7 +115,7 @@ const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, se
        {/* Issues List */}
        <div className="space-y-6">
          <h3 className={`${selectedCategory ? 'text-accent' : 'text-ink'} text-2xl font-display font-bold uppercase`}>
-           {selectedCategory ? t.dashboard.categoryIssues.replace('{category}', t.dashboard.categories[selectedCategory as CategoryKey]) : t.dashboard.identifiedIssues}
+           {selectedCategory ? t.dashboard.categoryIssues.replace('{category}', t.dashboard.categories[selectedCategory as CategoryKey] ?? selectedCategory) : t.dashboard.identifiedIssues}
          </h3>
         
         {filteredIssues.length > 0 ? (
@@ -128,10 +130,28 @@ const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, se
                   <span className="font-mono text-xs text-ink/50 uppercase">{issue.category}</span>
                 </div>
                 <p className="font-mono text-sm text-ink/80 mb-4">{issue.description}</p>
-                <div className="p-4 bg-paper tech-border">
-                  <span className="font-mono text-xs font-bold uppercase text-ink/50 block mb-2">{t.dashboard.recommendation}</span>
-                  <p className="font-mono text-sm">{issue.recommendation}</p>
-                </div>
+                {issue.recommendation ? (
+                  <div className="p-4 bg-paper tech-border">
+                    <span className="font-mono text-xs font-bold uppercase text-ink/50 block mb-2">{t.dashboard.recommendation}</span>
+                    <p className="font-mono text-sm">{issue.recommendation}</p>
+                  </div>
+                ) : (
+                  <div className="p-4 md:p-5 bg-paper tech-border flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <Lock className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                      <div>
+                        <span className="block font-mono text-xs font-bold uppercase tracking-widest mb-1">{t.dashboard.solutionLocked}</span>
+                        <p className="font-mono text-sm text-ink/70 leading-relaxed">{t.dashboard.lockedHint}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={onUpgradeClick}
+                      className="shrink-0 bg-accent text-white px-5 py-3 font-mono text-xs font-bold uppercase tracking-widest tech-shadow hover:bg-ink transition-colors"
+                    >
+                      {t.dashboard.unlockCta}
+                    </button>
+                  </div>
+                )}
                 {issue.codeSnippet && (
                   <CodeSnippetDisplay code={issue.codeSnippet} />
                 )}

@@ -1,6 +1,42 @@
 import { Request, Response } from 'express';
 import { ScannerService } from '../services/scanner.service';
-import { GoogleGenAI, Type } from '@google/genai';
+import { ScanResult } from '../rules/types';
+
+const PRIVATE_HOST_PATTERN = /^(localhost$|.*\.localhost$|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0$|\[::1?\]?$|::1$)/;
+const DESCRIPTION_TEASER_LENGTH = 90;
+
+function validateTargetUrl(rawUrl: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return null;
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (PRIVATE_HOST_PATTERN.test(hostname)) {
+    return null;
+  }
+
+  return parsed.toString();
+}
+
+/**
+ * Förkortar en beskrivning till en teaser så att gratisanvändaren förstår
+ * vad problemet är men inte får hela lösningsbeskrivningen.
+ */
+function truncateDescription(description: string): string {
+  if (description.length <= DESCRIPTION_TEASER_LENGTH) {
+    return description;
+  }
+  const cutoff = description.slice(0, DESCRIPTION_TEASER_LENGTH);
+  const lastSpace = cutoff.lastIndexOf(' ');
+  return `${cutoff.slice(0, lastSpace > 40 ? lastSpace : DESCRIPTION_TEASER_LENGTH).trimEnd()}…`;
+}
 
 export class ScanController {
   private scannerService: ScannerService;
@@ -9,116 +45,106 @@ export class ScanController {
     this.scannerService = new ScannerService();
   }
 
+  /**
+   * Hämtar målwebbplatsen och kör den lokala analysmotorn.
+   * Kostnad: 0 kr - allt körs på egen server.
+   */
+  private async fetchAndScan(targetUrl: string): Promise<ScanResult> {
+    const startTime = Date.now();
+
+    const response = await fetch(targetUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SiteScannerBot/1.0)' },
+      signal: AbortSignal.timeout(20000),
+      redirect: 'follow'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Webbplatsen svarade med status ${response.status}`);
+    }
+
+    const html = await response.text();
+    const loadTime = Date.now() - startTime;
+
+    const context = {
+      loadTime,
+      isHttps: targetUrl.startsWith('https://'),
+      headers: response.headers as unknown as Headers
+    };
+
+    return this.scannerService.scan(html, context);
+  }
+
+  /**
+   * Tar bort alla lösningsdelar innan resultatet skickas till
+   * gratisanvändare - det enda sättet att garantera att lösningarna
+   * aldrig läcker är att de aldrig skickas från servern.
+   */
+  private toPublicResult(result: ScanResult): ScanResult {
+    return {
+      overallScore: result.overallScore,
+      summary: result.summary,
+      metrics: result.metrics,
+      issues: result.issues.map((issue) => ({
+        category: issue.category,
+        severity: issue.severity,
+        title: issue.title,
+        description: truncateDescription(issue.description)
+      }))
+    };
+  }
+
   public scanFree = async (req: Request, res: Response): Promise<void> => {
     try {
       const { url } = req.body;
-      if (!url) {
-        res.status(400).json({ error: 'URL saknas' });
+
+      const targetUrl = typeof url === 'string' ? validateTargetUrl(url) : null;
+      if (!targetUrl) {
+        res.status(400).json({ error: 'Ogiltig URL. Endast publika http(s)-adresser kan skannas.' });
         return;
       }
 
-      const startTime = Date.now();
-      
-      // Artificial delay for UX (matching the original implementation)
+      // Artificial delay for UX (matching the scanning animation)
       await new Promise(resolve => setTimeout(resolve, 8000));
 
-      const response = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SiteScannerBot/1.0)' }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Webbplatsen svarade med status ${response.status}`);
-      }
-
-      const html = await response.text();
-      const loadTime = Date.now() - startTime;
-
-      const context = {
-        loadTime,
-        isHttps: url.startsWith('https://'),
-        headers: response.headers as unknown as Headers
-      };
-
-      const result = await this.scannerService.scan(html, context);
-      res.json(result);
+      const result = await this.fetchAndScan(targetUrl);
+      res.json(this.toPublicResult(result));
     } catch (error: any) {
       console.error('Free scan error:', error);
+      if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+        res.status(504).json({ error: 'Webbplatsen svarade inte inom tidsgränsen.' });
+        return;
+      }
       res.status(500).json({ error: `Analys misslyckades: ${error.message}` });
     }
   };
 
+  /**
+   * Pro-djupläge: samma lokala motor men med fullständiga lösningar
+   * (rekommendationer + kodexempel) och förtur i kön. Kräver giltig
+   * licens-token via requireLicense-middleware.
+   */
   public scanPremium = async (req: Request, res: Response): Promise<void> => {
     try {
       const { url } = req.body;
-      if (!url) {
-        res.status(400).json({ error: 'URL saknas' });
+
+      const targetUrl = typeof url === 'string' ? validateTargetUrl(url) : null;
+      if (!targetUrl) {
+        res.status(400).json({ error: 'Ogiltig URL. Endast publika http(s)-adresser kan skannas.' });
         return;
       }
 
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        res.status(500).json({ error: 'AI-konfiguration saknas på servern.' });
-        return;
-      }
+      // Pro-användare har förtur
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      const genAI = new GoogleGenAI({ apiKey });
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-pro', // Using a stable version
-      });
-
-      const prompt = `Du är en expert på webbutveckling, cybersäkerhet och SEO. Analysera källkoden, strukturen och innehållet på följande webbplats: ${url}. 
-      Identifiera specifika kodfel (t.ex. syntaxfel, dåligt formaterad kod, osäkra kodmönster), buggar, SEO-problem, säkerhetsbrister och prestandaproblem. 
-      Var extremt noggrann och ge konkreta, tekniska rekommendationer. Svara ENDAST på svenska.`;
-
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              overallScore: { type: Type.NUMBER },
-              summary: { type: Type.STRING },
-              metrics: {
-                type: Type.OBJECT,
-                properties: {
-                  seo: { type: Type.NUMBER },
-                  performance: { type: Type.NUMBER },
-                  security: { type: Type.NUMBER },
-                  accessibility: { type: Type.NUMBER },
-                  code: { type: Type.NUMBER }
-                },
-                required: ["seo", "performance", "security", "accessibility", "code"]
-              },
-              issues: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    category: { type: Type.STRING },
-                    severity: { type: Type.STRING },
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    recommendation: { type: Type.STRING },
-                    affectedUrl: { type: Type.STRING },
-                    codeSnippet: { type: Type.STRING }
-                  },
-                  required: ["category", "severity", "title", "description", "recommendation"]
-                }
-              }
-            },
-            required: ["overallScore", "summary", "metrics", "issues"]
-          }
-        }
-      });
-
-      const responseText = result.response.text();
-      const scanResult = JSON.parse(responseText);
-
-      res.json(scanResult);
+      const result = await this.fetchAndScan(targetUrl);
+      res.json(result);
     } catch (error: any) {
       console.error('Premium scan error:', error);
-      res.status(500).json({ error: `AI-analysen misslyckades: ${error.message}` });
+      if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+        res.status(504).json({ error: 'Webbplatsen svarade inte inom tidsgränsen.' });
+        return;
+      }
+      res.status(500).json({ error: `Analys misslyckades: ${error.message}` });
     }
   };
 }

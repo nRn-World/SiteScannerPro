@@ -21,7 +21,18 @@ interface ScanHistoryItem {
   score: number;
 }
 
+const readErrorMessage = async (res: Response, fallback: string): Promise<string> => {
+  try {
+    const data = await res.json();
+    return data?.error || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function App() {
+  const LICENSE_STORAGE_KEY = 'siteScannerLicenseToken';
+
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
@@ -29,7 +40,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   const [isPremium, setIsPremium] = useState(false);
-  const [scanCount, setScanCount] = useState(0);
+  const [licenseToken, setLicenseToken] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   
   const [view, setView] = useState<'home' | 'about' | 'contact' | 'api' | 'pricing' | 'terms' | 'privacy' | 'cookies'>('home');
@@ -47,14 +58,41 @@ export default function App() {
   }, [language]);
 
   useEffect(() => {
+    // Rensa gamla nycklar från tidigare betalflöde
+    localStorage.removeItem('siteScannerPremium');
+
+    const savedToken = localStorage.getItem(LICENSE_STORAGE_KEY);
+    if (savedToken) {
+      setLicenseToken(savedToken);
+      setIsPremium(true);
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true') {
-      localStorage.setItem('siteScannerPremium', 'true');
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+      fetch('/api/verify-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      })
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.token) {
+            localStorage.setItem(LICENSE_STORAGE_KEY, data.token);
+            setLicenseToken(data.token);
+            setIsPremium(true);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        });
+    } else if (urlParams.get('canceled') === 'true') {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-    setIsPremium(localStorage.getItem('siteScannerPremium') === 'true');
-    setScanCount(parseInt(localStorage.getItem('siteScannerScans') || '0', 10));
-    
+
     const savedHistory = localStorage.getItem('siteScannerHistory');
     if (savedHistory) {
       try {
@@ -81,12 +119,6 @@ export default function App() {
     e.preventDefault();
     if (!url) return;
 
-    // Note: Paywall logic can be re-enabled here if desired
-    // if (!isPremium && scanCount >= 1) {
-    //   setShowPaywall(true);
-    //   return;
-    // }
-
     let targetUrl = url;
     if (!/^https?:\/\//i.test(targetUrl)) {
       targetUrl = 'https://' + targetUrl;
@@ -108,22 +140,30 @@ export default function App() {
         });
         
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || t.errors.freeScan);
+          throw new Error(await readErrorMessage(res, t.errors.freeScan));
         }
         
         data = await res.json();
       } else {
-        // SECURE: Call our backend instead of direct Gemini API
+        // Pro-djupläge: kräver giltig licens-token
         const res = await fetch('/api/scan-premium', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(licenseToken ? { 'x-license-token': licenseToken } : {})
+          },
           body: JSON.stringify({ url: targetUrl })
         });
 
+        if (res.status === 403 || res.status === 401) {
+          localStorage.removeItem(LICENSE_STORAGE_KEY);
+          setLicenseToken(null);
+          setIsPremium(false);
+          throw new Error(t.errors.licenseInvalid);
+        }
+
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || t.errors.premiumScan);
+          throw new Error(await readErrorMessage(res, t.errors.premiumScan));
         }
         data = await res.json();
       }
@@ -140,12 +180,6 @@ export default function App() {
       const updatedHistory = [newHistoryItem, ...scanHistory].slice(0, 10);
       setScanHistory(updatedHistory);
       localStorage.setItem('siteScannerHistory', JSON.stringify(updatedHistory));
-      
-      if (!isPremium) {
-        const newCount = scanCount + 1;
-        setScanCount(newCount);
-        localStorage.setItem('siteScannerScans', newCount.toString());
-      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || t.errors.scanFailed);
@@ -218,7 +252,9 @@ export default function App() {
                   result={result} 
                   url={url} 
                   selectedCategory={selectedCategory} 
-                  setSelectedCategory={setSelectedCategory} t={t}
+                  setSelectedCategory={setSelectedCategory}
+                  onUpgradeClick={() => setShowPaywall(true)}
+                  t={t}
                 />
               )}
 

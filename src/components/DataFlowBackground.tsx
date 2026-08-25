@@ -113,4 +113,4 @@ const DataFlowBackground: React.FC = () => {
   );
 };
 
-export default DataFlowBackground;
+export default React.memo(DataFlowBackground);

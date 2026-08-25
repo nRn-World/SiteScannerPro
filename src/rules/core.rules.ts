@@ -159,7 +159,7 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
       let imagesWithoutAlt = 0;
       let firstImgWithoutAlt: string | null = null;
 
-      images.each((_: number, img: cheerio.Element) => {
+      images.each((_: number, img) => {
         if (!$(img).attr('alt')) {
           imagesWithoutAlt++;
           if (!firstImgWithoutAlt) firstImgWithoutAlt = $.html(img);

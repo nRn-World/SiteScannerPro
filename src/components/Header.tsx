@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, isPremium, language, set
             <Activity className="w-6 h-6" />
           </div >
           <span className="text-2xl font-display font-bold tracking-tighter uppercase hidden sm:block">
-            SiteScanner <span className="text-accent">Pro_</span>
+            SiteScanner <span className="text-accent">Pro<span className="animate-cursor-blink">_</span></span>
           </span >
           {isPremium && (
             <span className="ml-2 inline-flex items-center gap-1 px-3 py-1 bg-accent text-white text-xs font-mono font-bold uppercase tech-border">

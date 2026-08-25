@@ -5,7 +5,11 @@ export interface ScannerIssue {
   severity: Severity;
   title: string;
   description: string;
-  recommendation: string;
+  /**
+   * Rekommendationen är endast inkluderad för Pro-användare -
+   * servern strippar fältet helt ur gratis-svar.
+   */
+  recommendation?: string;
   codeSnippet?: string;
 }
 
