@@ -22,7 +22,7 @@ Analyze any public website across SEO, performance, security, accessibility, and
 
 SiteScanner Pro is a website health analysis service for businesses, freelancers, creators, and web agencies. Enter a public URL and get a clear, prioritized report of what can be improved — no guesswork, no complicated dashboards.
 
-The analysis engine combines a deterministic rule-based scanner with AI-assisted interpretation. Measurable issues are caught by rules; context, prioritization, and ready-to-use code fixes are added by AI.
+The analysis engine is a deterministic rule-based scanner: it fetches the page, evaluates measurable technical signals, and turns each finding into a prioritized issue with a practical recommendation. Premium unlocks the exact code fixes.
 
 ## What the analysis covers
 
@@ -50,7 +50,7 @@ The analysis engine combines a deterministic rule-based scanner with AI-assisted
 | Issue details | ✓ | ✓ |
 | Complete code solutions | — | ✓ |
 | Unlimited scans | — | ✓ |
-| Priority scan queue | — | ✓ |
+| Faster scans (shorter wait time) | — | ✓ |
 
 Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription. Payments are handled securely by [Stripe](https://stripe.com).
 

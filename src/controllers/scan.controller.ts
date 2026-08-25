@@ -120,7 +120,7 @@ export class ScanController {
 
   /**
    * Pro-djupläge: samma lokala motor men med fullständiga lösningar
-   * (rekommendationer + kodexempel) och förtur i kön. Kräver giltig
+   * (rekommendationer + kodexempel) med kortare väntetid. Kräver giltig
    * licens-token via requireLicense-middleware.
    */
   public scanPremium = async (req: Request, res: Response): Promise<void> => {
@@ -133,7 +133,7 @@ export class ScanController {
         return;
       }
 
-      // Pro-användare har förtur
+      // Pro-användare får kortare väntetid
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       const result = await this.fetchAndScan(targetUrl);

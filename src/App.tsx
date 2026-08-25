@@ -208,7 +208,7 @@ export default function App() {
     <HelmetProvider>
       <div className="min-h-screen flex flex-col selection:bg-accent selection:text-white">
         <Helmet>
-          <title>SiteScanner Pro_ | AI-Driven Website Analysis</title>
+          <title>SiteScanner Pro | Website Health Analysis</title>
           <meta name="description" content={t.hero.description} />
           <link rel="canonical" href="https://sitescanner.pro" />
         </Helmet>

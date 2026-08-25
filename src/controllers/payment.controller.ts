@@ -26,7 +26,7 @@ export class PaymentController {
               currency: 'sek',
               product_data: {
                 name: 'SiteScanner Pro - Premium (Livstid)',
-                description: 'Obegränsade analyser, kompletta kodlösningar för alla hittade fel och förtur i kön.',
+                description: 'Obegränsade analyser, kompletta kodlösningar för alla hittade fel och snabbare skanningar.',
               },
               unit_amount: PRICE_AMOUNT,
             },

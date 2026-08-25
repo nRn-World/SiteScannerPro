@@ -1,31 +1,31 @@
 import React from 'react';
-import { Layers, Network, ShieldCheck, FileJson, Link, Activity } from 'lucide-react';
+import { Layers, Activity, ShieldCheck, Accessibility, Code, Gauge } from 'lucide-react';
 import { TranslationSet } from '../i18n/translations';
 
 const featureIcons = [
   {
     icon: Layers,
-    title: 'Edge-Level SEO Injection'
+    title: 'Core SEO Tags'
   },
   {
-    icon: Network,
-    title: 'Instant Network Rendering'
+    icon: Gauge,
+    title: 'Server Response Check'
   },
   {
     icon: ShieldCheck,
-    title: 'High-Integrity Content'
+    title: 'HTTPS & Security Headers'
   },
   {
-    icon: FileJson,
-    title: 'JSON-LD Schema Auto-Gen'
+    icon: Accessibility,
+    title: 'Accessibility Basics'
   },
   {
-    icon: Link,
-    title: 'Autonomous Linking & Sitemap'
+    icon: Code,
+    title: 'Code Quality Checks'
   },
   {
     icon: Activity,
-    title: 'Zero Core Web Vitals Impact'
+    title: 'Zero Impact On Your Site'
   }
 ];
 
