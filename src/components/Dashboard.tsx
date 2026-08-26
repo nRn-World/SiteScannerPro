@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
-import { 
-  Globe, 
-  Download, 
-  SearchCheck, 
-  Zap, 
-  ShieldAlert, 
-  Globe as GlobeIcon, 
-  AlertTriangle,
-  Lock
+import {
+  Accessibility,
+  Code2,
+  Download,
+  Globe,
+  Lock,
+  RotateCcw,
+  SearchCheck,
+  ShieldAlert,
+  Zap,
 } from 'lucide-react';
 import MetricBox from './ui/MetricBox';
 import SeverityBadge from './ui/SeverityBadge';
 import CodeSnippetDisplay from './ui/CodeSnippetDisplay';
+import ScoreRing, { scoreTone } from './ui/ScoreRing';
 import { ScanResult } from '../rules/types';
 import { CategoryKey, TranslationSet } from '../i18n/translations';
 
@@ -22,146 +24,171 @@ interface DashboardProps {
   selectedCategory: string | null;
   setSelectedCategory: (category: string | null) => void;
   onUpgradeClick: () => void;
+  onNewScan: () => void;
   t: TranslationSet;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, setSelectedCategory, onUpgradeClick, t }) => {
-  const filteredIssues = selectedCategory 
+const Dashboard: React.FC<DashboardProps> = ({
+  result,
+  url,
+  selectedCategory,
+  setSelectedCategory,
+  onUpgradeClick,
+  onNewScan,
+  t,
+}) => {
+  const filteredIssues = selectedCategory
     ? result.issues.filter(issue => issue.category === selectedCategory)
     : result.issues;
+  const tone = scoreTone(result.overallScore);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-12"
-    >
-      {/* Dashboard Header */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 bg-white tech-border p-8 md:p-12">
-        <div className="flex-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-paper tech-border font-mono text-xs font-bold uppercase mb-6">
-            <Globe className="w-4 h-4" />
-            {url}
-          </div >
-          <h2 className="text-4xl md:text-6xl font-display font-bold uppercase leading-[0.9] tracking-tighter mb-6">
-            {t.dashboard.report}
-          </h2>
-          <p className="font-mono text-base max-w-2xl leading-relaxed mb-6">
-            {result.summary}
-          </p>
-          <button 
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-ink text-paper font-mono text-sm font-bold uppercase tracking-widest hover:bg-accent transition-colors tech-border"
-          >
-            <Download className="w-4 h-4" /> {t.dashboard.exportPdf}
-          </button>
-        </div >
-        
-        <div className="flex flex-col items-center justify-center p-8 bg-paper tech-border min-w-[200px] tech-shadow">
-          <span className="font-mono text-xs font-bold uppercase tracking-widest mb-2">{t.dashboard.totalScore}</span>
-          <span className={`text-8xl font-display font-bold tracking-tighter ${
-            result.overallScore >= 80 ? 'text-ink' : 
-            result.overallScore >= 50 ? 'text-yellow-500' : 'text-accent'
-          }`}>
-            {result.overallScore}
-          </span >
-        </div>
-      </div >
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+      <div className="surface-card p-6 md:p-10">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+          <div className="flex-1 min-w-0">
+            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 mb-5 max-w-full">
+              <Globe className="w-4 h-4 text-muted shrink-0" />
+              <span className="font-mono text-xs truncate">{url}</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4">
+              {t.dashboard.report}
+            </h2>
+            <p className="text-muted leading-relaxed max-w-2xl mb-6">{result.summary}</p>
+            <div className="flex flex-wrap gap-3 no-print">
+              <button
+                type="button"
+                onClick={onNewScan}
+                className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-semibold hover:border-ink/25 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" /> {t.site.actions.newScan}
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 rounded-full bg-ink text-paper px-5 py-2.5 text-sm font-semibold hover:bg-accent transition-colors"
+              >
+                <Download className="w-4 h-4" /> {t.dashboard.exportPdf}
+              </button>
+            </div>
+          </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <MetricBox 
-          score={result.metrics.seo} 
+          <div className="flex flex-col items-center justify-center min-w-[200px]">
+            <ScoreRing score={result.overallScore} />
+            <p className="eyebrow mt-3">{t.dashboard.totalScore}</p>
+            <p className={`mt-1 text-sm font-bold ${tone.text}`}>{t.site.score[tone.labelKey]}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <MetricBox
+          score={result.metrics.seo}
           label={t.dashboard.categories.SEO}
           icon={SearchCheck}
           t={t}
           isActive={selectedCategory === 'SEO'}
           onClick={() => setSelectedCategory(selectedCategory === 'SEO' ? null : 'SEO')}
         />
-        <MetricBox 
-          score={result.metrics.performance} 
+        <MetricBox
+          score={result.metrics.performance}
           label={t.dashboard.categories.Performance}
-          icon={Zap} 
+          icon={Zap}
           t={t}
           isActive={selectedCategory === 'Performance'}
           onClick={() => setSelectedCategory(selectedCategory === 'Performance' ? null : 'Performance')}
         />
-        <MetricBox 
-          score={result.metrics.security} 
+        <MetricBox
+          score={result.metrics.security}
           label={t.dashboard.categories.Security}
-          icon={ShieldAlert} 
+          icon={ShieldAlert}
           t={t}
           isActive={selectedCategory === 'Security'}
           onClick={() => setSelectedCategory(selectedCategory === 'Security' ? null : 'Security')}
         />
-        <MetricBox 
-          score={result.metrics.accessibility} 
+        <MetricBox
+          score={result.metrics.accessibility}
           label={t.dashboard.categories.Accessibility}
-          icon={GlobeIcon} 
+          icon={Accessibility}
           t={t}
           isActive={selectedCategory === 'Accessibility'}
           onClick={() => setSelectedCategory(selectedCategory === 'Accessibility' ? null : 'Accessibility')}
         />
-        <MetricBox 
-          score={result.metrics.code} 
+        <MetricBox
+          score={result.metrics.code}
           label={t.dashboard.categories.Code}
-          icon={SearchCheck} 
+          icon={Code2}
           t={t}
           isActive={selectedCategory === 'Code'}
           onClick={() => setSelectedCategory(selectedCategory === 'Code' ? null : 'Code')}
         />
       </div>
 
-       {/* Issues List */}
-       <div className="space-y-6">
-         <h3 className={`${selectedCategory ? 'text-accent' : 'text-ink'} text-2xl font-display font-bold uppercase`}>
-           {selectedCategory ? t.dashboard.categoryIssues.replace('{category}', t.dashboard.categories[selectedCategory as CategoryKey] ?? selectedCategory) : t.dashboard.identifiedIssues}
-         </h3>
-        
+      <div className="space-y-5">
+        <div className="flex items-end justify-between gap-4">
+          <h3 className="font-display text-2xl font-bold tracking-tight">
+            {selectedCategory
+              ? t.dashboard.categoryIssues.replace(
+                  '{category}',
+                  t.dashboard.categories[selectedCategory as CategoryKey] ?? selectedCategory
+                )
+              : t.dashboard.identifiedIssues}
+          </h3>
+          <span className="text-sm text-muted tabular-nums">{filteredIssues.length}</span>
+        </div>
+
         {filteredIssues.length > 0 ? (
-          <div className="grid gap-6">
-            {filteredIssues.map((issue, idx) => (
-              <div key={idx} className="bg-white tech-border p-6 tech-shadow">
-                <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                  <div className="flex items-start gap-3">
-                    <SeverityBadge severity={issue.severity} />
-                    <h4 className="font-display font-bold uppercase text-lg">{issue.title}</h4>
-                  </div>
-                  <span className="font-mono text-xs text-ink/50 uppercase">{issue.category}</span>
-                </div>
-                <p className="font-mono text-sm text-ink/80 mb-4">{issue.description}</p>
-                {issue.recommendation ? (
-                  <div className="p-4 bg-paper tech-border">
-                    <span className="font-mono text-xs font-bold uppercase text-ink/50 block mb-2">{t.dashboard.recommendation}</span>
-                    <p className="font-mono text-sm">{issue.recommendation}</p>
-                  </div>
-                ) : (
-                  <div className="p-4 md:p-5 bg-paper tech-border flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
-                    <div className="flex items-start gap-3">
-                      <Lock className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                      <div>
-                        <span className="block font-mono text-xs font-bold uppercase tracking-widest mb-1">{t.dashboard.solutionLocked}</span>
-                        <p className="font-mono text-sm text-ink/70 leading-relaxed">{t.dashboard.lockedHint}</p>
-                      </div>
+          <div className="grid gap-4">
+            {filteredIssues.map((issue, idx) => {
+              const bar =
+                issue.severity === 'High'
+                  ? 'bg-bad'
+                  : issue.severity === 'Medium'
+                    ? 'bg-warn'
+                    : 'bg-good';
+              return (
+                <article key={`${issue.title}-${idx}`} className="surface-card p-5 md:p-6 relative overflow-hidden">
+                  <span className={`absolute inset-y-0 start-0 w-1 ${bar}`} />
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <SeverityBadge severity={issue.severity} t={t} />
+                      <h4 className="font-display font-bold text-lg leading-snug">{issue.title}</h4>
                     </div>
-                    <button 
-                      onClick={onUpgradeClick}
-                      className="shrink-0 bg-accent text-white px-5 py-3 font-mono text-xs font-bold uppercase tracking-widest tech-shadow hover:bg-ink transition-colors"
-                    >
-                      {t.dashboard.unlockCta}
-                    </button>
+                    <span className="text-xs font-semibold text-muted">
+                      {t.dashboard.categories[issue.category as CategoryKey] ?? issue.category}
+                    </span>
                   </div>
-                )}
-                {issue.codeSnippet && (
-                  <CodeSnippetDisplay code={issue.codeSnippet} />
-                )}
-              </div>
-            ))}
+                  <p className="text-sm text-muted leading-relaxed mb-4">{issue.description}</p>
+                  {issue.recommendation ? (
+                    <div className="rounded-2xl bg-paper border border-line p-4">
+                      <span className="eyebrow block mb-2">{t.dashboard.recommendation}</span>
+                      <p className="text-sm leading-relaxed">{issue.recommendation}</p>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl bg-paper border border-line p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between no-print">
+                      <div className="flex items-start gap-3">
+                        <Lock className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                        <div>
+                          <span className="block text-sm font-bold mb-1">{t.dashboard.solutionLocked}</span>
+                          <p className="text-sm text-muted leading-relaxed">{t.dashboard.lockedHint}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={onUpgradeClick}
+                        className="shrink-0 rounded-full bg-accent text-white px-5 py-2.5 text-sm font-semibold hover:bg-ink transition-colors"
+                      >
+                        {t.dashboard.unlockCta}
+                      </button>
+                    </div>
+                  )}
+                  {issue.codeSnippet && <CodeSnippetDisplay code={issue.codeSnippet} t={t} />}
+                </article>
+              );
+            })}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white tech-border font-mono text-ink/50">
-            {t.dashboard.noIssues}
-          </div>
+          <div className="surface-card py-14 text-center text-muted">{t.dashboard.noIssues}</div>
         )}
       </div>
     </motion.div>
