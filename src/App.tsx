@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence } from 'motion/react';
+import { Activity, Crown } from 'lucide-react';
 
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -11,14 +12,9 @@ import Paywall from './components/Paywall';
 import FeatureList from './components/FeatureList';
 import HistoryList from './components/HistoryList';
 import DataFlowBackground from './components/DataFlowBackground';
-import Footer from './components/Footer';
-import Pricing from './components/Pricing';
-import LegalPage from './components/LegalPage';
-import CtaBand from './components/CtaBand';
 import { ScanResult } from './rules/types';
 import { getLanguage, LANGUAGE_STORAGE_KEY, Language, normalizeCategory, translations } from './i18n/translations';
 import { apiUrl } from './api';
-import { AppView } from './types/view';
 
 interface ScanHistoryItem {
   url: string;
@@ -47,8 +43,8 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false);
   const [licenseToken, setLicenseToken] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
-
-  const [view, setView] = useState<AppView>('home');
+  
+  const [view, setView] = useState<'home' | 'about' | 'contact' | 'api' | 'pricing' | 'terms' | 'privacy' | 'cookies'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [language, setLanguage] = useState<Language>(() => getLanguage(localStorage.getItem(LANGUAGE_STORAGE_KEY)));
@@ -63,19 +59,7 @@ export default function App() {
   }, [language]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [view]);
-
-  useEffect(() => {
-    if (!showPaywall) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowPaywall(false);
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [showPaywall]);
-
-  useEffect(() => {
+    // Rensa gamla nycklar från tidigare betalflöde
     localStorage.removeItem('siteScannerPremium');
 
     const savedToken = localStorage.getItem(LICENSE_STORAGE_KEY);
@@ -91,9 +75,9 @@ export default function App() {
       fetch(apiUrl('/api/verify-session'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId })
       })
-        .then(async res => {
+        .then(async (res) => {
           if (!res.ok) return;
           const data = await res.json();
           if (data.token) {
@@ -115,16 +99,16 @@ export default function App() {
       try {
         setScanHistory(JSON.parse(savedHistory));
       } catch (e) {
-        console.error('Could not parse history', e);
+        console.error("Could not parse history", e);
       }
     }
   }, []);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    let interval: NodeJS.Timeout;
     if (isScanning) {
       interval = setInterval(() => {
-        setScanStep(prev => (prev < scanSteps.length - 1 ? prev + 1 : prev));
+        setScanStep((prev) => (prev < scanSteps.length - 1 ? prev + 1 : prev));
       }, 1500);
     } else {
       setScanStep(0);
@@ -145,7 +129,6 @@ export default function App() {
     setError(null);
     setResult(null);
     setSelectedCategory(null);
-    setView('home');
 
     try {
       let data: ScanResult;
@@ -154,22 +137,23 @@ export default function App() {
         const res = await fetch(apiUrl('/api/scan-free'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: targetUrl }),
+          body: JSON.stringify({ url: targetUrl })
         });
-
+        
         if (!res.ok) {
           throw new Error(await readErrorMessage(res, t.errors.freeScan));
         }
-
+        
         data = await res.json();
       } else {
+        // Pro-djupläge: kräver giltig licens-token
         const res = await fetch(apiUrl('/api/scan-premium'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(licenseToken ? { 'x-license-token': licenseToken } : {}),
+            ...(licenseToken ? { 'x-license-token': licenseToken } : {})
           },
-          body: JSON.stringify({ url: targetUrl }),
+          body: JSON.stringify({ url: targetUrl })
         });
 
         if (res.status === 403 || res.status === 401) {
@@ -187,13 +171,13 @@ export default function App() {
 
       data.issues = data.issues.map(issue => ({ ...issue, category: normalizeCategory(issue.category) }));
       setResult(data);
-
+      
       const newHistoryItem: ScanHistoryItem = {
         url: targetUrl,
         date: new Date().toISOString(),
-        score: data.overallScore,
+        score: data.overallScore
       };
-
+      
       const updatedHistory = [newHistoryItem, ...scanHistory].slice(0, 10);
       setScanHistory(updatedHistory);
       localStorage.setItem('siteScannerHistory', JSON.stringify(updatedHistory));
@@ -220,113 +204,64 @@ export default function App() {
     }
   };
 
-  const handleNewScan = () => {
-    setResult(null);
-    setError(null);
-    setSelectedCategory(null);
-    setView('home');
-    requestAnimationFrame(() => {
-      document.getElementById('scan-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  };
-
-  const goToScanner = () => {
-    setResult(null);
-    setError(null);
-    setView('home');
-    requestAnimationFrame(() => {
-      document.getElementById('scan-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  };
-
-  const pageTitle =
-    view === 'about'
-      ? `${t.about.title} | SiteScanner Pro`
-      : view === 'contact'
-        ? `${t.site.pages.contactTitle} | SiteScanner Pro`
-        : view === 'pricing'
-          ? `${t.site.pricing.eyebrow} | SiteScanner Pro`
-          : view === 'terms'
-            ? `${t.site.legal.termsTitle} | SiteScanner Pro`
-            : view === 'privacy'
-              ? `${t.site.legal.privacyTitle} | SiteScanner Pro`
-              : view === 'cookies'
-                ? `${t.site.legal.cookiesTitle} | SiteScanner Pro`
-                : 'SiteScanner Pro | Website Health Analysis';
-
-  const showMarketing = view === 'home' && !result && !isScanning;
-  const showCta = !isPremium && (showMarketing || view === 'about');
-
   return (
     <HelmetProvider>
-      <div className="min-h-dvh flex flex-col">
+      <div className="min-h-screen flex flex-col selection:bg-accent selection:text-white">
         <Helmet>
-          <title>{pageTitle}</title>
+          <title>SiteScanner Pro | Website Health Analysis</title>
           <meta name="description" content={t.hero.description} />
           <link rel="canonical" href="https://sitescanner.pro" />
         </Helmet>
 
-        <Header
-          view={view}
-          setView={setView}
-          isPremium={isPremium}
-          language={language}
-          setLanguage={setLanguage}
-          t={t}
-          onUpgradeClick={() => setShowPaywall(true)}
-        />
+        <Header view={view} setView={setView} isPremium={isPremium} language={language} setLanguage={setLanguage} t={t} />
         <DataFlowBackground />
 
-        <main
-          id="main-content"
-          className={`flex-1 max-w-7xl mx-auto px-5 sm:px-6 w-full relative z-10 ${
-            result && view === 'home' ? 'py-8 md:py-12' : 'py-10 md:py-20'
-          }`}
-        >
-          <AnimatePresence>
+        <main className="flex-1 max-w-7xl mx-auto px-6 py-12 md:py-24 w-full relative z-10">
+          <AnimatePresence mode="wait">
             {showPaywall && (
-              <Paywall key="paywall" onClose={() => setShowPaywall(false)} onCheckout={handleCheckout} t={t} />
+              <Paywall 
+                onClose={() => setShowPaywall(false)} 
+                onCheckout={handleCheckout} 
+                t={t}
+              />
             )}
           </AnimatePresence>
 
           {view === 'home' && (
             <>
               {!result && !isScanning && (
-                <Hero
-                  url={url}
-                  setUrl={setUrl}
-                  onScan={handleScan}
-                  error={error}
-                  isScanning={isScanning}
+                <Hero 
+                  url={url} 
+                  setUrl={setUrl} 
+                  onScan={handleScan} 
+                  error={error} 
+                  isScanning={isScanning} 
                   t={t}
                 />
               )}
 
-              {isScanning && <ScanningState url={url} scanStep={scanStep} scanSteps={scanSteps} t={t} />}
+              {isScanning && (
+                <ScanningState 
+                  url={url} 
+                  scanStep={scanStep} 
+                  scanSteps={scanSteps} t={t}
+                />
+              )}
 
               {result && !isScanning && (
-                <Dashboard
-                  result={result}
-                  url={url}
-                  selectedCategory={selectedCategory}
+                <Dashboard 
+                  result={result} 
+                  url={url} 
+                  selectedCategory={selectedCategory} 
                   setSelectedCategory={setSelectedCategory}
                   onUpgradeClick={() => setShowPaywall(true)}
-                  onNewScan={handleNewScan}
                   t={t}
                 />
               )}
 
-              {showMarketing && (
+              {!result && !isScanning && (
                 <>
                   <FeatureList t={t} />
-                  <div className="mt-24 md:mt-32">
-                    <Pricing
-                      t={t}
-                      isPremium={isPremium}
-                      onCheckout={handleCheckout}
-                      onStartFree={goToScanner}
-                    />
-                  </div>
                   <HistoryList history={scanHistory} t={t} />
                 </>
               )}
@@ -334,53 +269,31 @@ export default function App() {
           )}
 
           {view === 'contact' && (
-            <ContactForm
-              onSuccess={() => {
-                setError(null);
-              }}
-              onError={msg => setError(msg)}
-              t={t}
+            <ContactForm 
+              onSuccess={() => { setError(null); }} 
+              onError={(msg) => setError(msg)} t={t}
             />
           )}
 
           {view === 'about' && (
-            <div className="max-w-3xl mx-auto">
-              <p className="eyebrow text-accent mb-4">{t.nav.about}</p>
-              <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight mb-6">{t.about.title}</h1>
-              <p className="text-lg md:text-xl text-muted leading-relaxed mb-12">{t.about.lead}</p>
-              <div className="space-y-5">
-                {t.about.sections.map((section, index) => (
-                  <section key={section.heading} className="surface-card p-6 md:p-8">
-                    <div className="flex items-baseline gap-3 mb-3">
-                      <span className="font-display text-sm font-bold text-accent">0{index + 1}</span>
-                      <h2 className="font-display text-xl font-bold">{section.heading}</h2>
-                    </div>
-                    <p className="text-muted leading-relaxed">{section.body}</p>
-                  </section>
-                ))}
-              </div>
+            <div className="max-w-3xl mx-auto space-y-10">
+              <h2 className="text-5xl font-display font-bold uppercase text-center">{t.about.title}</h2>
+              <p className="font-mono text-lg text-ink/70 leading-relaxed text-center">
+                {t.about.lead}
+              </p>
+              {t.about.sections.map((section) => (
+                <div key={section.heading} className="space-y-3">
+                  <h3 className="text-xl font-display font-bold uppercase tracking-wide border-b-2 border-ink pb-2">
+                    {section.heading}
+                  </h3>
+                  <p className="font-mono text-sm text-ink/70 leading-relaxed">
+                    {section.body}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
-
-          {view === 'pricing' && (
-            <Pricing t={t} isPremium={isPremium} onCheckout={handleCheckout} onStartFree={goToScanner} />
-          )}
-
-          {view === 'terms' && (
-            <LegalPage title={t.site.legal.termsTitle} updated={t.site.legal.updated} sections={t.site.legal.terms} />
-          )}
-          {view === 'privacy' && (
-            <LegalPage title={t.site.legal.privacyTitle} updated={t.site.legal.updated} sections={t.site.legal.privacy} />
-          )}
-          {view === 'cookies' && (
-            <LegalPage title={t.site.legal.cookiesTitle} updated={t.site.legal.updated} sections={t.site.legal.cookies} />
-          )}
         </main>
-
-        <div className="relative z-10">
-          {showCta && <CtaBand t={t} onCheckout={handleCheckout} />}
-          <Footer t={t} setView={setView} />
-        </div>
       </div>
     </HelmetProvider>
   );

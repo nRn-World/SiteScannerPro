@@ -1,27 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-
-  --color-paper: #f4f2ec;
-  --color-surface: #fffcf7;
-  --color-ink: #121212;
-  --color-muted: #5f5c56;
-  --color-line: #e4dfd4;
-  --color-accent: #e8450a;
-  --color-accent-soft: #fff0e8;
-  --color-good: #0f7a5a;
-  --color-good-soft: #e6f5ef;
-  --color-warn: #b45309;
-  --color-warn-soft: #fff6e5;
-  --color-bad: #c81e1e;
-  --color-bad-soft: #fdecec;
-}
-
-html {
-  scroll-behavior: smooth;
+  
+  --color-paper: #F4F4F0;
+  --color-ink: #0A0A0A;
+  --color-accent: #FF4E00;
 }
 
 body {
@@ -32,135 +19,66 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-::selection {
-  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
-  color: var(--color-ink);
+/* Technical / Brutalist Utilities */
+.tech-border {
+  border: 2px solid var(--color-ink);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+.tech-border-b {
+  border-bottom: 2px solid var(--color-ink);
 }
 
-.skip-link {
-  position: absolute;
-  inset-inline-start: 1rem;
-  top: -100px;
-  z-index: 100;
-  border-radius: 999px;
-  background: var(--color-ink);
-  color: var(--color-paper);
-  padding: 0.6rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+.tech-shadow {
+  box-shadow: 6px 6px 0px 0px var(--color-ink);
+  transition: all 0.15s ease-out;
 }
 
-.skip-link:focus {
-  top: 1rem;
+.tech-shadow:hover {
+  box-shadow: 2px 2px 0px 0px var(--color-ink);
+  transform: translate(4px, 4px);
 }
 
-.surface-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-line);
-  border-radius: 1.25rem;
-  box-shadow:
-    0 1px 2px rgba(18, 18, 18, 0.04),
-    0 12px 32px rgba(18, 18, 18, 0.05);
+.tech-shadow:active {
+  box-shadow: 0px 0px 0px 0px var(--color-ink);
+  transform: translate(6px, 6px);
 }
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-muted);
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-@keyframes float-soft {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+.animate-marquee {
+  animation: marquee 20s linear infinite;
 }
 
-.animate-float-soft {
-  animation: float-soft 7s ease-in-out infinite;
+/* Blinking Cursor Animation */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-@keyframes scan-line {
-  0% {
-    transform: translateY(-20%);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(220%);
-    opacity: 0;
-  }
-}
-
-.animate-scan-line {
-  animation: scan-line 2.4s ease-in-out infinite;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 2.2s ease-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .animate-float-soft,
-  .animate-scan-line,
-  .animate-pulse-ring,
-  .animate-marquee {
-    animation: none !important;
-  }
+.animate-cursor-blink {
+  animation: cursor-blink 1.2s step-end infinite;
 }
 
 @media print {
   body {
-    background: white !important;
+    background-color: white;
   }
-
-  header,
-  footer,
-  button,
-  .no-print,
-  .pointer-events-none {
+  header, footer, button, .pointer-events-none {
     display: none !important;
   }
-
+  .tech-shadow {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  .tech-border {
+    border: 1px solid #ccc !important;
+  }
   main {
     padding: 0 !important;
     margin: 0 !important;
-    max-width: none !important;
-  }
-
-  .surface-card {
-    box-shadow: none !important;
-    break-inside: avoid;
   }
 }
