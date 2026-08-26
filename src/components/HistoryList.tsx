@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, Globe } from 'lucide-react';
+import { Globe, History } from 'lucide-react';
 import { TranslationSet } from '../i18n/translations';
 
 interface HistoryItem {
@@ -13,42 +13,50 @@ interface HistoryListProps {
   t: TranslationSet;
 }
 
+const scoreClass = (score: number) => {
+  if (score >= 80) return 'bg-good-soft text-good';
+  if (score >= 50) return 'bg-warn-soft text-warn';
+  return 'bg-bad-soft text-bad';
+};
+
 const HistoryList: React.FC<HistoryListProps> = ({ history, t }) => {
   if (history.length === 0) return null;
 
   return (
-    <div className="mt-32 max-w-5xl">
-      <div className="flex items-center gap-3 mb-8">
-        <History className="w-6 h-6 text-accent" />
-        <h2 className="text-2xl md:text-3xl font-display font-bold uppercase">{t.history.title}</h2>
-      </div >
-      <div className="bg-white tech-border overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 p-4 bg-paper border-b-2 border-ink font-mono text-xs font-bold uppercase">
-          <div className="col-span-6 md:col-span-8">{t.history.target}</div >
-          <div className="col-span-3 md:col-span-2 text-right">{t.history.score}</div >
-          <div className="col-span-3 md:col-span-2 text-right">{t.history.date}</div >
-        </div >
+    <section className="mt-24 md:mt-32">
+      <div className="flex items-center gap-3 mb-6">
+        <span className="w-10 h-10 rounded-2xl bg-surface border border-line flex items-center justify-center">
+          <History className="w-5 h-5 text-accent" />
+        </span>
+        <h2 className="font-display text-2xl md:text-3xl font-bold tracking-tight">{t.history.title}</h2>
+      </div>
+      <div className="surface-card overflow-hidden">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 border-b border-line eyebrow">
+          <div className="col-span-8">{t.history.target}</div>
+          <div className="col-span-2 text-end">{t.history.score}</div>
+          <div className="col-span-2 text-end">{t.history.date}</div>
+        </div>
         {history.map((item, idx) => (
-          <div key={idx} className="grid grid-cols-12 gap-4 p-4 border-b border-paper/50 font-mono text-sm hover:bg-paper/30 transition-colors items-center">
-            <div className="col-span-6 md:col-span-8 truncate flex items-center gap-2">
-              <Globe className="w-4 h-4 text-ink/40 shrink-0" />
-              <span className="truncate">{item.url}</span>
-            </div >
-            <div className="col-span-3 md:col-span-2 text-right font-bold">
-              <span className={`${
-                item.score >= 80 ? 'text-green-600' : 
-                item.score >= 50 ? 'text-yellow-600' : 'text-accent'
-              }`}>
-                {item.score}/100
-              </span >
-            </div >
-            <div className="col-span-3 md:col-span-2 text-right text-xs text-ink/50">
-              {new Date(item.date).toLocaleDateString('sv-SE')}
-            </div >
-          </div >
+          <div
+            key={`${item.url}-${item.date}-${idx}`}
+            className="grid grid-cols-12 gap-3 px-5 py-4 border-b border-line last:border-b-0 items-center hover:bg-paper/50 transition-colors"
+          >
+            <div className="col-span-8 md:col-span-8 truncate flex items-center gap-2.5">
+              <Globe className="w-4 h-4 text-muted shrink-0" />
+              <span className="truncate text-sm font-medium">{item.url}</span>
+            </div>
+            <div className="col-span-4 md:col-span-2 flex justify-end">
+              <span className={`rounded-full px-2.5 py-1 text-xs font-bold tabular-nums ${scoreClass(item.score)}`}>
+                {item.score}
+              </span>
+            </div>
+            <div className="hidden md:block col-span-2 text-end text-xs text-muted">
+              {new Date(item.date).toLocaleDateString()}
+            </div>
+          </div>
         ))}
-      </div >
-    </div >
+      </div>
+    </section>
   );
 };
 
