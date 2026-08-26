@@ -1,7 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { TranslationSet } from '../../i18n/translations';
-import { scoreTone } from './ScoreRing';
 
 interface MetricBoxProps {
   score: number;
@@ -13,30 +12,29 @@ interface MetricBoxProps {
 }
 
 const MetricBox: React.FC<MetricBoxProps> = ({ score, label, icon: Icon, onClick, isActive, t }) => {
-  const tone = scoreTone(score);
-
+  const scoreColor = score >= 90 ? 'text-green-500' : score >= 50 ? 'text-yellow-500' : 'text-red-500';
+  const activeClass = isActive ? 'ring-4 ring-accent bg-paper scale-[1.02] z-10' : 'hover:bg-paper/50 hover:scale-[1.02]';
+  
   return (
-    <button
-      type="button"
+    <button 
       onClick={onClick}
-      aria-pressed={isActive}
-      className={`surface-card p-5 text-start transition-all duration-200 hover:-translate-y-0.5 ${
-        isActive ? 'ring-2 ring-accent' : ''
-      }`}
+      className={`tech-border bg-white p-6 flex flex-col justify-between aspect-square relative overflow-hidden group text-left transition-all duration-200 ${activeClass}`}
     >
-      <div className="flex justify-between items-start mb-6">
-        <span className="text-xs font-bold tracking-wide text-muted uppercase">{label}</span>
-        <Icon className={`w-5 h-5 ${tone.text}`} />
-      </div>
-      <span className={`font-display text-4xl md:text-5xl font-bold tracking-tight tabular-nums ${tone.text}`}>
-        {score}
-      </span>
-      <div className="mt-4 h-1.5 rounded-full bg-line overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${score}%`, background: tone.stroke }} />
-      </div>
-      <span className={`block mt-3 text-[11px] font-semibold ${isActive ? 'text-accent' : 'text-muted'}`}>
-        {isActive ? t.dashboard.details : t.dashboard.clickForDetails}
-      </span>
+      <div className={`absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity ${scoreColor}`}>
+        <Icon className="w-32 h-32" />
+      </div >
+      <div className="flex justify-between items-start mb-8 relative z-10">
+        <span className="font-mono text-xs font-bold uppercase tracking-widest">{label}</span>
+        <Icon className={`w-6 h-6 ${scoreColor}`} />
+      </div >
+      <div className="relative z-10 flex flex-col">
+        <span className={`text-6xl md:text-7xl font-display font-bold tracking-tighter ${scoreColor}`}>
+          {score}
+        </span>
+        <span className={`font-mono text-[10px] uppercase mt-2 transition-opacity ${isActive ? 'text-accent font-bold opacity-100' : 'text-ink/40 opacity-0 group-hover:opacity-100'}`}>
+          {isActive ? t.dashboard.details : t.dashboard.clickForDetails}
+        </span>
+      </div >
     </button>
   );
 };

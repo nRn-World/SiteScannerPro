@@ -1,23 +1,19 @@
 import React from 'react';
-import { TranslationSet } from '../../i18n/translations';
 
 interface SeverityBadgeProps {
   severity: string;
-  t: TranslationSet;
 }
 
-const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity, t }) => {
-  const styles: Record<string, string> = {
-    High: 'bg-bad-soft text-bad',
-    Medium: 'bg-warn-soft text-warn',
-    Low: 'bg-good-soft text-good',
+const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity }) => {
+  const colors: Record<string, string> = {
+    High: 'bg-accent text-white',
+    Medium: 'bg-yellow-400 text-ink',
+    Low: 'bg-blue-500 text-white'
   };
-  const label =
-    t.site.severity[severity as keyof typeof t.site.severity] ?? severity;
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide ${styles[severity] || styles.Low}`}>
-      {label}
+    <span className={`inline-flex items-center px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider tech-border ${colors[severity] || colors.Low}`}>
+      {severity}
     </span>
   );
 };
