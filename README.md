@@ -52,7 +52,7 @@ The analysis engine is a deterministic rule-based scanner: it fetches the page, 
 | Unlimited scans | — | ✓ |
 | Faster scans (shorter wait time) | — | ✓ |
 
-Premium is a **one-time purchase (€10.99, lifetime access)** — no subscription. The private lifetime code is shown only in the Ko-fi product's post-purchase thank-you message and is activated in SiteScanner.
+Premium is a **one-time purchase (€10.99, lifetime access)** — no subscription. Purchase [SiteScanner Pro on Ko-fi](https://ko-fi.com/s/b525e21531). The private lifetime code is shown only in the product's post-purchase thank-you message and is activated in SiteScanner.
 
 ## Features
 
@@ -102,7 +102,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-KOFI_PRO_URL="https://ko-fi.com/nrnworld"
+KOFI_PRO_URL="https://ko-fi.com/s/b525e21531"
 KOFI_LICENSE_KEY_HASH=""              # SHA-256 of the private Ko-fi code
 LICENSE_SIGNING_SECRET=""             # Private random secret, minimum 32 characters
 APP_URL="http://localhost:3000"
@@ -150,6 +150,6 @@ SiteScanner Pro is released under the Creative Commons Attribution-NonCommercial
 
 ---
 
-☕ **Support development**: [Buy me a coffee 💜](https://ko-fi.com/nrnworld)
+☕ **Get lifetime Pro access**: [Buy SiteScanner Pro on Ko-fi 💜](https://ko-fi.com/s/b525e21531)
 
 Created by ❤️ © nRn World

@@ -13,7 +13,7 @@ services:
       - key: APP_URL
         sync: false
       - key: KOFI_PRO_URL
-        value: https://ko-fi.com/nrnworld
+        value: https://ko-fi.com/s/b525e21531
       - key: KOFI_LICENSE_KEY_HASH
         sync: false
       - key: LICENSE_SIGNING_SECRET

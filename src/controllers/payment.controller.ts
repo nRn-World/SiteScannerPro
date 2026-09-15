@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { LicenseService } from '../services/license.service';
 
-const DEFAULT_KOFI_PRO_URL = 'https://ko-fi.com/nrnworld';
+const DEFAULT_KOFI_PRO_URL = 'https://ko-fi.com/s/b525e21531';
 
 export class PaymentController {
   private licenseService: LicenseService;
