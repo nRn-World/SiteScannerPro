@@ -14,7 +14,9 @@ services:
         sync: false
       - key: KOFI_PRO_URL
         value: https://ko-fi.com/nrnworld
-      - key: SITE_SCANNER_PRO_LICENSE_HASHES
+      - key: KOFI_LICENSE_KEY_HASH
+        sync: false
+      - key: LICENSE_SIGNING_SECRET
         sync: false
       - key: CORS_ORIGIN
         value: https://nrnworld.one,https://nrn-world.github.io,https://sitescannerpro-ten.vercel.app

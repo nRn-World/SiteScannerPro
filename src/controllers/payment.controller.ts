@@ -34,17 +34,16 @@ export class PaymentController {
         return;
       }
 
-      const license = await this.licenseService.validateLicense(licenseKey);
-      if (!license) {
+      const activationToken = this.licenseService.activateLicense(licenseKey);
+      if (!activationToken) {
         res.status(403).json({ error: 'Ogiltig Pro-licenskod.' });
         return;
       }
 
       res.json({
         licensed: true,
-        token: license.sessionId,
-        createdAt: license.createdAt,
-        source: license.source ?? 'ko-fi'
+        token: activationToken,
+        source: 'ko-fi'
       });
     } catch (error: any) {
       console.error('Verify license error:', error);
