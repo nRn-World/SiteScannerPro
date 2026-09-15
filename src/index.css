@@ -9,6 +9,9 @@
   --color-paper: #F4F4F0;
   --color-ink: #0A0A0A;
   --color-accent: #FF4E00;
+  --color-background: #F4F4F0;
+  --color-foreground: #0A0A0A;
+  --color-muted-foreground: #6B6B66;
 }
 
 body {
@@ -61,6 +64,45 @@ body {
 
 .animate-cursor-blink {
   animation: cursor-blink 1.2s step-end infinite;
+}
+
+/* Pixel loader + shimmer label (LoadingState) */
+@keyframes pixel-on {
+  0%, 100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer-text {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.ss-shimmer-label {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-ink) 45%, transparent) 35%,
+    var(--color-accent) 50%,
+    color-mix(in srgb, var(--color-ink) 45%, transparent) 65%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-text 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-shimmer-label {
+    animation: none;
+    background-image: none;
+    color: color-mix(in srgb, var(--color-ink) 70%, transparent);
+    -webkit-text-fill-color: unset;
+  }
 }
 
 @media print {
