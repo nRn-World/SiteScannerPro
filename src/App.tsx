@@ -214,7 +214,7 @@ export default function App() {
         </Helmet>
 
         <Header view={view} setView={setView} isPremium={isPremium} language={language} setLanguage={setLanguage} t={t} />
-        <DataFlowBackground />
+        <DataFlowBackground paused={isScanning} />
 
         <main className="flex-1 max-w-7xl mx-auto px-6 py-12 md:py-24 w-full relative z-10">
           <AnimatePresence mode="wait">

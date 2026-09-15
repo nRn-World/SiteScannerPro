@@ -1,6 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Activity } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { TranslationSet } from '../i18n/translations';
 
 interface ScanningStateProps {
@@ -10,65 +9,72 @@ interface ScanningStateProps {
   t: TranslationSet;
 }
 
+/** Lätt skannings-UI: CSS-spinner utan 3D/blur/Framer Motion. */
 const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps, t }) => {
+  const progress = scanSteps.length > 0 ? (scanStep + 1) / scanSteps.length : 0;
+
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center py-32"
-    >
-      {/* 3D Wireframe Cube Scanner */}
-      <div className="relative w-32 h-32 mb-24" style={{ perspective: '1000px' }}>
-        <motion.div
-          animate={{ rotateX: [0, 360], rotateY: [0, 360] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="w-full h-full relative"
-          style={{ transformStyle: 'preserve-3d' }}
-        >
-          {/* Cube Faces */}
-          <div className="absolute inset-0 border-2 border-accent bg-accent/10 flex items-center justify-center backdrop-blur-sm" style={{ transform: 'translateZ(64px)' }}>
-            <span className="text-accent opacity-50">🔍</span>
-          </div >
-          <div className="absolute inset-0 border-2 border-ink bg-ink/5 backdrop-blur-sm" style={{ transform: 'rotateY(180deg) translateZ(64px)' }} />
-          <div className="absolute inset-0 border-2 border-ink bg-ink/5 backdrop-blur-sm" style={{ transform: 'rotateY(-90deg) translateZ(64px)' }} />
-          <div className="absolute inset-0 border-2 border-accent bg-accent/10 backdrop-blur-sm" style={{ transform: 'rotateY(90deg) translateZ(64px)' }} />
-          <div className="absolute inset-0 border-2 border-ink bg-ink/5 backdrop-blur-sm" style={{ transform: 'rotateX(90deg) translateZ(64px)' }} />
-          <div className="absolute inset-0 border-2 border-accent bg-accent/10 backdrop-blur-sm" style={{ transform: 'rotateX(-90deg) translateZ(64px)' }} />
-        </motion.div>
-        
-        {/* Floor Grid Reflection */}
-        <div className="absolute -bottom-16 -inset-x-16 h-16 bg-gradient-to-t from-transparent to-accent/20 blur-xl transform rotate-x-60" style={{ transform: 'rotateX(75deg)' }}></div >
-      </div >
-      
-      <div className="relative w-full max-w-lg">
-        {/* Scanning Laser over text */}
-        <motion.div 
-          animate={{ top: ['-10%', '110%', '-10%'] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -inset-x-4 md:-inset-x-12 h-1 bg-accent z-20 shadow-[0_0_20px_rgba(242,125,38,1)] pointer-events-none"
+    <div className="flex flex-col items-center justify-center py-20 md:py-28">
+      <div
+        className="relative w-20 h-20 mb-10"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress * 100)}
+        aria-label={scanSteps[scanStep]}
+      >
+        <div className="absolute inset-0 rounded-full border-2 border-ink/10" />
+        <div
+          className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent border-r-accent/40 ss-scan-spin"
+          style={{ willChange: 'transform' }}
         />
-        
-        <div className="h-24 md:h-32 overflow-hidden relative w-full text-center">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={scanStep}
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -40, opacity: 0 }}
-              className="font-display font-bold text-2xl md:text-3xl uppercase tracking-widest absolute inset-0 flex items-center justify-center leading-tight px-4"
-            >
-              {scanSteps[scanStep]}
-            </motion.p>
-          </AnimatePresence>
-        </div >
-      </div >
-      
-      <div className="mt-8 font-mono text-sm uppercase tracking-widest text-ink/50 flex items-center gap-2">
-        <Activity className="w-4 h-4 animate-pulse text-accent" />
-        {t.scanning.target} {url}
-      </div >
-    </motion.div>
+        <div className="absolute inset-3 rounded-full border border-ink/10" />
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `conic-gradient(#1a73e8 ${progress * 360}deg, transparent 0deg)`,
+            opacity: 0.15,
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px))',
+            WebkitMask:
+              'radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px))'
+          }}
+        />
+      </div>
+
+      <div className="flex justify-center gap-1.5 mb-6">
+        {scanSteps.map((_, i) => (
+          <div
+            key={i}
+            className={`h-1 rounded-full transition-[width,background-color] duration-300 ${
+              i <= scanStep ? 'bg-accent w-7' : 'bg-ink/10 w-2'
+            }`}
+          />
+        ))}
+      </div>
+
+      <p className="font-display font-bold text-xl md:text-2xl uppercase tracking-widest text-center leading-tight px-4 min-h-[2.5rem]">
+        {scanSteps[scanStep]}
+      </p>
+
+      <div className="mt-6 font-mono text-xs uppercase tracking-widest text-ink/50 flex items-center gap-2 max-w-lg text-center">
+        <Globe className="w-4 h-4 text-accent shrink-0" />
+        <span className="truncate">
+          {t.scanning.target} {url}
+        </span>
+      </div>
+
+      <style>{`
+        @keyframes ss-scan-spin {
+          to { transform: rotate(360deg); }
+        }
+        .ss-scan-spin {
+          animation: ss-scan-spin 0.9s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ss-scan-spin { animation: none; border-top-color: #1a73e8; }
+        }
+      `}</style>
+    </div>
   );
 };
 
