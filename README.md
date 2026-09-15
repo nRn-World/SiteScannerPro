@@ -52,7 +52,7 @@ The analysis engine is a deterministic rule-based scanner: it fetches the page, 
 | Unlimited scans | — | ✓ |
 | Faster scans (shorter wait time) | — | ✓ |
 
-Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription. The private lifetime code is shown only in the Ko-fi product's post-purchase thank-you message and is activated in SiteScanner.
+Premium is a **one-time purchase (€10.99, lifetime access)** — no subscription. The private lifetime code is shown only in the Ko-fi product's post-purchase thank-you message and is activated in SiteScanner.
 
 ## Features
 
