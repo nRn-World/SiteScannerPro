@@ -15,4 +15,4 @@ services:
       - key: APP_URL
         sync: false
       - key: CORS_ORIGIN
-        value: https://nrn-world.github.io,https://sitescannerpro-ten.vercel.app
+        value: https://nrnworld.one,https://nrn-world.github.io,https://sitescannerpro-ten.vercel.app

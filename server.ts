@@ -8,17 +8,26 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  const allowedOrigins = (process.env.CORS_ORIGIN || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const defaultOrigins = [
+    'https://nrnworld.one',
+    'https://www.nrnworld.one',
+    'https://nrn-world.github.io',
+    'https://sitescannerpro-ten.vercel.app'
+  ];
+  const allowedOrigins = [
+    ...defaultOrigins,
+    ...(process.env.CORS_ORIGIN || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  ];
 
   app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (allowedOrigins.length === 0) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-    } else if (origin && allowedOrigins.includes(origin)) {
+    if (origin && allowedOrigins.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
+    } else if (!process.env.CORS_ORIGIN) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-license-token');
