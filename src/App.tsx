@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence } from 'motion/react';
 import { Activity, Crown } from 'lucide-react';
@@ -13,7 +13,8 @@ import FeatureList from './components/FeatureList';
 import HistoryList from './components/HistoryList';
 import DataFlowBackground from './components/DataFlowBackground';
 import { ScanResult } from './rules/types';
-import { getLanguage, LANGUAGE_STORAGE_KEY, Language, normalizeCategory, translations } from './i18n/translations';
+import { getLanguage, LANGUAGE_STORAGE_KEY, Language, translations } from './i18n/translations';
+import { localizeScanResult } from './i18n/report-translations';
 import { apiUrl } from './api';
 
 interface ScanHistoryItem {
@@ -24,11 +25,9 @@ interface ScanHistoryItem {
 
 const readErrorMessage = async (res: Response, fallback: string): Promise<string> => {
   try {
-    const data = await res.json();
-    return data?.error || fallback;
-  } catch {
-    return fallback;
-  }
+    await res.json();
+  } catch {}
+  return fallback;
 };
 
 export default function App() {
@@ -52,6 +51,10 @@ export default function App() {
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [language, setLanguage] = useState<Language>(() => getLanguage(localStorage.getItem(LANGUAGE_STORAGE_KEY)));
   const t = translations[language];
+  const localizedResult = useMemo(
+    () => result ? localizeScanResult(result, language) : null,
+    [result, language]
+  );
 
   const scanSteps = t.scanSteps;
 
@@ -59,6 +62,8 @@ export default function App() {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    setError(null);
+    setLicenseMessage(null);
   }, [language]);
 
   useEffect(() => {
@@ -110,7 +115,7 @@ export default function App() {
         const res = await fetch(apiUrl('/api/scan-free'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: targetUrl })
+          body: JSON.stringify({ url: targetUrl, language })
         });
         
         if (!res.ok) {
@@ -126,7 +131,7 @@ export default function App() {
             'Content-Type': 'application/json',
             'x-license-token': activeToken
           },
-          body: JSON.stringify({ url: targetUrl })
+          body: JSON.stringify({ url: targetUrl, language })
         });
 
         if (res.status === 403 || res.status === 401) {
@@ -142,7 +147,6 @@ export default function App() {
         data = await res.json();
       }
 
-      data.issues = data.issues.map(issue => ({ ...issue, category: normalizeCategory(issue.category) }));
       setResult(data);
       
       const newHistoryItem: ScanHistoryItem = {
@@ -176,8 +180,8 @@ export default function App() {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
-      } else if (data.error) {
-        alert(t.errors.payment + ': ' + data.error);
+      } else {
+        alert(t.errors.payment);
       }
     } catch (err) {
       console.error(err);
@@ -233,7 +237,7 @@ export default function App() {
     <HelmetProvider>
       <div className="min-h-screen flex flex-col selection:bg-accent selection:text-white">
         <Helmet>
-          <title>SiteScanner Pro | Website Health Analysis</title>
+          <title>SiteScanner Pro | {t.nav.scanner}</title>
           <meta name="description" content={t.hero.description} />
           <link rel="canonical" href="https://sitescanner.pro" />
         </Helmet>
@@ -278,9 +282,9 @@ export default function App() {
                 />
               )}
 
-              {result && !isScanning && (
+              {localizedResult && !isScanning && (
                 <Dashboard 
-                  result={result} 
+                  result={localizedResult}
                   url={url} 
                   selectedCategory={selectedCategory} 
                   setSelectedCategory={setSelectedCategory}
@@ -293,7 +297,7 @@ export default function App() {
               {!result && !isScanning && (
                 <>
                   <FeatureList t={t} />
-                  <HistoryList history={scanHistory} t={t} />
+                  <HistoryList history={scanHistory} language={language} t={t} />
                 </>
               )}
             </>

@@ -3,8 +3,6 @@ import { ScannerService } from '../services/scanner.service';
 import { ScanResult } from '../rules/types';
 
 const PRIVATE_HOST_PATTERN = /^(localhost$|.*\.localhost$|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0$|\[::1?\]?$|::1$)/;
-const DESCRIPTION_TEASER_LENGTH = 90;
-
 function validateTargetUrl(rawUrl: string): string | null {
   let parsed: URL;
   try {
@@ -23,19 +21,6 @@ function validateTargetUrl(rawUrl: string): string | null {
   }
 
   return parsed.toString();
-}
-
-/**
- * Förkortar en beskrivning till en teaser så att gratisanvändaren förstår
- * vad problemet är men inte får hela lösningsbeskrivningen.
- */
-function truncateDescription(description: string): string {
-  if (description.length <= DESCRIPTION_TEASER_LENGTH) {
-    return description;
-  }
-  const cutoff = description.slice(0, DESCRIPTION_TEASER_LENGTH);
-  const lastSpace = cutoff.lastIndexOf(' ');
-  return `${cutoff.slice(0, lastSpace > 40 ? lastSpace : DESCRIPTION_TEASER_LENGTH).trimEnd()}…`;
 }
 
 export class ScanController {
@@ -82,13 +67,13 @@ export class ScanController {
   private toPublicResult(result: ScanResult): ScanResult {
     return {
       overallScore: result.overallScore,
-      summary: result.summary,
       metrics: result.metrics,
       issues: result.issues.map((issue) => ({
+        id: issue.id,
         category: issue.category,
         severity: issue.severity,
-        title: issue.title,
-        description: truncateDescription(issue.description)
+        values: issue.values,
+        descriptionTeaser: true
       }))
     };
   }

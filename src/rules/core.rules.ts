@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { ScannerRule, ScannerIssue, Severity } from './types';
+import { ScannerRule, ScannerIssue } from './types';
 
 export const SEO_RULES: ScannerRule[] = [
   {
@@ -10,12 +10,11 @@ export const SEO_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       if (!$('title').text()) {
         issues.push({
+          id: 'seo.missing-title',
           category: 'SEO',
           severity: 'High',
-          title: 'Saknad Title-tagg',
-          description: 'Sidan saknar en <title>-tagg, vilket är kritiskt för sökmotorer.',
-          recommendation: 'Lägg till en beskrivande <title> i <head>.',
-          codeSnippet: '<head>\n  <!-- Saknas: <title>Din Sidtitel</title> -->\n</head>'
+          recommendationAvailable: true,
+          codeSnippetId: 'seo.missing-title'
         });
       }
       return issues;
@@ -29,12 +28,11 @@ export const SEO_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       if (!$('meta[name="description"]').attr('content')) {
         issues.push({
+          id: 'seo.missing-meta-description',
           category: 'SEO',
           severity: 'Medium',
-          title: 'Saknad Meta Description',
-          description: 'Sidan saknar en metabeskrivning.',
-          recommendation: 'Lägg till <meta name="description" content="...">.',
-          codeSnippet: '<head>\n  <!-- Saknas: <meta name="description" content="..."> -->\n</head>'
+          recommendationAvailable: true,
+          codeSnippetId: 'seo.missing-meta-description'
         });
       }
       return issues;
@@ -48,12 +46,11 @@ export const SEO_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       if ($('h1').length === 0) {
         issues.push({
+          id: 'seo.missing-h1',
           category: 'SEO',
           severity: 'Medium',
-          title: 'Saknad H1-rubrik',
-          description: 'Sidan saknar en huvudrubrik (H1).',
-          recommendation: 'Se till att varje sida har exakt en H1-rubrik.',
-          codeSnippet: '<body>\n  <!-- Saknas: <h1>Huvudrubrik</h1> -->\n</body>'
+          recommendationAvailable: true,
+          codeSnippetId: 'seo.missing-h1'
         });
       }
       return issues;
@@ -70,19 +67,19 @@ export const PERFORMANCE_RULES: ScannerRule[] = [
       const loadTime = context.loadTime;
       if (loadTime > 2000) {
         issues.push({
+          id: 'performance.slow-response-high',
           category: 'Performance',
           severity: 'High',
-          title: 'Långsam svarstid',
-          description: `Servern tog ${loadTime}ms att svara.`,
-          recommendation: 'Optimera servern, använd caching eller en CDN.'
+          values: { loadTime },
+          recommendationAvailable: true
         });
       } else if (loadTime > 1000) {
         issues.push({
+          id: 'performance.slow-response-medium',
           category: 'Performance',
           severity: 'Medium',
-          title: 'Något långsam svarstid',
-          description: `Servern tog ${loadTime}ms att svara.`,
-          recommendation: 'Optimera TTFB (Time to First Byte).'
+          values: { loadTime },
+          recommendationAvailable: true
         });
       }
       return issues;
@@ -98,11 +95,10 @@ export const SECURITY_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       if (!context.isHttps) {
         issues.push({
+          id: 'security.insecure-http',
           category: 'Security',
           severity: 'High',
-          title: 'Okrypterad anslutning',
-          description: 'Sidan använder HTTP istället för HTTPS.',
-          recommendation: 'Installera ett SSL-certifikat och tvinga HTTPS.'
+          recommendationAvailable: true
         });
       }
       return issues;
@@ -115,11 +111,10 @@ export const SECURITY_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       if (!context.headers.get('strict-transport-security')) {
         issues.push({
+          id: 'security.missing-hsts',
           category: 'Security',
           severity: 'Low',
-          title: 'Saknad HSTS-header',
-          description: 'Sidan tvingar inte webbläsare att använda HTTPS (HSTS).',
-          recommendation: 'Lägg till Strict-Transport-Security i serverns headers.',
+          recommendationAvailable: true,
           codeSnippet: 'Strict-Transport-Security: max-age=31536000; includeSubDomains'
         });
       }
@@ -135,11 +130,10 @@ export const SECURITY_RULES: ScannerRule[] = [
       const hasCSP = context.headers.get('content-security-policy');
       if (!hasXFrame && !hasCSP) {
         issues.push({
+          id: 'security.clickjacking-risk',
           category: 'Security',
           severity: 'Low',
-          title: 'Risk för Clickjacking',
-          description: 'Sidan saknar skydd mot att bäddas in i iframes.',
-          recommendation: 'Lägg till X-Frame-Options: DENY eller SAMEORIGIN.',
+          recommendationAvailable: true,
           codeSnippet: 'X-Frame-Options: DENY\nContent-Security-Policy: frame-ancestors \'none\';'
         });
       }
@@ -168,11 +162,11 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
 
       if (imagesWithoutAlt > 0) {
         issues.push({
+          id: 'accessibility.missing-alt-text',
           category: 'Accessibility',
           severity: 'Medium',
-          title: 'Saknade Alt-texter',
-          description: `${imagesWithoutAlt} bilder saknar alt-attribut.`,
-          recommendation: 'Lägg till beskrivande alt-texter på alla bilder för skärmläsare.',
+          values: { count: imagesWithoutAlt },
+          recommendationAvailable: true,
           codeSnippet: firstImgWithoutAlt || undefined
         });
       }
@@ -187,12 +181,11 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       if (!$('html').attr('lang')) {
         issues.push({
+          id: 'accessibility.missing-language',
           category: 'Accessibility',
           severity: 'Low',
-          title: 'Saknat språkattribut',
-          description: 'HTML-taggen saknar lang-attribut.',
-          recommendation: 'Lägg till lang="sv" (eller aktuellt språk) i <html>-taggen.',
-          codeSnippet: '<html>\n  <!-- Borde vara: <html lang="sv"> -->\n</html>'
+          recommendationAvailable: true,
+          codeSnippetId: 'accessibility.missing-language'
         });
       }
       return issues;
@@ -211,11 +204,11 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
       if (inlineStyles > 0) {
         const firstInlineStyle = $.html($('[style]').first());
         issues.push({
+          id: 'code.inline-styles',
           category: 'Code',
           severity: 'Low',
-          title: 'Inline CSS används',
-          description: `Hittade ${inlineStyles} element med inline-styles. Detta gör koden svårare att underhålla och kan leda till sämre formaterad kod.`,
-          recommendation: 'Flytta all styling till externa CSS-filer.',
+          values: { count: inlineStyles },
+          recommendationAvailable: true,
           codeSnippet: firstInlineStyle
         });
       }
@@ -232,11 +225,10 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
       if (deprecatedTags > 0) {
         const firstDeprecated = $.html($('font, center, strike, marquee').first());
         issues.push({
+          id: 'code.deprecated-tags',
           category: 'Code',
           severity: 'Medium',
-          title: 'Föråldrade HTML-taggar',
-          description: 'Sidan använder föråldrade taggar (t.ex. <font>, <center>). Detta är ett dåligt kodmönster.',
-          recommendation: 'Ersätt föråldrade taggar med modern CSS.',
+          recommendationAvailable: true,
           codeSnippet: firstDeprecated
         });
       }
@@ -253,11 +245,11 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
       if (scriptsWithoutDefer > 0) {
         const firstScript = $.html($('script[src]:not([defer]):not([async])').first());
         issues.push({
+          id: 'code.render-blocking-js',
           category: 'Code',
           severity: 'Medium',
-          title: 'Render-blockerande JavaScript',
-          description: `Hittade ${scriptsWithoutDefer} script-taggar utan 'defer' eller 'async'. Detta är ett osäkert/ineffektivt kodmönster för prestanda.`,
-          recommendation: "Lägg till 'defer' eller 'async' på externa script.",
+          values: { count: scriptsWithoutDefer },
+          recommendationAvailable: true,
           codeSnippet: firstScript
         });
       }

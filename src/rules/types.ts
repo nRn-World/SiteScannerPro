@@ -1,16 +1,39 @@
 export type Severity = 'High' | 'Medium' | 'Low';
 
+export const ISSUE_IDS = [
+  'seo.missing-title',
+  'seo.missing-meta-description',
+  'seo.missing-h1',
+  'performance.slow-response-high',
+  'performance.slow-response-medium',
+  'security.insecure-http',
+  'security.missing-hsts',
+  'security.clickjacking-risk',
+  'accessibility.missing-alt-text',
+  'accessibility.missing-language',
+  'code.inline-styles',
+  'code.deprecated-tags',
+  'code.render-blocking-js'
+] as const;
+
+export type IssueId = typeof ISSUE_IDS[number];
+export type IssueValues = Partial<Record<'loadTime' | 'count', number>>;
+
 export interface ScannerIssue {
+  id: IssueId;
   category: string;
   severity: Severity;
+  values?: IssueValues;
+  recommendationAvailable?: true;
+  codeSnippet?: string;
+  codeSnippetId?: IssueId;
+  descriptionTeaser?: true;
+}
+
+export interface LocalizedScannerIssue extends ScannerIssue {
   title: string;
   description: string;
-  /**
-   * Rekommendationen är endast inkluderad för Pro-användare -
-   * servern strippar fältet helt ur gratis-svar.
-   */
   recommendation?: string;
-  codeSnippet?: string;
 }
 
 export interface ScanMetrics {
@@ -23,9 +46,13 @@ export interface ScanMetrics {
 
 export interface ScanResult {
   overallScore: number;
-  summary: string;
   metrics: ScanMetrics;
   issues: ScannerIssue[];
+}
+
+export interface LocalizedScanResult extends Omit<ScanResult, 'issues'> {
+  summary: string;
+  issues: LocalizedScannerIssue[];
 }
 
 export interface ScannerContext {

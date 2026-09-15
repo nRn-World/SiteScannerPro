@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ view, setView, isPremium, language, set
           >
             {t.nav.scanner}
           </button>
-          <select aria-label="Language" value={language} onChange={(event) => setLanguage(event.target.value as Language)} className="bg-paper tech-border px-2 py-2 text-xs font-mono font-bold uppercase">
+          <select aria-label={t.languageName} value={language} onChange={(event) => setLanguage(event.target.value as Language)} className="bg-paper tech-border px-2 py-2 text-xs font-mono font-bold uppercase">
             {LANGUAGE_OPTIONS.map(option => <option key={option.code} value={option.code}>{option.label}</option>)}
           </select>
           <button 

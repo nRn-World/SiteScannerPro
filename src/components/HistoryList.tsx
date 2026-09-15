@@ -1,6 +1,6 @@
 import React from 'react';
 import { History, Globe } from 'lucide-react';
-import { TranslationSet } from '../i18n/translations';
+import { Language, TranslationSet } from '../i18n/translations';
 
 interface HistoryItem {
   url: string;
@@ -10,10 +10,11 @@ interface HistoryItem {
 
 interface HistoryListProps {
   history: HistoryItem[];
+  language: Language;
   t: TranslationSet;
 }
 
-const HistoryList: React.FC<HistoryListProps> = ({ history, t }) => {
+const HistoryList: React.FC<HistoryListProps> = ({ history, language, t }) => {
   if (history.length === 0) return null;
 
   return (
@@ -43,7 +44,7 @@ const HistoryList: React.FC<HistoryListProps> = ({ history, t }) => {
               </span >
             </div >
             <div className="col-span-3 md:col-span-2 text-right text-xs text-ink/50">
-              {new Date(item.date).toLocaleDateString('sv-SE')}
+              {new Date(item.date).toLocaleDateString(language)}
             </div >
           </div >
         ))}

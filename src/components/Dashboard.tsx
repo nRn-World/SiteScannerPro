@@ -13,11 +13,11 @@ import {
 import MetricBox from './ui/MetricBox';
 import SeverityBadge from './ui/SeverityBadge';
 import CodeSnippetDisplay from './ui/CodeSnippetDisplay';
-import { ScanResult } from '../rules/types';
+import { LocalizedScanResult } from '../rules/types';
 import { CategoryKey, TranslationSet } from '../i18n/translations';
 
 interface DashboardProps {
-  result: ScanResult;
+  result: LocalizedScanResult;
   url: string;
   selectedCategory: string | null;
   setSelectedCategory: (category: string | null) => void;
@@ -121,14 +121,16 @@ const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, se
         
         {filteredIssues.length > 0 ? (
           <div className="grid gap-6">
-            {filteredIssues.map((issue, idx) => (
-              <div key={idx} className="bg-white tech-border p-6 tech-shadow">
+            {filteredIssues.map((issue) => (
+              <div key={issue.id} className="bg-white tech-border p-6 tech-shadow">
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                   <div className="flex items-start gap-3">
-                    <SeverityBadge severity={issue.severity} />
+                    <SeverityBadge severity={issue.severity} label={t.dashboard.severities[issue.severity]} />
                     <h4 className="font-display font-bold uppercase text-lg">{issue.title}</h4>
                   </div>
-                  <span className="font-mono text-xs text-ink/50 uppercase">{issue.category}</span>
+                  <span className="font-mono text-xs text-ink/50 uppercase">
+                    {t.dashboard.categories[issue.category as CategoryKey] ?? issue.category}
+                  </span>
                 </div>
                 <p className="font-mono text-sm text-ink/80 mb-4">{issue.description}</p>
                 {issue.recommendation ? (
@@ -154,7 +156,12 @@ const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, se
                   </div>
                 ) : null}
                 {issue.codeSnippet && (
-                  <CodeSnippetDisplay code={issue.codeSnippet} />
+                  <CodeSnippetDisplay
+                    code={issue.codeSnippet}
+                    codeExampleLabel={t.dashboard.codeExample}
+                    copyLabel={t.dashboard.copyCode}
+                    copiedLabel={t.dashboard.copied}
+                  />
                 )}
               </div>
             ))}

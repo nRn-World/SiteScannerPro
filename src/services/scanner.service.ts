@@ -22,7 +22,6 @@ export class ScannerService {
 
     return {
       overallScore,
-      summary: this.generateSummary(overallScore),
       metrics,
       issues: allIssues
     };
@@ -79,10 +78,4 @@ export class ScannerService {
     }
   }
 
-  private generateSummary(score: number): string {
-    if (score >= 90) return "Webbplatsen ser fantastisk ut! Den följer de flesta best practices.";
-    if (score >= 70) return "Bra jobb, men det finns några områden som kan optimeras för att nå toppnivå.";
-    if (score >= 50) return "Webbplatsen har flera brister som bör åtgärdas för att förbättra användarupplevelse och SEO.";
-    return "Webbplatsen behöver omfattande åtgärder för att möta grundläggande standarder.";
-  }
 }
