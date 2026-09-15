@@ -1,15 +1,37 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Crown, Lock } from 'lucide-react';
+import { Coffee, Crown, KeyRound, Lock } from 'lucide-react';
 import { TranslationSet } from '../i18n/translations';
 
 interface PaywallProps {
   onClose: () => void;
   onCheckout: () => void;
+  onActivateLicense: () => void;
+  licenseInput: string;
+  setLicenseInput: (value: string) => void;
+  licenseMessage: string | null;
+  isActivatingLicense: boolean;
   t: TranslationSet;
 }
 
-const Paywall: React.FC<PaywallProps> = ({ onClose, onCheckout, t }) => {
+const Paywall: React.FC<PaywallProps> = ({
+  onClose,
+  onCheckout,
+  onActivateLicense,
+  licenseInput,
+  setLicenseInput,
+  licenseMessage,
+  isActivatingLicense,
+  t
+}) => {
+  const paywallText = {
+    codeTitle: t.paywall.codeTitle ?? 'Already have a Pro code?',
+    afterPurchase: t.paywall.afterPurchase ?? 'After Ko-fi payment, paste the license code from the thank-you page.',
+    codePlaceholder: t.paywall.codePlaceholder ?? 'SSP-PRO-XXXX-XXXX-XXXX',
+    activate: t.paywall.activate ?? 'Activate',
+    activating: t.paywall.activating ?? 'Activating...'
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-paper/90 backdrop-blur-sm">
       <motion.div
@@ -47,8 +69,62 @@ const Paywall: React.FC<PaywallProps> = ({ onClose, onCheckout, t }) => {
           onClick={onCheckout}
           className="w-full bg-accent text-white py-5 font-display font-bold text-xl uppercase tracking-widest tech-shadow flex items-center justify-center gap-3 hover:bg-ink transition-colors"
         >
-          <Lock className="w-5 h-5" /> {t.paywall.buy}
+          <Coffee className="w-5 h-5" /> {t.paywall.buy}
         </button>
+
+        <div className="mt-8 tech-border bg-paper p-4">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 bg-ink text-paper flex items-center justify-center shrink-0">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-display font-bold uppercase tracking-wide">
+                {paywallText.codeTitle}
+              </h4>
+              <p className="font-mono text-xs text-ink/60 mt-1 leading-relaxed">
+                {paywallText.afterPurchase}
+              </p>
+            </div>
+          </div>
+
+          <form
+            className="flex flex-col sm:flex-row gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onActivateLicense();
+            }}
+          >
+            <input
+              value={licenseInput}
+              onChange={(event) => setLicenseInput(event.target.value.toUpperCase())}
+              placeholder={paywallText.codePlaceholder}
+              autoComplete="off"
+              spellCheck={false}
+              className="flex-1 bg-white tech-border px-4 py-3 font-mono text-sm uppercase outline-none focus:border-accent"
+            />
+            <button
+              type="submit"
+              disabled={isActivatingLicense}
+              className="bg-ink text-paper px-5 py-3 font-display font-bold uppercase tracking-widest hover:bg-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4" />
+              {isActivatingLicense ? paywallText.activating : paywallText.activate}
+            </button>
+          </form>
+
+          <AnimatePresence>
+            {licenseMessage && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="font-mono text-xs mt-3 text-ink/70"
+              >
+                {licenseMessage}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
         
         <button
           onClick={onClose}

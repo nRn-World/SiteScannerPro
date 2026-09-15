@@ -19,6 +19,7 @@ router.post('/scan-premium', requireLicense, scanController.scanPremium);
 
 // Payment routes
 router.post('/create-checkout-session', paymentController.createCheckoutSession);
+router.post('/verify-license', paymentController.verifyLicense);
 router.post('/verify-session', paymentController.verifySession);
 
 export default router;

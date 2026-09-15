@@ -48,6 +48,12 @@ export interface TranslationSet {
     description: string;
     benefits: string[];
     buy: string;
+    codeTitle?: string;
+    afterPurchase?: string;
+    codePlaceholder?: string;
+    activate?: string;
+    activating?: string;
+    activated?: string;
     cancel: string;
   };
   contact: {
@@ -112,7 +118,19 @@ const english: TranslationSet = {
     solutionLocked: 'Solution locked', lockedHint: 'Get the exact fix with step-by-step instructions and ready-to-use code.', unlockCta: 'Unlock – 99 kr',
     categories: { SEO: 'SEO', Performance: 'Performance', Security: 'Security', Accessibility: 'Accessibility', Code: 'Code' }
   },
-  paywall: { title: 'Premium\nRequired.', description: 'You can see which issues were found. Unlock Pro to get the complete solution for every issue - with exact code fixes.', benefits: ['Unlimited scans', 'Complete code solutions', 'Faster scans (shorter wait)'], buy: 'Buy now – 99 kr', cancel: 'Cancel' },
+  paywall: {
+    title: 'Pro\nRequired.',
+    description: 'You can see which issues were found. Unlock Pro for lifetime access to full fixes, exact code snippets and deeper scans.',
+    benefits: ['Lifetime Pro access', 'Complete code solutions', 'Unlimited premium scans'],
+    buy: 'Buy Pro on Ko-fi',
+    codeTitle: 'Already have a Pro code?',
+    afterPurchase: 'After Ko-fi payment, paste the license code from the thank-you page.',
+    codePlaceholder: 'SSP-PRO-XXXX-XXXX-XXXX',
+    activate: 'Activate',
+    activating: 'Activating...',
+    activated: 'Pro activated.',
+    cancel: 'Cancel'
+  },
   contact: { successTitle: 'Thank you for your message!', successDescription: 'We received your email and will get back to you as soon as we can.', sendAnother: 'Send another message', name: 'Name', namePlaceholder: 'Your name', email: 'Email', emailPlaceholder: 'you@email.com', subject: 'Subject', subjectPlaceholder: 'What is it about?', message: 'Message', messagePlaceholder: 'Write your message here...', sending: 'Sending...', send: 'Send Message', sendError: 'Something went wrong while sending.' },
   errors: { freeScan: 'An error occurred during the analysis.', premiumScan: 'The premium analysis failed.', scanFailed: 'Could not analyze the website.', payment: 'Could not connect to the payment server.', licenseInvalid: 'Your Pro license could not be verified. Try again or contact support.' }
 };
@@ -166,12 +184,12 @@ localized.es.history = { title: 'Escaneos anteriores', target: 'Objetivo', score
 localized.fr.history = { title: 'Analyses précédentes', target: 'Cible', score: 'Score', date: 'Date' };
 localized.ar.history = { title: 'الفحوصات السابقة', target: 'الهدف', score: 'النتيجة', date: 'التاريخ' };
 
-localized.tr.paywall = { title: 'Premium\nGerekli.', description: 'Sorunların neler olduğunu görebilirsiniz. Her sorun için eksiksiz çözüm ve hazır kod için Pro\'nun kilidini açın.', benefits: ['Sınırsız tarama', 'Eksiksiz kod çözümleri', 'Daha hızlı taramalar (daha kısa bekleme)'], buy: 'Hemen satın al – 99 kr', cancel: 'İptal' };
-localized.es.paywall = { title: 'Premium\nrequerido.', description: 'Puedes ver qué problemas se han encontrado. Desbloquea Pro para obtener la solución completa de cada problema, con el código exacto.', benefits: ['Escaneos ilimitados', 'Soluciones de código completas', 'Escaneos más rápidos (espera más corta)'], buy: 'Comprar ahora – 99 kr', cancel: 'Cancelar' };
-localized.fr.paywall = { title: 'Premium\nrequis.', description: 'Vous pouvez voir quels problèmes ont été détectés. Débloquez Pro pour obtenir la solution complète de chaque problème, avec le code exact.', benefits: ['Analyses illimitées', 'Solutions de code complètes', 'Analyses plus rapides (attente réduite)'], buy: 'Acheter – 99 kr', cancel: 'Annuler' };
-localized.ar.paywall = { title: 'يلزم\nPremium.', description: 'يمكنك الاطلاع على المشكلات التي تم اكتشافها. افتح Pro للحصول على الحل الكامل لكل مشكلة مع الكود الجاهز.', benefits: ['فحوصات غير محدودة', 'حلول كود كاملة', 'فحوصات أسرع (وقت انتظار أقصر)'], buy: 'اشترِ الآن – 99 kr', cancel: 'إلغاء' };
+localized.tr.paywall = { ...english.paywall, title: 'Pro\nGerekli.', description: 'Sorunları görebilirsiniz. Eksiksiz çözümler, hazır kod ve sınırsız premium taramalar için Pro kilidini açın.', benefits: ['Ömür boyu Pro erişimi', 'Eksiksiz kod çözümleri', 'Sınırsız premium tarama'], buy: 'Ko-fi üzerinden Pro satın al', codeTitle: 'Zaten Pro kodunuz var mı?', afterPurchase: 'Ko-fi ödemesinden sonra teşekkür sayfasındaki lisans kodunu yapıştırın.', activate: 'Etkinleştir', activating: 'Etkinleştiriliyor...', activated: 'Pro etkinleştirildi.', cancel: 'İptal' };
+localized.es.paywall = { ...english.paywall, title: 'Pro\nrequerido.', description: 'Puedes ver los problemas encontrados. Desbloquea Pro para obtener soluciones completas, código listo y escaneos premium ilimitados.', benefits: ['Acceso Pro de por vida', 'Soluciones de código completas', 'Escaneos premium ilimitados'], buy: 'Comprar Pro en Ko-fi', codeTitle: '¿Ya tienes un código Pro?', afterPurchase: 'Tras pagar en Ko-fi, pega el código de licencia de la página de agradecimiento.', activate: 'Activar', activating: 'Activando...', activated: 'Pro activado.', cancel: 'Cancelar' };
+localized.fr.paywall = { ...english.paywall, title: 'Pro\nrequis.', description: 'Vous pouvez voir les problèmes détectés. Débloquez Pro pour obtenir les solutions complètes, le code prêt à l’emploi et des analyses premium illimitées.', benefits: ['Accès Pro à vie', 'Solutions de code complètes', 'Analyses premium illimitées'], buy: 'Acheter Pro sur Ko-fi', codeTitle: 'Vous avez déjà un code Pro ?', afterPurchase: 'Après le paiement Ko-fi, collez le code de licence depuis la page de remerciement.', activate: 'Activer', activating: 'Activation...', activated: 'Pro activé.', cancel: 'Annuler' };
+localized.ar.paywall = { ...english.paywall, title: 'يلزم\nPro.', description: 'يمكنك رؤية المشكلات المكتشفة. افتح Pro للحصول على الحلول الكاملة والكود الجاهز وفحوصات Premium غير محدودة.', benefits: ['وصول Pro مدى الحياة', 'حلول كود كاملة', 'فحوصات Premium غير محدودة'], buy: 'شراء Pro عبر Ko-fi', codeTitle: 'هل لديك كود Pro؟', afterPurchase: 'بعد الدفع عبر Ko-fi، الصق كود الترخيص من صفحة الشكر.', activate: 'تفعيل', activating: 'جارٍ التفعيل...', activated: 'تم تفعيل Pro.', cancel: 'إلغاء' };
 
-localized.sv.paywall = { title: 'Premium\nkrävs.', description: 'Du ser vilka fel som hittats. Lås upp Pro för att få den kompletta lösningen till varje fel - med exakta kodfixar.', benefits: ['Obegränsade skanningar', 'Kompletta kodlösningar', 'Snabbare skanningar (kortare väntetid)'], buy: 'Köp nu – 99 kr', cancel: 'Avbryt' };
+localized.sv.paywall = { ...english.paywall, title: 'Pro\nkrävs.', description: 'Du ser vilka fel som hittats. Lås upp Pro för livstidsåtkomst till kompletta lösningar, exakta kodfixar och djupare skanningar.', benefits: ['Livstids Pro-åtkomst', 'Kompletta kodlösningar', 'Obegränsade premiumskanningar'], buy: 'Köp Pro på Ko-fi', codeTitle: 'Har du redan en Pro-kod?', afterPurchase: 'Efter Ko-fi-betalningen klistrar du in licenskoden från tack-sidan.', codePlaceholder: 'SSP-PRO-XXXX-XXXX-XXXX', activate: 'Aktivera', activating: 'Aktiverar...', activated: 'Pro är aktiverat.', cancel: 'Avbryt' };
 localized.sv.dashboard = { ...english.dashboard, solutionLocked: 'Lösning låst', lockedHint: 'Få exakta åtgärder med steg-för-steg-instruktioner och färdig kod.', unlockCta: 'Lås upp – 99 kr' };
 
 localized.tr.contact = { ...english.contact, successTitle: 'Mesajınız için teşekkürler!', successDescription: 'E-postanızı aldık ve en kısa sürede yanıtlayacağız.', sendAnother: 'Başka bir mesaj gönder', name: 'Ad', namePlaceholder: 'Adınız', email: 'E-posta', emailPlaceholder: 'siz@email.com', subject: 'Konu', subjectPlaceholder: 'Konu nedir?', message: 'Mesaj', messagePlaceholder: 'Mesajınızı buraya yazın...', sending: 'Gönderiliyor...', send: 'Mesaj gönder', sendError: 'Gönderim sırasında bir hata oluştu.' };

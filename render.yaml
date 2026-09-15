@@ -10,9 +10,11 @@ services:
         value: production
       - key: PORT
         value: 3000
-      - key: STRIPE_SECRET_KEY
-        sync: false
       - key: APP_URL
+        sync: false
+      - key: KOFI_PRO_URL
+        value: https://ko-fi.com/nrnworld
+      - key: SITE_SCANNER_PRO_LICENSE_HASHES
         sync: false
       - key: CORS_ORIGIN
         value: https://nrnworld.one,https://nrn-world.github.io,https://sitescannerpro-ten.vercel.app
