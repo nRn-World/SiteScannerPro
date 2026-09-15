@@ -22,10 +22,11 @@ interface DashboardProps {
   selectedCategory: string | null;
   setSelectedCategory: (category: string | null) => void;
   onUpgradeClick: () => void;
+  isPremium: boolean;
   t: TranslationSet;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, setSelectedCategory, onUpgradeClick, t }) => {
+const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, setSelectedCategory, onUpgradeClick, isPremium, t }) => {
   const filteredIssues = selectedCategory 
     ? result.issues.filter(issue => issue.category === selectedCategory)
     : result.issues;
@@ -135,7 +136,7 @@ const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, se
                     <span className="font-mono text-xs font-bold uppercase text-ink/50 block mb-2">{t.dashboard.recommendation}</span>
                     <p className="font-mono text-sm">{issue.recommendation}</p>
                   </div>
-                ) : (
+                ) : !isPremium ? (
                   <div className="p-4 md:p-5 bg-paper tech-border flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
                     <div className="flex items-start gap-3">
                       <Lock className="w-5 h-5 text-accent shrink-0 mt-0.5" />
@@ -151,7 +152,7 @@ const Dashboard: React.FC<DashboardProps> = ({ result, url, selectedCategory, se
                       {t.dashboard.unlockCta}
                     </button>
                   </div>
-                )}
+                ) : null}
                 {issue.codeSnippet && (
                   <CodeSnippetDisplay code={issue.codeSnippet} />
                 )}

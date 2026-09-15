@@ -97,15 +97,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isScanning, scanSteps]);
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url) return;
-
-    let targetUrl = url;
-    if (!/^https?:\/\//i.test(targetUrl)) {
-      targetUrl = 'https://' + targetUrl;
-    }
-
+  const runScan = async (targetUrl: string, activeToken: string | null = isPremium ? licenseToken : null) => {
     setIsScanning(true);
     setError(null);
     setResult(null);
@@ -114,7 +106,7 @@ export default function App() {
     try {
       let data: ScanResult;
 
-      if (!isPremium) {
+      if (!activeToken) {
         const res = await fetch(apiUrl('/api/scan-free'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -132,7 +124,7 @@ export default function App() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(licenseToken ? { 'x-license-token': licenseToken } : {})
+            'x-license-token': activeToken
           },
           body: JSON.stringify({ url: targetUrl })
         });
@@ -168,6 +160,14 @@ export default function App() {
     } finally {
       setIsScanning(false);
     }
+  };
+
+  const handleScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url) return;
+
+    const targetUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    await runScan(targetUrl);
   };
 
   const handleCheckout = async () => {
@@ -216,7 +216,12 @@ export default function App() {
       setIsPremium(true);
       setLicenseInput('');
       setLicenseMessage(t.paywall.activated ?? 'Pro activated.');
-      window.setTimeout(() => setShowPaywall(false), 650);
+      setShowPaywall(false);
+
+      if (result && url) {
+        const targetUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+        await runScan(targetUrl, data.token);
+      }
     } catch (err: any) {
       setLicenseMessage(err.message || t.errors.licenseInvalid);
     } finally {
@@ -280,6 +285,7 @@ export default function App() {
                   selectedCategory={selectedCategory} 
                   setSelectedCategory={setSelectedCategory}
                   onUpgradeClick={() => setShowPaywall(true)}
+                  isPremium={isPremium}
                   t={t}
                 />
               )}
