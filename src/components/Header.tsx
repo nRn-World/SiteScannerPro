@@ -28,7 +28,15 @@ const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div 
           className="flex items-center gap-4 cursor-pointer"
-          onClick={() => setView('home')}
+          onClick={() => {
+            // Full page restart (same idea as Ctrl+F5): clear SPA state and reload.
+            window.location.replace(
+              `${window.location.origin}${window.location.pathname}`
+            );
+          }}
+          role="link"
+          aria-label="SiteScanner Pro"
+          title="SiteScanner Pro"
         >
           <div className="w-10 h-10 bg-ink text-paper flex items-center justify-center tech-border">
             <Activity className="w-6 h-6" />
