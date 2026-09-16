@@ -30,8 +30,8 @@ const CodeSnippetDisplay: React.FC<CodeSnippetDisplayProps> = ({ code, codeExamp
           {copied ? copiedLabel : copyLabel}
         </button>
       </div>
-      <pre className="bg-ink text-paper p-3 text-xs overflow-x-auto tech-border font-mono">
-        <code>{code}</code>
+      <pre className="bg-ink text-paper p-3 text-xs tech-border font-mono max-w-full overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+        <code className="block whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{code}</code>
       </pre>
     </div>
   );
