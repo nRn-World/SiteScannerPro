@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ScannerService } from '../services/scanner.service';
 import { ScanResult } from '../rules/types';
+import { VipService } from '../services/vip.service';
 
 const PRIVATE_HOST_PATTERN = /^(localhost$|.*\.localhost$|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0$|\[::1?\]?$|::1$)/;
 function validateTargetUrl(rawUrl: string): string | null {
@@ -25,6 +26,7 @@ function validateTargetUrl(rawUrl: string): string | null {
 
 export class ScanController {
   private scannerService: ScannerService;
+  private vipService = new VipService();
 
   constructor() {
     this.scannerService = new ScannerService();
@@ -38,7 +40,11 @@ export class ScanController {
     const startTime = Date.now();
 
     const response = await fetch(targetUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SiteScannerBot/1.0)' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; SiteScannerBot/1.0)',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      },
       signal: AbortSignal.timeout(20000),
       redirect: 'follow'
     });
@@ -49,10 +55,11 @@ export class ScanController {
 
     const html = await response.text();
     const loadTime = Date.now() - startTime;
+    const finalUrl = response.url || targetUrl;
 
     const context = {
       loadTime,
-      isHttps: targetUrl.startsWith('https://'),
+      isHttps: finalUrl.startsWith('https://'),
       headers: response.headers as unknown as Headers
     };
 
@@ -107,6 +114,7 @@ export class ScanController {
    * Pro-djupläge: samma lokala motor men med fullständiga lösningar
    * (rekommendationer + kodexempel) med kortare väntetid. Kräver giltig
    * licens-token via requireLicense-middleware.
+   * VIP: förbrukas först efter lyckad skanning så nätverksfel inte bränner länken.
    */
   public scanPremium = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -122,6 +130,20 @@ export class ScanController {
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       const result = await this.fetchAndScan(targetUrl);
+
+      const license = req.license;
+      let vipConsumed = false;
+      if ((license?.kind === 'vip' || license?.source === 'vip') && license.vipId) {
+        vipConsumed = this.vipService.consumeScan(license.vipId);
+        if (!vipConsumed) {
+          res.status(403).json({ error: 'VIP-länken är redan använd.' });
+          return;
+        }
+      }
+
+      if (vipConsumed) {
+        res.setHeader('X-Vip-Consumed', '1');
+      }
       res.json(result);
     } catch (error: any) {
       console.error('Premium scan error:', error);

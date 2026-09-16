@@ -52,4 +52,27 @@ export class PaymentController {
   };
 
   public verifySession = this.verifyLicense;
+
+  /**
+   * Lokal Pro-aktivering utan köpkod.
+   * Tillåts endast utanför production (npm run dev / localhost).
+   */
+  public activateLocalPro = async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        res.status(404).json({ error: 'Not found' });
+        return;
+      }
+
+      const activationToken = this.licenseService.activateLocalDevLicense();
+      res.json({
+        licensed: true,
+        token: activationToken,
+        source: 'local-dev'
+      });
+    } catch (error: any) {
+      console.error('Local Pro activate error:', error);
+      res.status(500).json({ error: 'Kunde inte aktivera lokal Pro.' });
+    }
+  };
 }

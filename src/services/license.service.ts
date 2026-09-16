@@ -3,13 +3,17 @@ import crypto from 'crypto';
 export interface LicenseRecord {
   sessionId: string;
   createdAt: string;
-  source: 'ko-fi';
+  source: 'ko-fi' | 'vip' | 'local';
+  vipId?: string;
+  kind?: 'pro' | 'vip' | 'local';
 }
 
 interface ActivationPayload {
   v: 1;
   id: string;
   issuedAt: string;
+  kind?: 'pro' | 'vip' | 'local';
+  vipId?: string;
 }
 
 const LICENSE_PREFIX = 'SSPA1';
@@ -40,7 +44,33 @@ function normalizeLicenseKey(key: string): string {
   return key.trim().toUpperCase().replace(/\s+/g, '');
 }
 
+function encodeToken(payload: ActivationPayload): string {
+  const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  return `${LICENSE_PREFIX}.${encodedPayload}.${sign(encodedPayload)}`;
+}
+
 export class LicenseService {
+  private issueActivationToken(kind: 'pro' | 'local' = 'pro'): string {
+    const payload: ActivationPayload = {
+      v: 1,
+      id: crypto.randomUUID(),
+      issuedAt: new Date().toISOString(),
+      kind
+    };
+    return encodeToken(payload);
+  }
+
+  public issueVipToken(vipId: string): string {
+    const payload: ActivationPayload = {
+      v: 1,
+      id: crypto.randomUUID(),
+      issuedAt: new Date().toISOString(),
+      kind: 'vip',
+      vipId
+    };
+    return encodeToken(payload);
+  }
+
   public activateLicense(licenseKey: string): string | null {
     const normalizedKey = normalizeLicenseKey(licenseKey);
     const expectedHash = (process.env.KOFI_LICENSE_KEY_HASH || '').trim().toLowerCase();
@@ -56,13 +86,12 @@ export class LicenseService {
       return null;
     }
 
-    const payload: ActivationPayload = {
-      v: 1,
-      id: crypto.randomUUID(),
-      issuedAt: new Date().toISOString()
-    };
-    const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
-    return `${LICENSE_PREFIX}.${encodedPayload}.${sign(encodedPayload)}`;
+    return this.issueActivationToken('pro');
+  }
+
+  /** Endast för lokal utveckling. Ger Pro utan köpkod. */
+  public activateLocalDevLicense(): string {
+    return this.issueActivationToken('local');
   }
 
   public async validateLicense(token: string): Promise<LicenseRecord | null> {
@@ -93,10 +122,20 @@ export class LicenseService {
         return null;
       }
 
+      const kind = payload.kind ?? 'pro';
+      if (kind === 'vip' && !payload.vipId) {
+        return null;
+      }
+
+      const source: LicenseRecord['source'] =
+        kind === 'vip' ? 'vip' : kind === 'local' ? 'local' : 'ko-fi';
+
       return {
         sessionId: token.trim(),
         createdAt: payload.issuedAt,
-        source: 'ko-fi'
+        source,
+        kind,
+        ...(payload.vipId ? { vipId: payload.vipId } : {})
       };
     } catch {
       return null;

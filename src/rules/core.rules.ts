@@ -1,6 +1,32 @@
 import * as cheerio from 'cheerio';
 import { ScannerRule, ScannerIssue } from './types';
 
+function hasMeaningfulText(value: string | undefined | null): boolean {
+  return Boolean(value && value.trim().length > 0);
+}
+
+function cspBlocksFraming(csp: string | null): boolean {
+  if (!csp) return false;
+  const match = csp.match(/(?:^|;)\s*frame-ancestors\s+([^;]+)/i);
+  if (!match) return false;
+  const value = match[1].trim().toLowerCase();
+  return value !== '*' && value.length > 0;
+}
+
+function isRenderBlockingScript($: cheerio.CheerioAPI, el: any): boolean {
+  const node = $(el);
+  const src = node.attr('src');
+  if (!src) return false;
+
+  const type = (node.attr('type') || 'text/javascript').trim().toLowerCase();
+  // ES modules are deferred by default and are not classic render-blocking scripts.
+  if (type === 'module' || type === 'importmap') return false;
+  if (type && type !== 'text/javascript' && type !== 'application/javascript') return false;
+
+  if (node.is('[defer], [async], [nomodule]')) return false;
+  return true;
+}
+
 export const SEO_RULES: ScannerRule[] = [
   {
     name: 'Title Tag Check',
@@ -8,7 +34,8 @@ export const SEO_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      if (!$('title').text()) {
+      const titleText = $('head title').first().text();
+      if (!hasMeaningfulText(titleText)) {
         issues.push({
           id: 'seo.missing-title',
           category: 'SEO',
@@ -26,7 +53,8 @@ export const SEO_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      if (!$('meta[name="description"]').attr('content')) {
+      const content = $('head meta[name="description" i]').attr('content');
+      if (!hasMeaningfulText(content)) {
         issues.push({
           id: 'seo.missing-meta-description',
           category: 'SEO',
@@ -44,7 +72,10 @@ export const SEO_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      if ($('h1').length === 0) {
+      const meaningfulH1 = $('h1')
+        .toArray()
+        .some((el) => hasMeaningfulText($(el).text()));
+      if (!meaningfulH1) {
         issues.push({
           id: 'seo.missing-h1',
           category: 'SEO',
@@ -109,7 +140,11 @@ export const SECURITY_RULES: ScannerRule[] = [
     category: 'Security',
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
-      if (!context.headers.get('strict-transport-security')) {
+      // HSTS applies only to HTTPS responses.
+      if (!context.isHttps) return issues;
+
+      const hsts = context.headers.get('strict-transport-security');
+      if (!hasMeaningfulText(hsts)) {
         issues.push({
           id: 'security.missing-hsts',
           category: 'Security',
@@ -126,9 +161,10 @@ export const SECURITY_RULES: ScannerRule[] = [
     category: 'Security',
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
-      const hasXFrame = context.headers.get('x-frame-options');
-      const hasCSP = context.headers.get('content-security-policy');
-      if (!hasXFrame && !hasCSP) {
+      const xFrame = context.headers.get('x-frame-options');
+      const csp = context.headers.get('content-security-policy');
+      const hasFrameProtection = hasMeaningfulText(xFrame) || cspBlocksFraming(csp);
+      if (!hasFrameProtection) {
         issues.push({
           id: 'security.clickjacking-risk',
           category: 'Security',
@@ -149,12 +185,15 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      const images = $('img');
       let imagesWithoutAlt = 0;
       let firstImgWithoutAlt: string | null = null;
 
-      images.each((_: number, img) => {
-        if (!$(img).attr('alt')) {
+      $('img').each((_: number, img) => {
+        const node = $(img);
+        // aria-hidden images are intentionally ignored by assistive tech.
+        if ((node.attr('aria-hidden') || '').toLowerCase() === 'true') return;
+        // Missing alt attribute is a real WCAG failure. alt="" is valid for decorative images.
+        if (node.attr('alt') === undefined) {
           imagesWithoutAlt++;
           if (!firstImgWithoutAlt) firstImgWithoutAlt = $.html(img);
         }
@@ -179,7 +218,8 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      if (!$('html').attr('lang')) {
+      const lang = $('html').attr('lang') || $('html').attr('xml:lang');
+      if (!hasMeaningfulText(lang)) {
         issues.push({
           id: 'accessibility.missing-language',
           category: 'Accessibility',
@@ -200,16 +240,17 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      const inlineStyles = $('[style]').length;
-      if (inlineStyles > 0) {
-        const firstInlineStyle = $.html($('[style]').first());
+      const inlineNodes = $('[style]')
+        .toArray()
+        .filter((el) => hasMeaningfulText($(el).attr('style')));
+      if (inlineNodes.length > 0) {
         issues.push({
           id: 'code.inline-styles',
           category: 'Code',
           severity: 'Low',
-          values: { count: inlineStyles },
+          values: { count: inlineNodes.length },
           recommendationAvailable: true,
-          codeSnippet: firstInlineStyle
+          codeSnippet: $.html(inlineNodes[0])
         });
       }
       return issues;
@@ -221,15 +262,14 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      const deprecatedTags = $('font, center, strike, marquee').length;
-      if (deprecatedTags > 0) {
-        const firstDeprecated = $.html($('font, center, strike, marquee').first());
+      const deprecated = $('font, center, strike, marquee');
+      if (deprecated.length > 0) {
         issues.push({
           id: 'code.deprecated-tags',
           category: 'Code',
           severity: 'Medium',
           recommendationAvailable: true,
-          codeSnippet: firstDeprecated
+          codeSnippet: $.html(deprecated.first())
         });
       }
       return issues;
@@ -241,16 +281,18 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
     run: async (html) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
-      const scriptsWithoutDefer = $('script[src]:not([defer]):not([async])').length;
-      if (scriptsWithoutDefer > 0) {
-        const firstScript = $.html($('script[src]:not([defer]):not([async])').first());
+      const blocking = $('script[src]')
+        .toArray()
+        .filter((el) => isRenderBlockingScript($, el));
+
+      if (blocking.length > 0) {
         issues.push({
           id: 'code.render-blocking-js',
           category: 'Code',
           severity: 'Medium',
-          values: { count: scriptsWithoutDefer },
+          values: { count: blocking.length },
           recommendationAvailable: true,
-          codeSnippet: firstScript
+          codeSnippet: $.html(blocking[0])
         });
       }
       return issues;
