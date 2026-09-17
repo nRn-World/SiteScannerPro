@@ -31,6 +31,7 @@ async function startServer() {
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-license-token');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Vip-Consumed');
     if (req.method === 'OPTIONS') {
       res.sendStatus(204);
       return;

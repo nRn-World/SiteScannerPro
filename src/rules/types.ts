@@ -51,6 +51,26 @@ export interface AgentFix {
   do_not: string[];
 }
 
+/** Legacy issue IDs used by report-translations AI JSON wrapping */
+export const ISSUE_IDS = [
+  'seo.missing-title',
+  'seo.missing-meta-description',
+  'seo.missing-h1',
+  'performance.slow-response-high',
+  'performance.slow-response-medium',
+  'security.insecure-http',
+  'security.missing-hsts',
+  'security.clickjacking-risk',
+  'accessibility.missing-alt-text',
+  'accessibility.missing-language',
+  'code.inline-styles',
+  'code.deprecated-tags',
+  'code.render-blocking-js'
+] as const;
+
+export type IssueId = (typeof ISSUE_IDS)[number];
+export type IssueValues = Partial<Record<'loadTime' | 'count', number>>;
+
 export interface ScannerIssue {
   category: string;
   severity: Severity;
@@ -74,7 +94,15 @@ export interface ScannerIssue {
    * Ge hela objektet till agenten.
    */
   agentFix?: AgentFix;
+  /** Legacy fields (ID-baserad rapportlokalisering) */
+  id?: IssueId;
+  values?: IssueValues;
+  recommendationAvailable?: true;
+  codeSnippetId?: IssueId;
+  descriptionTeaser?: true;
 }
+
+export type LocalizedScannerIssue = ScannerIssue;
 
 export interface ScanScreenshots {
   desktop?: string;
@@ -133,6 +161,8 @@ export interface ScanResult {
   screenshots?: ScanScreenshots;
   analysis?: AnalysisMeta;
 }
+
+export type LocalizedScanResult = ScanResult;
 
 export interface ScannerContext {
   url: string;

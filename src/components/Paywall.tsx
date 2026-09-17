@@ -24,6 +24,14 @@ const Paywall: React.FC<PaywallProps> = ({
   isActivatingLicense,
   t
 }) => {
+  const paywallText = {
+    codeTitle: t.paywall.codeTitle ?? 'Already have a Pro code?',
+    afterPurchase: t.paywall.afterPurchase ?? 'After Ko-fi payment, paste the license code from the thank-you page.',
+    codePlaceholder: t.paywall.codePlaceholder ?? 'SSP-PRO-XXXX-XXXX-XXXX',
+    activate: t.paywall.activate ?? 'Activate',
+    activating: t.paywall.activating ?? 'Activating...'
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-paper/90 backdrop-blur-sm">
       <motion.div
@@ -71,10 +79,10 @@ const Paywall: React.FC<PaywallProps> = ({
             </div>
             <div>
               <h4 className="font-display font-bold uppercase tracking-wide">
-                {t.paywall.codeTitle}
+                {paywallText.codeTitle}
               </h4>
               <p className="font-mono text-xs text-ink/60 mt-1 leading-relaxed">
-                {t.paywall.afterPurchase}
+                {paywallText.afterPurchase}
               </p>
             </div>
           </div>
@@ -89,7 +97,7 @@ const Paywall: React.FC<PaywallProps> = ({
             <input
               value={licenseInput}
               onChange={(event) => setLicenseInput(event.target.value.toUpperCase())}
-              placeholder={t.paywall.codePlaceholder}
+              placeholder={paywallText.codePlaceholder}
               autoComplete="off"
               spellCheck={false}
               className="flex-1 bg-white tech-border px-4 py-3 font-mono text-sm uppercase outline-none focus:border-accent"
@@ -100,7 +108,7 @@ const Paywall: React.FC<PaywallProps> = ({
               className="bg-ink text-paper px-5 py-3 font-display font-bold uppercase tracking-widest hover:bg-accent transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Lock className="w-4 h-4" />
-              {isActivatingLicense ? t.paywall.activating : t.paywall.activate}
+              {isActivatingLicense ? paywallText.activating : paywallText.activate}
             </button>
           </form>
 

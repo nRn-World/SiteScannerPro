@@ -7,6 +7,7 @@ import { parseScanLanguage } from '../services/axeLocale.service';
 import { isDevServer } from '../utils/devMode.server';
 import type { Language } from '../i18n/translations';
 import { apiError } from '../i18n/scanLocale';
+import { VipService } from '../services/vip.service';
 
 const PRIVATE_HOST_PATTERN = /^(localhost$|.*\.localhost$|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0$|\[::1?\]?$|::1$)/;
 const DESCRIPTION_TEASER_LENGTH = 90;
@@ -122,6 +123,7 @@ async function fetchFallbackHtml(targetUrl: string): Promise<{
 
 export class ScanController {
   private scannerService: ScannerService;
+  private vipService = new VipService();
 
   constructor() {
     this.scannerService = new ScannerService();
@@ -258,6 +260,22 @@ export class ScanController {
 
       const result = await this.fetchAndScan(targetUrl, true, language);
       await ensureMinDuration(startedAt, 'premium');
+
+      // VIP: förbrukas först efter lyckad skanning så nätverksfel inte bränner länken.
+      const license = req.license;
+      let vipConsumed = false;
+      if ((license?.kind === 'vip' || license?.source === 'vip') && license.vipId) {
+        vipConsumed = this.vipService.consumeScan(license.vipId);
+        if (!vipConsumed) {
+          res.status(403).json({ error: 'VIP-länken är redan använd.' });
+          return;
+        }
+      }
+
+      if (vipConsumed) {
+        res.setHeader('X-Vip-Consumed', '1');
+      }
+
       res.json(result);
     } catch (error: any) {
       console.error('Premium scan error:', error);

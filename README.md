@@ -52,7 +52,7 @@ The analysis engine is a deterministic rule-based scanner: it fetches the page, 
 | Unlimited scans | — | ✓ |
 | Faster scans (shorter wait time) | — | ✓ |
 
-Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription. Payments are handled through [Ko-fi](https://ko-fi.com/nrnworld); after checkout, the buyer receives a lifetime Pro code to paste into SiteScanner.
+Premium is a **one-time purchase (€10.99, lifetime access)** — no subscription. Purchase [SiteScanner Pro on Ko-fi](https://ko-fi.com/s/b525e21531). The private lifetime code is shown only in the product's post-purchase thank-you message and is activated in SiteScanner.
 
 ## Features
 
@@ -102,8 +102,9 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-KOFI_PRO_URL="https://ko-fi.com/nrnworld"
-SITE_SCANNER_PRO_LICENSE_HASHES="..." # Generate with: npm run license:generate
+KOFI_PRO_URL="https://ko-fi.com/s/b525e21531"
+KOFI_LICENSE_KEY_HASH=""              # SHA-256 of the private Ko-fi code
+LICENSE_SIGNING_SECRET=""             # Private random secret, minimum 32 characters
 APP_URL="http://localhost:3000"
 EMAIL_USER="..."                     # Optional: Gmail for contact form
 EMAIL_PASS="..."                     # Optional: Gmail app password
@@ -115,7 +116,7 @@ CONTACT_RECEIVER_EMAIL="..."         # Optional: Where contact emails are sent
 npm run dev
 ```
 
-Open http://localhost:3000. For testing Pro, paste a Ko-fi license code in the paywall dialog.
+Open http://localhost:3000. License activation requires the private environment variables above.
 
 ### Useful scripts
 
@@ -125,7 +126,6 @@ Open http://localhost:3000. For testing Pro, paste a Ko-fi license code in the p
 | `npm run build` | Build frontend to `dist/` |
 | `npm start` | Serve production build |
 | `npm run lint` | Type-check with TypeScript |
-| `npm run license:generate` | Generate a new Ko-fi Pro code + server hash |
 
 ## Deployment
 
@@ -134,7 +134,7 @@ This project deploys automatically on push to `main`:
 - **Frontend** → GitHub Pages via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) (configured with `VITE_PUBLIC_BASE` and `VITE_API_BASE`)
 - **Backend** → Render via [`render.yaml`](render.yaml) Blueprint (Node web service)
 
-Environment variables used in production: `KOFI_PRO_URL`, `SITE_SCANNER_PRO_LICENSE_HASHES`, `APP_URL`, `CORS_ORIGIN`.
+Environment variables used in production: `KOFI_PRO_URL`, `KOFI_LICENSE_KEY_HASH`, `LICENSE_SIGNING_SECRET`, `APP_URL`, `CORS_ORIGIN`.
 
 ## Important information
 
@@ -150,6 +150,6 @@ SiteScanner Pro is released under the Creative Commons Attribution-NonCommercial
 
 ---
 
-☕ **Support development**: [Buy me a coffee 💜](https://ko-fi.com/nrnworld)
+☕ **Get lifetime Pro access**: [Buy SiteScanner Pro on Ko-fi 💜](https://ko-fi.com/s/b525e21531)
 
 Created by ❤️ © nRn World

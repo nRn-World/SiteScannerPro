@@ -1,8 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { LicenseService } from '../services/license.service';
+import { LicenseRecord, LicenseService } from '../services/license.service';
+import { VipService } from '../services/vip.service';
 import { isDevServer, isDevLicenseToken } from '../utils/devMode.server';
 
 const licenseService = new LicenseService();
+const vipService = new VipService();
+
+declare global {
+  namespace Express {
+    interface Request {
+      license?: LicenseRecord;
+    }
+  }
+}
 
 export function requireLicense(req: Request, res: Response, next: NextFunction): void {
   if (isDevServer()) {
@@ -24,6 +34,16 @@ export function requireLicense(req: Request, res: Response, next: NextFunction):
         res.status(403).json({ error: 'Giltig Pro-licens krävs.' });
         return;
       }
+
+      if (license.kind === 'vip' || license.source === 'vip') {
+        const vipId = license.vipId;
+        if (!vipId || !vipService.isAvailable(vipId)) {
+          res.status(403).json({ error: 'VIP-länken är redan använd.' });
+          return;
+        }
+      }
+
+      req.license = license;
       next();
     })
     .catch(() => {

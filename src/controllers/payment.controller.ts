@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { LicenseService } from '../services/license.service';
 
-const DEFAULT_KOFI_PRO_URL = 'https://ko-fi.com/nrnworld';
+const DEFAULT_KOFI_PRO_URL = 'https://ko-fi.com/s/b525e21531';
 
 export class PaymentController {
   private licenseService: LicenseService;
@@ -34,17 +34,16 @@ export class PaymentController {
         return;
       }
 
-      const license = await this.licenseService.validateLicense(licenseKey);
-      if (!license) {
+      const activationToken = this.licenseService.activateLicense(licenseKey);
+      if (!activationToken) {
         res.status(403).json({ error: 'Ogiltig Pro-licenskod.' });
         return;
       }
 
       res.json({
         licensed: true,
-        token: license.sessionId,
-        createdAt: license.createdAt,
-        source: license.source ?? 'ko-fi'
+        token: activationToken,
+        source: 'ko-fi'
       });
     } catch (error: any) {
       console.error('Verify license error:', error);
@@ -52,6 +51,28 @@ export class PaymentController {
     }
   };
 
-  // Bakåtkompatibel route för gamla frontend-byggen. Nya flödet använder verifyLicense.
   public verifySession = this.verifyLicense;
+
+  /**
+   * Lokal Pro-aktivering utan köpkod.
+   * Tillåts endast utanför production (npm run dev / localhost).
+   */
+  public activateLocalPro = async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        res.status(404).json({ error: 'Not found' });
+        return;
+      }
+
+      const activationToken = this.licenseService.activateLocalDevLicense();
+      res.json({
+        licensed: true,
+        token: activationToken,
+        source: 'local-dev'
+      });
+    } catch (error: any) {
+      console.error('Local Pro activate error:', error);
+      res.status(500).json({ error: 'Kunde inte aktivera lokal Pro.' });
+    }
+  };
 }

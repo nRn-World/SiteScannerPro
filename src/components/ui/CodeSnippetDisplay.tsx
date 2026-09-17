@@ -7,9 +7,21 @@ interface CodeSnippetDisplayProps {
   t?: TranslationSet;
   label?: string;
   languageHint?: string;
+  /** Bakåtkompatibla props från äldre UI */
+  codeExampleLabel?: string;
+  copyLabel?: string;
+  copiedLabel?: string;
 }
 
-const CodeSnippetDisplay: React.FC<CodeSnippetDisplayProps> = ({ code, t, label: labelProp, languageHint }) => {
+const CodeSnippetDisplay: React.FC<CodeSnippetDisplayProps> = ({
+  code,
+  t,
+  label: labelProp,
+  languageHint,
+  codeExampleLabel,
+  copyLabel: copyLabelProp,
+  copiedLabel: copiedLabelProp
+}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -18,9 +30,9 @@ const CodeSnippetDisplay: React.FC<CodeSnippetDisplayProps> = ({ code, t, label:
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const label = labelProp ?? t?.dashboard.codeExample ?? 'Code example';
-  const copyLabel = t?.dashboard.copy ?? 'Copy';
-  const copiedLabel = t?.dashboard.copied ?? 'Copied!';
+  const label = labelProp ?? codeExampleLabel ?? t?.dashboard.codeExample ?? 'Code example';
+  const copyLabel = copyLabelProp ?? t?.dashboard.copy ?? 'Copy';
+  const copiedLabel = copiedLabelProp ?? t?.dashboard.copied ?? 'Copied!';
 
   return (
     <div>
@@ -32,13 +44,14 @@ const CodeSnippetDisplay: React.FC<CodeSnippetDisplayProps> = ({ code, t, label:
           type="button"
           onClick={handleCopy}
           className="text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1 text-xs font-medium"
+          title={copyLabel}
         >
           {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
           {copied ? copiedLabel : copyLabel}
         </button>
       </div>
-      <pre className="bg-[#282828] text-[#e8eaed] p-4 text-xs overflow-x-auto rounded-lg font-mono leading-relaxed max-h-96 overflow-y-auto">
-        <code>{code}</code>
+      <pre className="bg-[#282828] text-[#e8eaed] p-4 text-xs overflow-x-auto rounded-lg font-mono leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+        <code className="block whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{code}</code>
       </pre>
     </div>
   );

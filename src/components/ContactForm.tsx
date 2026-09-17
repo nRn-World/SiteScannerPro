@@ -12,12 +12,10 @@ interface ContactFormProps {
 const ContactForm: React.FC<ContactFormProps> = ({ onSuccess, onError, t }) => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
-    setErrorMessage('');
 
     try {
       const response = await fetch('/api/contact', {
@@ -26,19 +24,18 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess, onError, t }) => {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || t.contact.sendError);
+        throw new Error(t.contact.sendError);
       }
 
       setStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' });
       onSuccess();
-    } catch (error: any) {
+    } catch {
       setStatus('error');
-      setErrorMessage(error.message);
-      onError(error.message);
+      onError(t.contact.sendError);
     }
   };
 
@@ -127,7 +124,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess, onError, t }) => {
           {status === 'error' && (
             <div className="p-4 bg-red-50 border border-red-200 text-red-600 font-mono text-sm flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 shrink-0" />
-              <p>{errorMessage}</p>
+              <p>{t.contact.sendError}</p>
             </div >
           )}
 
