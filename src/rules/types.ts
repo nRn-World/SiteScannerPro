@@ -33,7 +33,8 @@ export interface AgentCodeChange {
 export interface AgentFix {
   schema_version: '1.0';
   role: 'coding_agent';
-  language: 'sv' | 'en';
+  /** Always English — agent-fix JSON is language-stable for coding agents. */
+  language: 'en';
   issue: {
     title: string;
     category: string;

@@ -1,5 +1,4 @@
 import type { ScannerIssue, Severity, AgentFix } from '../rules/types';
-import type { Language } from '../i18n/translations';
 
 export type { AgentFix };
 
@@ -24,65 +23,66 @@ function extractCount(text: string): number | null {
 
 type FixBuilder = (issue: ScannerIssue) => Partial<Pick<AgentFix, 'goal' | 'steps' | 'code_changes' | 'acceptance_criteria' | 'do_not'>>;
 
+/** All agent-fix copy is English so coding agents get a stable language. */
 const BUILDERS: Array<{ match: RegExp; build: FixBuilder }> = [
   {
     match: /långsam svarstid|slow response time|långsam ttfb|slow ttfb|ttfb can be improved|förbättringsbar ttfb/i,
     build: (issue) => {
       const ms = extractMs(issue.description) ?? 0;
       return {
-        goal: `Sänk serverns svarstid (TTFB/load) till under 800 ms (nu ~${ms || '?'} ms).`,
+        goal: `Reduce server response time (TTFB/load) to under 800 ms (currently ~${ms || '?'} ms).`,
         steps: [
           {
             order: 1,
             action: 'investigate',
             target: 'server/network',
-            instruction: 'Mät TTFB med curl: curl -o /dev/null -s -w "ttfb:%{time_starttransfer}\\n" URL',
-            verify: 'Bekräfta aktuell TTFB i ms'
+            instruction: 'Measure TTFB with curl: curl -o /dev/null -s -w "ttfb:%{time_starttransfer}\\n" URL',
+            verify: 'Confirm current TTFB in ms'
           },
           {
             order: 2,
             action: 'configure',
             target: 'cache/CDN',
-            instruction: 'Aktivera HTTP-cache (Cache-Control) för statiska assets och HTML där det är säkert. Koppla CDN (Cloudflare/Fastly/Vercel Edge) framför origin.',
-            verify: 'Cache-Control syns i response headers för statiska filer'
+            instruction: 'Enable HTTP cache (Cache-Control) for static assets and HTML where safe. Put a CDN (Cloudflare/Fastly/Vercel Edge) in front of origin.',
+            verify: 'Cache-Control appears in response headers for static files'
           },
           {
             order: 3,
             action: 'optimize',
             target: 'backend',
-            instruction: 'Optimera långsamma DB-frågor, undvik N+1, lägg till serverside-caching (Redis/in-memory) för tunga endpoints, och se till att SSR/SSG inte blockerar onödigt.',
-            verify: 'TTFB < 800 ms på upprepade anrop'
+            instruction: 'Optimize slow DB queries, avoid N+1, add server-side caching (Redis/in-memory) for heavy endpoints, and ensure SSR/SSG is not blocking unnecessarily.',
+            verify: 'TTFB < 800 ms on repeated requests'
           },
           {
             order: 4,
             action: 'verify',
             target: 'site',
-            instruction: 'Kör om SiteScanner / PageSpeed och jämför TTFB före/efter.',
-            verify: 'TTFB under 800 ms och "Långsam svarstid"/"Långsam TTFB" försvinner'
+            instruction: 'Re-run SiteScanner / PageSpeed and compare TTFB before/after.',
+            verify: 'TTFB under 800 ms and Slow response / Slow TTFB issues are gone'
           }
         ],
         code_changes: [
           {
             type: 'config',
             language: 'nginx',
-            file_hint: 'nginx.conf eller host-plattformens cache-inställningar',
+            file_hint: 'nginx.conf or host platform cache settings',
             after: 'location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff2)$ {\n  expires 30d;\n  add_header Cache-Control "public, max-age=2592000, immutable";\n}',
-            notes: 'Anpassa till er webbserver (Nginx, Apache, Vercel headers, Cloudflare Cache Rules).'
+            notes: 'Adapt to your web server (Nginx, Apache, Vercel headers, Cloudflare Cache Rules).'
           },
           {
             type: 'config',
             language: 'http',
-            file_hint: 'response headers för HTML om cache är OK',
+            file_hint: 'response headers for HTML if caching is OK',
             after: 'Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=86400'
           }
         ],
         acceptance_criteria: [
-          `TTFB under 800 ms (tidigare ~${ms || 'hög'} ms)`,
-          'Inga High-severity "Långsam svarstid" / "Långsam TTFB" kvar i ny skanning'
+          `TTFB under 800 ms (was ~${ms || 'high'} ms)`,
+          'No High-severity "Slow response time" / "Slow TTFB" left in a new scan'
         ],
         do_not: [
-          'Cacha personliga/auth-sidor offentligt',
-          'Dölj problemet genom att bara höja timeouts'
+          'Cache personalized/auth pages publicly',
+          'Hide the problem by only raising timeouts'
         ]
       };
     }
@@ -92,227 +92,227 @@ const BUILDERS: Array<{ match: RegExp; build: FixBuilder }> = [
     build: (issue) => {
       const nodes = extractCount(issue.description) ?? 0;
       return {
-        goal: `Minska DOM-storleken till under 1500 noder (nu ${nodes || '?'}).`,
+        goal: `Reduce DOM size to under 1500 nodes (currently ${nodes || '?'}).`,
         steps: [
           {
             order: 1,
             action: 'investigate',
             target: 'DOM',
-            instruction: 'Öppna DevTools → Elements och identifiera djupa wrapper-divs, upprepade listor och dolda sektioner som fortfarande renderas.',
-            verify: `document.querySelectorAll('*').length ska ner från ${nodes || 'nuvarande'} mot < 1500`
+            instruction: 'Open DevTools → Elements and identify deep wrapper divs, repeated lists, and hidden sections that still render.',
+            verify: `document.querySelectorAll('*').length should drop from ${nodes || 'current'} toward < 1500`
           },
           {
             order: 2,
             action: 'replace',
-            target: 'listor/grids',
-            instruction: 'Virtualisera långa listor (t.ex. react-window / tanstack-virtual) så att bara synliga rader finns i DOM.',
-            verify: 'Långa listor renderar bara synliga items'
+            target: 'lists/grids',
+            instruction: 'Virtualize long lists (e.g. react-window / tanstack-virtual) so only visible rows exist in the DOM.',
+            verify: 'Long lists render only visible items'
           },
           {
             order: 3,
             action: 'remove',
             target: 'markup',
-            instruction: 'Ta bort onödiga wrapper-element (<div> i <div> i <div>) och undvik att mounta dolda tabs/modals tills de öppnas.',
-            verify: 'DOM-nodantal < 1500 på startsidan'
+            instruction: 'Remove unnecessary wrapper elements (<div> in <div> in <div>) and avoid mounting hidden tabs/modals until opened.',
+            verify: 'DOM node count < 1500 on the home page'
           }
         ],
         code_changes: [
           {
             type: 'replace',
             language: 'tsx',
-            file_hint: 'Komponenter som renderar långa listor',
+            file_hint: 'Components that render long lists',
             before: '{items.map(item => <Row key={item.id} ... />)}',
             after: '<VirtualList items={items} rowHeight={48} renderRow={(item) => <Row ... />} />',
-            notes: 'Använd projektets befintliga virtualiseringsbibliotek om det finns.'
+            notes: 'Use the project’s existing virtualization library if one exists.'
           }
         ],
         acceptance_criteria: [
-          'DOM-noder < 1500 på den skannade sidan',
-          'Inga visuella regressioner i listor/navigation'
+          'DOM nodes < 1500 on the scanned page',
+          'No visual regressions in lists/navigation'
         ],
-        do_not: ['Göm innehåll med display:none utan att ta bort det från DOM om målet är nodminskning']
+        do_not: ['Hide content with display:none without removing it from the DOM if the goal is node reduction']
       };
     }
   },
   {
     match: /bilder utan dimensioner|images without dimensions|cls-risk|cls risk/i,
     build: (issue) => ({
-      goal: 'Ge alla <img> explicita width/height (eller CSS aspect-ratio) för att undvika CLS.',
+      goal: 'Give all <img> explicit width/height (or CSS aspect-ratio) to avoid CLS.',
       steps: [
         {
           order: 1,
           action: 'investigate',
           target: 'img',
-          instruction: 'Hitta alla img utan width/height: document.querySelectorAll("img:not([width]), img:not([height]").',
-          verify: 'Lista berörda bilder'
+          instruction: 'Find all img without width/height: document.querySelectorAll("img:not([width]), img:not([height]").',
+          verify: 'List affected images'
         },
         {
           order: 2,
           action: 'add',
           target: 'img attributes',
-          instruction: 'Sätt width och height till bildens intrinsiska pixelstorlek, eller aspect-ratio i CSS.',
-          verify: 'Inga img saknar dimensioner; CLS förbättras'
+          instruction: 'Set width and height to the image’s intrinsic pixel size, or aspect-ratio in CSS.',
+          verify: 'No img missing dimensions; CLS improves'
         }
       ],
       code_changes: [
         {
           type: 'replace',
           language: 'html',
-          file_hint: 'Templates/komponenter med <img>',
+          file_hint: 'Templates/components with <img>',
           selector: issue.selector,
           before: issue.codeSnippet ?? '<img src="hero.jpg" alt="...">',
           after: '<img src="hero.jpg" alt="..." width="1200" height="630" loading="lazy">'
         }
       ],
       acceptance_criteria: [
-        'Alla content-bilder har width+height eller aspect-ratio',
-        'CLS-varning försvinner eller förbättras tydligt'
+        'All content images have width+height or aspect-ratio',
+        'CLS warning is gone or clearly improved'
       ],
-      do_not: ['Sätt felaktiga proportioner som sträcker bilden']
+      do_not: ['Set incorrect proportions that stretch the image']
     })
   },
   {
     match: /äldre bildformat|legacy image formats/i,
     build: () => ({
-      goal: 'Konvertera JPEG/PNG till WebP/AVIF med fallback via <picture>.',
+      goal: 'Convert JPEG/PNG to WebP/AVIF with fallback via <picture>.',
       steps: [
         {
           order: 1,
           action: 'optimize',
           target: 'image assets',
-          instruction: 'Konvertera stora JPEG/PNG till AVIF + WebP (t.ex. sharp, squoosh, CDN image transform).',
-          verify: 'Nya .webp/.avif-filer finns och är mindre'
+          instruction: 'Convert large JPEG/PNG to AVIF + WebP (e.g. sharp, squoosh, CDN image transform).',
+          verify: 'New .webp/.avif files exist and are smaller'
         },
         {
           order: 2,
           action: 'replace',
           target: 'img markup',
-          instruction: 'Byt till <picture> med AVIF/WebP source och JPEG/PNG fallback.',
-          verify: 'Nätverkspanelen visar modern format där browser stöder det'
+          instruction: 'Switch to <picture> with AVIF/WebP source and JPEG/PNG fallback.',
+          verify: 'Network panel shows modern format where the browser supports it'
         }
       ],
       code_changes: [
         {
           type: 'replace',
           language: 'html',
-          file_hint: 'Bildkomponenter / HTML',
+          file_hint: 'Image components / HTML',
           before: '<img src="/images/hero.jpg" alt="Hero">',
           after: '<picture>\n  <source srcset="/images/hero.avif" type="image/avif">\n  <source srcset="/images/hero.webp" type="image/webp">\n  <img src="/images/hero.jpg" alt="Hero" width="1200" height="630" loading="lazy">\n</picture>'
         }
       ],
       acceptance_criteria: [
-        'Majoriteten av content-bilder serveras som WebP/AVIF',
-        'Fallback fungerar i äldre webbläsare'
+        'Most content images are served as WebP/AVIF',
+        'Fallback works in older browsers'
       ],
-      do_not: ['Ta bort fallback helt om ni fortfarande stödjer äldre browsers']
+      do_not: ['Remove fallback entirely if you still support older browsers']
     })
   },
   {
     match: /trasiga css\/js|broken css\/js|trasiga länkar|broken links|trasiga bilder|broken images|misslyckade nätverks|failed network|aldrig slutfördes|never completed/i,
     build: (issue) => ({
-      goal: 'Fixa eller ta bort trasiga resurs-URL:er så att alla kritiska requests returnerar 2xx.',
+      goal: 'Fix or remove broken resource URLs so all critical requests return 2xx.',
       steps: [
         {
           order: 1,
           action: 'investigate',
           target: issue.codeSnippet ?? 'broken URL',
-          instruction: `Öppna/verifiera den trasiga URL:en: ${issue.codeSnippet ?? '(se description)'}. Kontrollera statuskod, CORS och om filen flyttats.`,
-          verify: 'Statuskod och felorsak känd'
+          instruction: `Open/verify the broken URL: ${issue.codeSnippet ?? '(see description)'}. Check status code, CORS, and whether the file moved.`,
+          verify: 'Status code and root cause known'
         },
         {
           order: 2,
           action: 'replace',
           target: 'href/src',
-          instruction: 'Uppdatera src/href till korrekt sökväg, eller ta bort referensen om resursen inte behövs.',
-          verify: 'Request ger 200/304 i Network-fliken'
+          instruction: 'Update src/href to the correct path, or remove the reference if the resource is unused.',
+          verify: 'Request returns 200/304 in the Network tab'
         },
         {
           order: 3,
           action: 'verify',
           target: 'site',
-          instruction: 'Ladda om sidan i mobil- och desktopvy och bekräfta att inga failed requests återstår för kritiska assets.',
-          verify: 'Inga röda failed requests för CSS/JS/bilder i Network'
+          instruction: 'Reload the page in mobile and desktop view and confirm no failed requests remain for critical assets.',
+          verify: 'No red failed requests for CSS/JS/images in Network'
         }
       ],
       code_changes: [
         {
           type: 'replace',
           language: 'html',
-          file_hint: 'Template/komponent som refererar resursen',
+          file_hint: 'Template/component that references the resource',
           before: issue.codeSnippet ?? null,
           after: null,
-          notes: 'Ersätt med korrekt absolut eller relativ URL, eller ta bort taggen.'
+          notes: 'Replace with the correct absolute or relative URL, or remove the tag.'
         }
       ],
       acceptance_criteria: [
-        'Inga 4xx/5xx för CSS/JS/kritiska bilder',
-        'Layout och funktionalitet intakt efter fix'
+        'No 4xx/5xx for CSS/JS/critical images',
+        'Layout and functionality intact after the fix'
       ],
-      do_not: ['Ignorera 404 genom att fånga fel i JS utan att laga URL:en']
+      do_not: ['Ignore 404 by catching errors in JS without fixing the URL']
     })
   },
   {
     match: /saknad title|missing title|för kort sidtitel|title too short|för lång sidtitel|title too long/i,
     build: (issue) => ({
-      goal: 'Sätt en unik, beskrivande <title> på 50–60 tecken.',
+      goal: 'Set a unique, descriptive <title> of 50–60 characters.',
       steps: [
         {
           order: 1,
           action: 'replace',
           target: 'head > title',
-          instruction: 'Uppdatera <title> med primärt sökord + varumärke, 50–60 tecken.',
-          verify: 'document.title längd 50–60'
+          instruction: 'Update <title> with primary keyword + brand, 50–60 characters.',
+          verify: 'document.title length 50–60'
         }
       ],
       code_changes: [
         {
           type: 'replace',
           language: 'html',
-          file_hint: '<head> i layout/template',
+          file_hint: '<head> in layout/template',
           before: null,
-          after: issue.codeSnippet ?? '<title>Primärt sökord – Varumärke</title>'
+          after: issue.codeSnippet ?? '<title>Primary keyword – Brand</title>'
         }
       ],
-      acceptance_criteria: ['Title finns och är 50–60 tecken'],
-      do_not: ['Duplicera samma title på alla sidor']
+      acceptance_criteria: ['Title exists and is 50–60 characters'],
+      do_not: ['Duplicate the same title on every page']
     })
   },
   {
     match: /meta description|metabeskrivning/i,
     build: (issue) => ({
-      goal: 'Sätt unik meta description på 120–160 tecken.',
+      goal: 'Set a unique meta description of 120–160 characters.',
       steps: [
         {
           order: 1,
           action: 'add',
           target: 'head meta[name=description]',
-          instruction: 'Lägg till eller uppdatera meta description med lockande text och sökord.',
-          verify: 'Meta description längd 120–160'
+          instruction: 'Add or update meta description with compelling copy and keywords.',
+          verify: 'Meta description length 120–160'
         }
       ],
       code_changes: [
         {
-          type: issue.title.toLowerCase().includes('saknad') ? 'add' : 'replace',
+          type: /saknad|missing/i.test(issue.title) ? 'add' : 'replace',
           language: 'html',
           file_hint: '<head>',
-          after: issue.codeSnippet ?? '<meta name="description" content="Beskrivning på 120–160 tecken.">'
+          after: issue.codeSnippet ?? '<meta name="description" content="Description of 120–160 characters.">'
         }
       ],
-      acceptance_criteria: ['Meta description finns och är 120–160 tecken'],
-      do_not: ['Keyword-stappa description']
+      acceptance_criteria: ['Meta description exists and is 120–160 characters'],
+      do_not: ['Keyword-stuff the description']
     })
   },
   {
     match: /viewport/i,
     build: (issue) => ({
-      goal: 'Lägg till viewport-meta för responsiv mobilvy.',
+      goal: 'Add viewport meta for responsive mobile layout.',
       steps: [
         {
           order: 1,
           action: 'add',
           target: 'head',
-          instruction: 'Infoga viewport-meta tidigt i <head>.',
-          verify: 'meta[name=viewport] finns'
+          instruction: 'Insert viewport meta early in <head>.',
+          verify: 'meta[name=viewport] exists'
         }
       ],
       code_changes: [
@@ -323,48 +323,48 @@ const BUILDERS: Array<{ match: RegExp; build: FixBuilder }> = [
           after: issue.codeSnippet ?? '<meta name="viewport" content="width=device-width, initial-scale=1">'
         }
       ],
-      acceptance_criteria: ['Viewport-meta finns', 'Mobil layout skalar korrekt'],
-      do_not: ['Använd user-scalable=no utan stark anledning']
+      acceptance_criteria: ['Viewport meta exists', 'Mobile layout scales correctly'],
+      do_not: ['Use user-scalable=no without a strong reason']
     })
   },
   {
     match: /alt-text|saknade alt|missing alt/i,
     build: (issue) => ({
-      goal: 'Lägg till beskrivande alt på alla meningsfulla bilder (tom alt="" endast för dekorativa).',
+      goal: 'Add descriptive alt on all meaningful images (empty alt="" only for decorative).',
       steps: [
         {
           order: 1,
           action: 'add',
           target: 'img[alt]',
-          instruction: 'Gå igenom img utan alt och sätt beskrivande text, eller alt="" för rent dekorativa bilder.',
-          verify: 'Inga img saknar alt-attribut'
+          instruction: 'Go through img without alt and set descriptive text, or alt="" for purely decorative images.',
+          verify: 'No img missing an alt attribute'
         }
       ],
       code_changes: [
         {
           type: 'replace',
           language: 'html',
-          file_hint: 'Bildkomponenter',
+          file_hint: 'Image components',
           selector: issue.selector,
           before: issue.codeSnippet ?? '<img src="...">',
-          after: '<img src="..." alt="Kort beskrivning av bilden">'
+          after: '<img src="..." alt="Short description of the image">'
         }
       ],
-      acceptance_criteria: ['Alla img har alt-attribut'],
-      do_not: ['Sätt meningslösa alt som "bild" eller filnamn']
+      acceptance_criteria: ['All img have an alt attribute'],
+      do_not: ['Set meaningless alt like "image" or the filename']
     })
   },
   {
     match: /content-security-policy|csp/i,
     build: (issue) => ({
-      goal: 'Inför en Content-Security-Policy som begränsar script-/style-källor.',
+      goal: 'Introduce a Content-Security-Policy that restricts script/style sources.',
       steps: [
         {
           order: 1,
           action: 'configure',
           target: 'HTTP headers',
-          instruction: 'Lägg till CSP-header på servern/CDN. Börja i Report-Only om ni vill testa.',
-          verify: 'content-security-policy syns i response headers'
+          instruction: 'Add a CSP header on the server/CDN. Start in Report-Only if you want to test.',
+          verify: 'content-security-policy appears in response headers'
         }
       ],
       code_changes: [
@@ -375,21 +375,67 @@ const BUILDERS: Array<{ match: RegExp; build: FixBuilder }> = [
           after: issue.codeSnippet ?? "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
         }
       ],
-      acceptance_criteria: ['CSP-header finns', 'Sidan fungerar utan konsolblockeringar (eller bara förväntade reports)'],
-      do_not: ["Lämna script-src 'unsafe-inline' 'unsafe-eval' permanent utan plan"]
+      acceptance_criteria: ['CSP header exists', 'Page works without console blocks (or only expected reports)'],
+      do_not: ["Leave script-src 'unsafe-inline' 'unsafe-eval' permanently without a plan"]
+    })
+  },
+  {
+    match: /x-content-type-options|content-type-options|nosniff/i,
+    build: (issue) => ({
+      goal: 'Add X-Content-Type-Options: nosniff on all responses.',
+      steps: [
+        {
+          order: 1,
+          action: 'investigate',
+          target: 'HTTP headers',
+          instruction: `Read the issue: "${issue.description}". Find where response headers are set (server, CDN, middleware, framework).`,
+          verify: 'Root cause identified'
+        },
+        {
+          order: 2,
+          action: 'configure',
+          target: 'response headers',
+          instruction: 'Add X-Content-Type-Options: nosniff on all responses.',
+          verify: 'Header present on HTML and static asset responses'
+        },
+        {
+          order: 3,
+          action: 'verify',
+          target: 'site',
+          instruction: 'Verify in the browser and re-run SiteScanner so the same issue does not remain.',
+          verify: `Issue "${issue.title}" gone or clearly improved`
+        }
+      ],
+      code_changes: [
+        {
+          type: 'config',
+          language: 'http',
+          file_hint: 'Server/CDN/middleware response headers',
+          after: issue.codeSnippet ?? 'X-Content-Type-Options: nosniff',
+          notes: 'Use the snippet as the concrete target / reference.'
+        }
+      ],
+      acceptance_criteria: [
+        `Issue "${issue.title}" is fixed`,
+        'No new regression in the same category'
+      ],
+      do_not: [
+        'Ignore acceptance_criteria',
+        'Do broad refactors outside this issue scope'
+      ]
     })
   },
   {
     match: /render-blockerande javascript|render-blocking javascript|defer|async/i,
     build: (issue) => ({
-      goal: 'Gör externa script icke-blockerande med defer eller async.',
+      goal: 'Make external scripts non-blocking with defer or async.',
       steps: [
         {
           order: 1,
           action: 'replace',
           target: 'script[src]',
-          instruction: 'Lägg till defer på app-script (behåll ordning) eller async på oberoende tredjepart.',
-          verify: 'Inga script[src] i <head> utan defer/async (förutom kritiska undantag)'
+          instruction: 'Add defer on app scripts (preserve order) or async on independent third-party scripts.',
+          verify: 'No script[src] in <head> without defer/async (except critical exceptions)'
         }
       ],
       code_changes: [
@@ -401,8 +447,8 @@ const BUILDERS: Array<{ match: RegExp; build: FixBuilder }> = [
           after: '<script src="app.js" defer></script>'
         }
       ],
-      acceptance_criteria: ['Kritiska script använder defer/async', 'Ingen regression i app-init'],
-      do_not: ['Sätt async på script som måste köras i ordning']
+      acceptance_criteria: ['Critical scripts use defer/async', 'No regression in app init'],
+      do_not: ['Set async on scripts that must run in order']
     })
   }
 ];
@@ -410,28 +456,28 @@ const BUILDERS: Array<{ match: RegExp; build: FixBuilder }> = [
 function defaultBuilder(issue: ScannerIssue): ReturnType<FixBuilder> {
   const hasSnippet = !!issue.codeSnippet;
   return {
-    goal: issue.recommendation ?? `Åtgärda problemet: ${issue.title}`,
+    goal: issue.recommendation ?? `Fix the issue: ${issue.title}`,
     steps: [
       {
         order: 1,
         action: 'investigate',
         target: issue.selector ?? issue.category,
-        instruction: `Läs problemet: "${issue.description}". Lokalisera orsaken i kodbasen${issue.selector ? ` via selector ${issue.selector}` : ''}.`,
-        verify: 'Rotorsak identifierad'
+        instruction: `Read the issue: "${issue.description}". Locate the root cause in the codebase${issue.selector ? ` via selector ${issue.selector}` : ''}.`,
+        verify: 'Root cause identified'
       },
       {
         order: 2,
         action: hasSnippet ? 'replace' : 'optimize',
         target: issue.selector ?? 'relevant file',
-        instruction: issue.recommendation ?? 'Applicera rekommenderad åtgärd i koden.',
-        verify: 'Ändringen är implementerad'
+        instruction: issue.recommendation ?? 'Apply the recommended fix in the code.',
+        verify: 'Change is implemented'
       },
       {
         order: 3,
         action: 'verify',
         target: 'site',
-        instruction: 'Verifiera i webbläsare och kör om SiteScanner så att samma issue inte återstår.',
-        verify: `Issue "${issue.title}" borta eller tydligt förbättrad`
+        instruction: 'Verify in the browser and re-run SiteScanner so the same issue does not remain.',
+        verify: `Issue "${issue.title}" gone or clearly improved`
       }
     ],
     code_changes: hasSnippet
@@ -439,42 +485,45 @@ function defaultBuilder(issue: ScannerIssue): ReturnType<FixBuilder> {
           {
             type: 'replace',
             language: guessLanguage(issue.codeSnippet!),
-            file_hint: issue.selector ? `Element: ${issue.selector}` : 'Relevant template/komponent',
+            file_hint: issue.selector ? `Element: ${issue.selector}` : 'Relevant template/component',
             selector: issue.selector,
             before: null,
             after: issue.codeSnippet!,
-            notes: 'Använd snippeten som målkod / referens.'
+            notes: 'Use the snippet as the concrete target code / reference.'
           }
         ]
       : [],
     acceptance_criteria: [
-      `Problemet "${issue.title}" är åtgärdat`,
-      'Ingen ny regression i samma kategori'
+      `Issue "${issue.title}" is fixed`,
+      'No new regression in the same category'
     ],
     do_not: [
-      'Ignorera acceptance_criteria',
-      'Gör breda refactors utanför issue-scope'
+      'Ignore acceptance_criteria',
+      'Do broad refactors outside this issue scope'
     ]
   };
 }
 
 function guessLanguage(snippet: string): string {
   if (/^\s*</.test(snippet)) return 'html';
-  if (/Cache-Control|Content-Security|Strict-Transport|X-Frame/i.test(snippet)) return 'http';
+  if (/Cache-Control|Content-Security|Strict-Transport|X-Frame|X-Content-Type/i.test(snippet)) return 'http';
   if (/^\s*{/.test(snippet) || /"@context"/.test(snippet)) return 'json';
   if (/function|const |let |=>/.test(snippet)) return 'javascript';
   return 'text';
 }
 
-export function buildAgentFix(issue: ScannerIssue, language?: Language): AgentFix {
+/**
+ * Agent-fix JSON is always English (for coding agents),
+ * regardless of the UI scan language.
+ */
+export function buildAgentFix(issue: ScannerIssue): AgentFix {
   const builder = BUILDERS.find((b) => b.match.test(issue.title))?.build ?? defaultBuilder;
   const partial = builder(issue);
-  const lang = language === 'sv' ? 'sv' : 'en';
 
   return {
     schema_version: '1.0',
     role: 'coding_agent',
-    language: lang,
+    language: 'en',
     issue: {
       title: issue.title,
       category: issue.category,
@@ -485,19 +534,12 @@ export function buildAgentFix(issue: ScannerIssue, language?: Language): AgentFi
     },
     goal: partial.goal ?? issue.recommendation ?? issue.title,
     priority: priorityFromSeverity(issue.severity),
-    constraints: lang === 'sv'
-      ? [
-          'Gör minsta möjliga ändring som löser just detta issue',
-          'Behåll befintlig design/UX om inte issue kräver annat',
-          'Följ steps i ordning och stanna när acceptance_criteria är uppfyllda',
-          'Om code_changes.after finns: använd den som konkret målkod'
-        ]
-      : [
-          'Make the smallest change that fixes this exact issue',
-          'Keep existing design/UX unless the issue requires otherwise',
-          'Follow steps in order and stop when acceptance_criteria are met',
-          'If code_changes.after exists: treat it as the concrete target code'
-        ],
+    constraints: [
+      'Make the smallest change that fixes this exact issue',
+      'Keep existing design/UX unless the issue requires otherwise',
+      'Follow steps in order and stop when acceptance_criteria are met',
+      'If code_changes.after exists: treat it as the concrete target code'
+    ],
     steps: partial.steps ?? [],
     code_changes: partial.code_changes ?? [],
     acceptance_criteria: partial.acceptance_criteria ?? [],
@@ -505,10 +547,10 @@ export function buildAgentFix(issue: ScannerIssue, language?: Language): AgentFi
   };
 }
 
-export function attachAgentFixes(issues: ScannerIssue[], language?: Language): ScannerIssue[] {
+export function attachAgentFixes(issues: ScannerIssue[]): ScannerIssue[] {
   return issues.map((issue) => ({
     ...issue,
-    agentFix: buildAgentFix(issue, language)
+    agentFix: buildAgentFix(issue)
   }));
 }
 

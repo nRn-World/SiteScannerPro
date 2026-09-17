@@ -105,8 +105,14 @@ export class ScannerService {
     ];
 
     const deduped = this.deduplicateIssues(allIssues);
-    const localized = localizeHardcodedIssues(options.language, deduped);
-    const withAgentFixes = attachAgentFixes(localized, options.language);
+    // Agent-fix JSON always from English issue text (for coding agents).
+    const englishForAgents = localizeHardcodedIssues('en', deduped);
+    const withEnglishFixes = attachAgentFixes(englishForAgents);
+    const localized = localizeHardcodedIssues(options.language, deduped).map((issue, idx) => ({
+      ...issue,
+      agentFix: withEnglishFixes[idx]?.agentFix
+    }));
+    const withAgentFixes = localized;
 
     const metricsByDevice = this.buildMetricsByDevice(withAgentFixes, vitalsResult?.vitalsByDevice);
     // Default/public metrics = mobile (PageSpeed default)
