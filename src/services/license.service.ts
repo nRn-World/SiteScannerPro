@@ -1,18 +1,27 @@
 import fs from 'fs';
 import path from 'path';
-import { getStripeClient } from './stripe.service';
+import crypto from 'crypto';
 
 export interface LicenseRecord {
   sessionId: string;
   createdAt: string;
   amountTotal?: number;
   currency?: string;
+  source?: 'ko-fi' | 'legacy';
 }
 
 type LicenseStore = Record<string, LicenseRecord>;
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const LICENSES_FILE = path.join(DATA_DIR, 'licenses.json');
+const LICENSE_SALT = 'SSP-LICENSE-v1|';
+const LICENSE_FORMAT = /^SSP-PRO(?:-[A-Z0-9]{4}){2,4}$/;
+const HASH_FORMAT = /^[a-f0-9]{64}$/i;
+
+// Plaintext-koden läggs bara på Ko-fi tack-sidan. Appen/servern jämför hash.
+const DEFAULT_LICENSE_KEY_HASHES = [
+  '1fe3f613134fab1fc2f03131f559c8a652eb2217a234f38de126165dfed92880'
+];
 
 function readStore(): LicenseStore {
   try {
@@ -40,9 +49,26 @@ function writeStore(store: LicenseStore): void {
   fs.renameSync(tempFile, LICENSES_FILE);
 }
 
+function normalizeLicenseKey(key: string): string {
+  return key.trim().toUpperCase().replace(/\s+/g, '');
+}
+
+function hashLicenseKey(normalizedKey: string): string {
+  return crypto.createHash('sha256').update(`${LICENSE_SALT}${normalizedKey}`).digest('hex');
+}
+
+function validLicenseHashes(): Set<string> {
+  const envHashes = (process.env.SITE_SCANNER_PRO_LICENSE_HASHES || process.env.KOFI_LICENSE_HASHES || '')
+    .split(',')
+    .map((hash) => hash.trim().toLowerCase())
+    .filter((hash) => HASH_FORMAT.test(hash));
+
+  return new Set([...DEFAULT_LICENSE_KEY_HASHES, ...envHashes]);
+}
+
 /**
- * Hanterar betalda Pro-licenser. En licens-token är Stripe-sessionens ID
- * (cs_...) som endast utfärdas efter att betalningen verifierats mot Stripe.
+ * Hanterar betalda Pro-licenser. Ko-fi visar plaintext-koden efter köp,
+ * men SiteScanner sparar och accepterar bara SHA-256-digesten som token.
  */
 export class LicenseService {
   public find(sessionId: string): LicenseRecord | null {
@@ -64,33 +90,34 @@ export class LicenseService {
   }
 
   /**
-   * Validerar en licens-token. Kollar först den lokala lagringen; hittas den
-   * inte där (t.ex. efter flytt av server) verifieras den på nytt mot Stripe.
+   * Validerar antingen en plaintext Ko-fi-kod eller en tidigare utfärdad digest-token.
    */
   public async validateLicense(token: string): Promise<LicenseRecord | null> {
-    if (!token || !token.startsWith('cs_')) {
+    if (!token || typeof token !== 'string') {
       return null;
     }
 
-    const existing = this.find(token);
+    const normalized = normalizeLicenseKey(token);
+    const hashes = validLicenseHashes();
+    const digest = HASH_FORMAT.test(normalized.toLowerCase())
+      ? normalized.toLowerCase()
+      : LICENSE_FORMAT.test(normalized)
+        ? hashLicenseKey(normalized)
+        : '';
+
+    if (!digest || !hashes.has(digest)) {
+      return null;
+    }
+
+    const existing = this.find(digest);
     if (existing) {
       return existing;
     }
 
-    try {
-      const stripe = getStripeClient();
-      const session = await stripe.checkout.sessions.retrieve(token);
+    return this.create(digest, { source: 'ko-fi' });
+  }
 
-      if (session.payment_status === 'paid') {
-        return this.create(session.id, {
-          amountTotal: session.amount_total ?? undefined,
-          currency: session.currency ?? undefined
-        });
-      }
-    } catch {
-      // Ogiltig token eller Stripe ej konfigurerat
-    }
-
-    return null;
+  public looksLikeLicenseKey(key: string): boolean {
+    return LICENSE_FORMAT.test(normalizeLicenseKey(key));
   }
 }

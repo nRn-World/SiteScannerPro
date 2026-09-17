@@ -15,6 +15,7 @@ import DataFlowBackground from './components/DataFlowBackground';
 import { ScanResult } from './rules/types';
 import { getLanguage, LANGUAGE_STORAGE_KEY, Language, normalizeCategory, translations } from './i18n/translations';
 import { apiUrl } from './api';
+import { isLocalDevHost } from './utils/devMode';
 
 interface ScanHistoryItem {
   url: string;
@@ -40,8 +41,13 @@ export default function App() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [isPremium, setIsPremium] = useState(false);
-  const [licenseToken, setLicenseToken] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState(() => isLocalDevHost());
+  const [licenseToken, setLicenseToken] = useState<string | null>(() =>
+    isLocalDevHost() ? 'dev-local' : null
+  );
+  const [licenseInput, setLicenseInput] = useState('');
+  const [licenseMessage, setLicenseMessage] = useState<string | null>(null);
+  const [isActivatingLicense, setIsActivatingLicense] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   
   const [view, setView] = useState<'home' | 'about' | 'contact' | 'api' | 'pricing' | 'terms' | 'privacy' | 'cookies'>('home');
@@ -56,41 +62,28 @@ export default function App() {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     document.documentElement.lang = language;
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    // Results are language-specific – clear stale mixed-language reports
+    setResult(null);
+    setSelectedCategory(null);
+    setError(null);
   }, [language]);
 
   useEffect(() => {
-    // Rensa gamla nycklar från tidigare betalflöde
     localStorage.removeItem('siteScannerPremium');
 
-    const savedToken = localStorage.getItem(LICENSE_STORAGE_KEY);
-    if (savedToken) {
-      setLicenseToken(savedToken);
+    if (isLocalDevHost()) {
+      setLicenseToken('dev-local');
       setIsPremium(true);
+    } else {
+      const savedToken = localStorage.getItem(LICENSE_STORAGE_KEY);
+      if (savedToken) {
+        setLicenseToken(savedToken);
+        setIsPremium(true);
+      }
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-
-    if (sessionId) {
-      fetch(apiUrl('/api/verify-session'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
-      })
-        .then(async (res) => {
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.token) {
-            localStorage.setItem(LICENSE_STORAGE_KEY, data.token);
-            setLicenseToken(data.token);
-            setIsPremium(true);
-          }
-        })
-        .catch(() => {})
-        .finally(() => {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        });
-    } else if (urlParams.get('canceled') === 'true') {
+    if (urlParams.get('canceled') === 'true') {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -109,7 +102,7 @@ export default function App() {
     if (isScanning) {
       interval = setInterval(() => {
         setScanStep((prev) => (prev < scanSteps.length - 1 ? prev + 1 : prev));
-      }, 1500);
+      }, 2800);
     } else {
       setScanStep(0);
     }
@@ -133,11 +126,13 @@ export default function App() {
     try {
       let data: ScanResult;
 
-      if (!isPremium) {
+      const usePremiumEndpoint = isPremium && !isLocalDevHost();
+
+      if (!usePremiumEndpoint) {
         const res = await fetch(apiUrl('/api/scan-free'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: targetUrl })
+          body: JSON.stringify({ url: targetUrl, language })
         });
         
         if (!res.ok) {
@@ -146,20 +141,21 @@ export default function App() {
         
         data = await res.json();
       } else {
-        // Pro-djupläge: kräver giltig licens-token
         const res = await fetch(apiUrl('/api/scan-premium'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...(licenseToken ? { 'x-license-token': licenseToken } : {})
           },
-          body: JSON.stringify({ url: targetUrl })
+          body: JSON.stringify({ url: targetUrl, language })
         });
 
         if (res.status === 403 || res.status === 401) {
-          localStorage.removeItem(LICENSE_STORAGE_KEY);
-          setLicenseToken(null);
-          setIsPremium(false);
+          if (!isLocalDevHost()) {
+            localStorage.removeItem(LICENSE_STORAGE_KEY);
+            setLicenseToken(null);
+            setIsPremium(false);
+          }
           throw new Error(t.errors.licenseInvalid);
         }
 
@@ -204,6 +200,45 @@ export default function App() {
     }
   };
 
+  const handleActivateLicense = async () => {
+    const licenseKey = licenseInput.trim();
+    if (!licenseKey) {
+      setLicenseMessage(t.errors.licenseInvalid);
+      return;
+    }
+
+    setIsActivatingLicense(true);
+    setLicenseMessage(null);
+
+    try {
+      const res = await fetch(apiUrl('/api/verify-license'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey })
+      });
+
+      if (!res.ok) {
+        throw new Error(await readErrorMessage(res, t.errors.licenseInvalid));
+      }
+
+      const data = await res.json();
+      if (!data?.token) {
+        throw new Error(t.errors.licenseInvalid);
+      }
+
+      localStorage.setItem(LICENSE_STORAGE_KEY, data.token);
+      setLicenseToken(data.token);
+      setIsPremium(true);
+      setLicenseInput('');
+      setLicenseMessage(t.paywall.activated);
+      window.setTimeout(() => setShowPaywall(false), 650);
+    } catch (err: any) {
+      setLicenseMessage(err.message || t.errors.licenseInvalid);
+    } finally {
+      setIsActivatingLicense(false);
+    }
+  };
+
   return (
     <HelmetProvider>
       <div className="min-h-screen flex flex-col selection:bg-accent selection:text-white">
@@ -213,7 +248,7 @@ export default function App() {
           <link rel="canonical" href="https://sitescanner.pro" />
         </Helmet>
 
-        <Header view={view} setView={setView} isPremium={isPremium} language={language} setLanguage={setLanguage} t={t} />
+        <Header view={view} setView={setView} isPremium={isPremium || isLocalDevHost()} language={language} setLanguage={setLanguage} t={t} />
         <DataFlowBackground paused={isScanning} />
 
         <main className="flex-1 max-w-7xl mx-auto px-6 py-12 md:py-24 w-full relative z-10">
@@ -222,6 +257,11 @@ export default function App() {
               <Paywall 
                 onClose={() => setShowPaywall(false)} 
                 onCheckout={handleCheckout} 
+                onActivateLicense={handleActivateLicense}
+                licenseInput={licenseInput}
+                setLicenseInput={setLicenseInput}
+                licenseMessage={licenseMessage}
+                isActivatingLicense={isActivatingLicense}
                 t={t}
               />
             )}
@@ -255,6 +295,7 @@ export default function App() {
                   selectedCategory={selectedCategory} 
                   setSelectedCategory={setSelectedCategory}
                   onUpgradeClick={() => setShowPaywall(true)}
+                  isPremium={isPremium || isLocalDevHost()}
                   t={t}
                 />
               )}

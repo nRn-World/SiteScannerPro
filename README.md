@@ -52,7 +52,7 @@ The analysis engine is a deterministic rule-based scanner: it fetches the page, 
 | Unlimited scans | — | ✓ |
 | Faster scans (shorter wait time) | — | ✓ |
 
-Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription. Payments are handled securely by [Stripe](https://stripe.com).
+Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription. Payments are handled through [Ko-fi](https://ko-fi.com/nrnworld); after checkout, the buyer receives a lifetime Pro code to paste into SiteScanner.
 
 ## Features
 
@@ -66,7 +66,7 @@ Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Motion, Lucide Icons
 - **Backend:** Node.js, Express, Cheerio
-- **Payments:** Stripe Checkout
+- **Payments:** Ko-fi + permanent Pro license codes
 - **Email:** Nodemailer
 
 ### Architecture
@@ -78,7 +78,7 @@ Premium is a **one-time purchase (99 SEK, lifetime access)** — no subscription
 │  nrn-world.github.io│ <────── │   sitescanner-pro    │
 └─────────────────────┘         │                      │
                                 │   • Scan engine      │
-        Stripe Checkout ───────>│   • Stripe payments  │
+        Ko-fi checkout ────────>│   • Pro code verify  │
         (redirect flow)         │   • License store    │
                                 └──────────────────────┘
 ```
@@ -102,8 +102,9 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-STRIPE_SECRET_KEY="sk_test_..."      # Required for payments (test key starts with sk_test_)
-APP_URL="http://localhost:3000"      # Address used for Stripe checkout return
+KOFI_PRO_URL="https://ko-fi.com/nrnworld"
+SITE_SCANNER_PRO_LICENSE_HASHES="..." # Generate with: npm run license:generate
+APP_URL="http://localhost:3000"
 EMAIL_USER="..."                     # Optional: Gmail for contact form
 EMAIL_PASS="..."                     # Optional: Gmail app password
 CONTACT_RECEIVER_EMAIL="..."         # Optional: Where contact emails are sent
@@ -114,7 +115,7 @@ CONTACT_RECEIVER_EMAIL="..."         # Optional: Where contact emails are sent
 npm run dev
 ```
 
-Open http://localhost:3000. For testing payments, use Stripe's test card `4242 4242 4242 4242` with any future expiry and CVC.
+Open http://localhost:3000. For testing Pro, paste a Ko-fi license code in the paywall dialog.
 
 ### Useful scripts
 
@@ -124,6 +125,7 @@ Open http://localhost:3000. For testing payments, use Stripe's test card `4242 4
 | `npm run build` | Build frontend to `dist/` |
 | `npm start` | Serve production build |
 | `npm run lint` | Type-check with TypeScript |
+| `npm run license:generate` | Generate a new Ko-fi Pro code + server hash |
 
 ## Deployment
 
@@ -132,7 +134,7 @@ This project deploys automatically on push to `main`:
 - **Frontend** → GitHub Pages via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) (configured with `VITE_PUBLIC_BASE` and `VITE_API_BASE`)
 - **Backend** → Render via [`render.yaml`](render.yaml) Blueprint (Node web service)
 
-Environment variables used in production: `STRIPE_SECRET_KEY`, `APP_URL`, `CORS_ORIGIN`.
+Environment variables used in production: `KOFI_PRO_URL`, `SITE_SCANNER_PRO_LICENSE_HASHES`, `APP_URL`, `CORS_ORIGIN`.
 
 ## Important information
 

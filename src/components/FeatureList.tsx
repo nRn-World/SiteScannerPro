@@ -1,32 +1,14 @@
 import React from 'react';
-import { Layers, Activity, ShieldCheck, Accessibility, Code, Gauge } from 'lucide-react';
+import { Layers, Gauge, ShieldCheck, Accessibility, Code, Activity } from 'lucide-react';
 import { TranslationSet } from '../i18n/translations';
 
 const featureIcons = [
-  {
-    icon: Layers,
-    title: 'Core SEO Tags'
-  },
-  {
-    icon: Gauge,
-    title: 'Server Response Check'
-  },
-  {
-    icon: ShieldCheck,
-    title: 'HTTPS & Security Headers'
-  },
-  {
-    icon: Accessibility,
-    title: 'Accessibility Basics'
-  },
-  {
-    icon: Code,
-    title: 'Code Quality Checks'
-  },
-  {
-    icon: Activity,
-    title: 'Zero Impact On Your Site'
-  }
+  { icon: Layers, title: '80+ Deep Analysis Checks' },
+  { icon: Gauge, title: 'Core Web Vitals' },
+  { icon: ShieldCheck, title: 'Security Header Audit' },
+  { icon: Accessibility, title: 'WCAG Accessibility (axe-core)' },
+  { icon: Code, title: 'Actionable Code Fixes' },
+  { icon: Activity, title: 'Zero Impact On Your Site' }
 ];
 
 const FeatureList: React.FC<{ t: TranslationSet }> = ({ t }) => {

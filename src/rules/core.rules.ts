@@ -1,22 +1,21 @@
 import * as cheerio from 'cheerio';
-import { ScannerRule, ScannerIssue, Severity } from './types';
+import { ScannerRule, ScannerIssue, ScannerContext } from './types';
+import { localizedIssue } from '../i18n/scanLocale';
 
 export const SEO_RULES: ScannerRule[] = [
   {
     name: 'Title Tag Check',
     category: 'SEO',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       if (!$('title').text()) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'seo.title.missing', {
           category: 'SEO',
           severity: 'High',
-          title: 'Saknad Title-tagg',
-          description: 'Sidan saknar en <title>-tagg, vilket är kritiskt för sökmotorer.',
-          recommendation: 'Lägg till en beskrivande <title> i <head>.',
-          codeSnippet: '<head>\n  <!-- Saknas: <title>Din Sidtitel</title> -->\n</head>'
-        });
+          source: 'rules',
+          codeSnippet: '<head>\n  <!-- Missing: <title>Your Page Title</title> -->\n</head>'
+        }));
       }
       return issues;
     }
@@ -24,18 +23,16 @@ export const SEO_RULES: ScannerRule[] = [
   {
     name: 'Meta Description Check',
     category: 'SEO',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       if (!$('meta[name="description"]').attr('content')) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'seo.meta.missing', {
           category: 'SEO',
           severity: 'Medium',
-          title: 'Saknad Meta Description',
-          description: 'Sidan saknar en metabeskrivning.',
-          recommendation: 'Lägg till <meta name="description" content="...">.',
-          codeSnippet: '<head>\n  <!-- Saknas: <meta name="description" content="..."> -->\n</head>'
-        });
+          source: 'rules',
+          codeSnippet: '<head>\n  <!-- Missing: <meta name="description" content="..."> -->\n</head>'
+        }));
       }
       return issues;
     }
@@ -43,18 +40,16 @@ export const SEO_RULES: ScannerRule[] = [
   {
     name: 'H1 Header Check',
     category: 'SEO',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       if ($('h1').length === 0) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'seo.h1.missing', {
           category: 'SEO',
           severity: 'Medium',
-          title: 'Saknad H1-rubrik',
-          description: 'Sidan saknar en huvudrubrik (H1).',
-          recommendation: 'Se till att varje sida har exakt en H1-rubrik.',
-          codeSnippet: '<body>\n  <!-- Saknas: <h1>Huvudrubrik</h1> -->\n</body>'
-        });
+          source: 'rules',
+          codeSnippet: '<body>\n  <!-- Missing: <h1>Main heading</h1> -->\n</body>'
+        }));
       }
       return issues;
     }
@@ -69,21 +64,19 @@ export const PERFORMANCE_RULES: ScannerRule[] = [
       const issues: ScannerIssue[] = [];
       const loadTime = context.loadTime;
       if (loadTime > 2000) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'perf.load.slow', {
           category: 'Performance',
           severity: 'High',
-          title: 'Långsam svarstid',
-          description: `Servern tog ${loadTime}ms att svara.`,
-          recommendation: 'Optimera servern, använd caching eller en CDN.'
-        });
+          source: 'rules',
+          params: { ms: loadTime }
+        }));
       } else if (loadTime > 1000) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'perf.load.medium', {
           category: 'Performance',
           severity: 'Medium',
-          title: 'Något långsam svarstid',
-          description: `Servern tog ${loadTime}ms att svara.`,
-          recommendation: 'Optimera TTFB (Time to First Byte).'
-        });
+          source: 'rules',
+          params: { ms: loadTime }
+        }));
       }
       return issues;
     }
@@ -97,13 +90,11 @@ export const SECURITY_RULES: ScannerRule[] = [
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
       if (!context.isHttps) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'sec.https.missing', {
           category: 'Security',
           severity: 'High',
-          title: 'Okrypterad anslutning',
-          description: 'Sidan använder HTTP istället för HTTPS.',
-          recommendation: 'Installera ett SSL-certifikat och tvinga HTTPS.'
-        });
+          source: 'rules'
+        }));
       }
       return issues;
     }
@@ -114,14 +105,12 @@ export const SECURITY_RULES: ScannerRule[] = [
     run: async (_, context) => {
       const issues: ScannerIssue[] = [];
       if (!context.headers.get('strict-transport-security')) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'sec.hsts.missing', {
           category: 'Security',
           severity: 'Low',
-          title: 'Saknad HSTS-header',
-          description: 'Sidan tvingar inte webbläsare att använda HTTPS (HSTS).',
-          recommendation: 'Lägg till Strict-Transport-Security i serverns headers.',
+          source: 'rules',
           codeSnippet: 'Strict-Transport-Security: max-age=31536000; includeSubDomains'
-        });
+        }));
       }
       return issues;
     }
@@ -134,14 +123,12 @@ export const SECURITY_RULES: ScannerRule[] = [
       const hasXFrame = context.headers.get('x-frame-options');
       const hasCSP = context.headers.get('content-security-policy');
       if (!hasXFrame && !hasCSP) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'sec.clickjacking', {
           category: 'Security',
           severity: 'Low',
-          title: 'Risk för Clickjacking',
-          description: 'Sidan saknar skydd mot att bäddas in i iframes.',
-          recommendation: 'Lägg till X-Frame-Options: DENY eller SAMEORIGIN.',
-          codeSnippet: 'X-Frame-Options: DENY\nContent-Security-Policy: frame-ancestors \'none\';'
-        });
+          source: 'rules',
+          codeSnippet: "X-Frame-Options: DENY\nContent-Security-Policy: frame-ancestors 'none';"
+        }));
       }
       return issues;
     }
@@ -152,7 +139,7 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
   {
     name: 'Alt Text Check',
     category: 'Accessibility',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       const images = $('img');
@@ -167,14 +154,13 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
       });
 
       if (imagesWithoutAlt > 0) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'a11y.alt.missing', {
           category: 'Accessibility',
           severity: 'Medium',
-          title: 'Saknade Alt-texter',
-          description: `${imagesWithoutAlt} bilder saknar alt-attribut.`,
-          recommendation: 'Lägg till beskrivande alt-texter på alla bilder för skärmläsare.',
+          source: 'rules',
+          params: { count: imagesWithoutAlt },
           codeSnippet: firstImgWithoutAlt || undefined
-        });
+        }));
       }
       return issues;
     }
@@ -182,18 +168,16 @@ export const ACCESSIBILITY_RULES: ScannerRule[] = [
   {
     name: 'Language Attribute Check',
     category: 'Accessibility',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       if (!$('html').attr('lang')) {
-        issues.push({
+        issues.push(localizedIssue(context.language, 'a11y.lang.missing', {
           category: 'Accessibility',
           severity: 'Low',
-          title: 'Saknat språkattribut',
-          description: 'HTML-taggen saknar lang-attribut.',
-          recommendation: 'Lägg till lang="sv" (eller aktuellt språk) i <html>-taggen.',
-          codeSnippet: '<html>\n  <!-- Borde vara: <html lang="sv"> -->\n</html>'
-        });
+          source: 'rules',
+          codeSnippet: '<html>\n  <!-- Should be: <html lang="en"> -->\n</html>'
+        }));
       }
       return issues;
     }
@@ -204,20 +188,19 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
   {
     name: 'Inline Style Check',
     category: 'Code',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       const inlineStyles = $('[style]').length;
       if (inlineStyles > 0) {
         const firstInlineStyle = $.html($('[style]').first());
-        issues.push({
+        issues.push(localizedIssue(context.language, 'code.inline.style', {
           category: 'Code',
           severity: 'Low',
-          title: 'Inline CSS används',
-          description: `Hittade ${inlineStyles} element med inline-styles. Detta gör koden svårare att underhålla och kan leda till sämre formaterad kod.`,
-          recommendation: 'Flytta all styling till externa CSS-filer.',
+          source: 'rules',
+          params: { count: inlineStyles },
           codeSnippet: firstInlineStyle
-        });
+        }));
       }
       return issues;
     }
@@ -225,20 +208,18 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
   {
     name: 'Deprecated HTML Tags Check',
     category: 'Code',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       const deprecatedTags = $('font, center, strike, marquee').length;
       if (deprecatedTags > 0) {
         const firstDeprecated = $.html($('font, center, strike, marquee').first());
-        issues.push({
+        issues.push(localizedIssue(context.language, 'code.deprecated.tags', {
           category: 'Code',
           severity: 'Medium',
-          title: 'Föråldrade HTML-taggar',
-          description: 'Sidan använder föråldrade taggar (t.ex. <font>, <center>). Detta är ett dåligt kodmönster.',
-          recommendation: 'Ersätt föråldrade taggar med modern CSS.',
+          source: 'rules',
           codeSnippet: firstDeprecated
-        });
+        }));
       }
       return issues;
     }
@@ -246,30 +227,34 @@ export const CODE_QUALITY_RULES: ScannerRule[] = [
   {
     name: 'Render Blocking JS Check',
     category: 'Code',
-    run: async (html) => {
+    run: async (html, context) => {
       const $ = cheerio.load(html);
       const issues: ScannerIssue[] = [];
       const scriptsWithoutDefer = $('script[src]:not([defer]):not([async])').length;
       if (scriptsWithoutDefer > 0) {
         const firstScript = $.html($('script[src]:not([defer]):not([async])').first());
-        issues.push({
+        issues.push(localizedIssue(context.language, 'code.js.blocking', {
           category: 'Code',
           severity: 'Medium',
-          title: 'Render-blockerande JavaScript',
-          description: `Hittade ${scriptsWithoutDefer} script-taggar utan 'defer' eller 'async'. Detta är ett osäkert/ineffektivt kodmönster för prestanda.`,
-          recommendation: "Lägg till 'defer' eller 'async' på externa script.",
+          source: 'rules',
+          params: { count: scriptsWithoutDefer },
           codeSnippet: firstScript
-        });
+        }));
       }
       return issues;
     }
   }
 ];
 
+import { EXTENDED_RULES } from './extended.rules';
+import { DEEP_ANALYSIS_RULES } from './deep.rules';
+
 export const ALL_RULES = [
   ...SEO_RULES,
   ...PERFORMANCE_RULES,
   ...SECURITY_RULES,
   ...ACCESSIBILITY_RULES,
-  ...CODE_QUALITY_RULES
+  ...CODE_QUALITY_RULES,
+  ...EXTENDED_RULES,
+  ...DEEP_ANALYSIS_RULES
 ];

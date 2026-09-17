@@ -43,7 +43,16 @@ async function startServer() {
   // API Routes
   app.use("/api", apiRouter);
 
-  if (process.env.NODE_ENV !== "production") {
+  const appUrl = (process.env.APP_URL || '').toLowerCase();
+  const isLocalApp =
+    appUrl.includes('localhost') ||
+    appUrl.includes('127.0.0.1') ||
+    appUrl.includes('[::1]');
+  const useViteDev =
+    process.env.USE_PRODUCTION_BUILD !== 'true' &&
+    (process.env.NODE_ENV !== 'production' || isLocalApp);
+
+  if (useViteDev) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
