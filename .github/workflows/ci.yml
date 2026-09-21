@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (lint)
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+        env:
+          LICENSE_SIGNING_SECRET: test-secret-0123456789abcdef0123456789abcdef
+
+      - name: Build (frontend + prerender)
+        run: npm run build
+        env:
+          VITE_PUBLIC_BASE: /SiteScannerPro/
+          VITE_API_BASE: https://sitescanner-pro.onrender.com

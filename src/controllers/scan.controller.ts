@@ -8,33 +8,44 @@ import { isDevServer } from '../utils/devMode.server';
 import type { Language } from '../i18n/translations';
 import { apiError } from '../i18n/scanLocale';
 import { VipService } from '../services/vip.service';
+import { scanQueue } from '../services/scanQueue.instance';
+import { resolveAndValidateTarget, revalidateHost, SsrfError } from '../utils/ssrf';
+import { createLogger, hostOnly, newCorrelationId } from '../utils/logger';
+import { Agent, setGlobalDispatcher, request as undiciRequest } from 'undici';
 
-const PRIVATE_HOST_PATTERN = /^(localhost$|.*\.localhost$|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0$|\[::1?\]?$|::1$)/;
+/**
+ * FAS 1.7: Custom undici Agent som validerar varje anslutnings IP (DNS rebinding-
+ * skydd för fetch) och blockerar redirects till privata adresser.
+ */
+const { isPrivateIp } = await import('../utils/ssrf');
+const safeAgent = new Agent({
+  connect: {
+    lookup(hostname: string, options: unknown, callback: (err: NodeJS.ErrnoException | null, addresses?: Array<{ address: string; family: number }>) => void) {
+      import('dns').then((dns) => {
+        dns.lookup(hostname, { all: true, verbatim: true }, (err, addresses) => {
+          if (err) {
+            callback(err);
+            return;
+          }
+          const safe = (addresses ?? []).filter((a) => !isPrivateIp(a.address));
+          if (safe.length === 0) {
+            const blocked = Object.assign(new Error(`Blocked private address for ${hostname}`), { code: 'ENOTFOUND' });
+            callback(blocked as NodeJS.ErrnoException);
+            return;
+          }
+          callback(null, safe.map((a) => ({ address: a.address, family: a.family })));
+        });
+      });
+    }
+  }
+});
+setGlobalDispatcher(safeAgent);
+
 const DESCRIPTION_TEASER_LENGTH = 90;
 const FETCH_HEADERS = { 'User-Agent': 'Mozilla/5.0 (compatible; SiteScannerBot/2.0)' };
 
 /** Minsta total tid så att djupanalysen hinner visas i UI */
 const MIN_SCAN_MS = { free: 22000, premium: 14000 };
-
-function validateTargetUrl(rawUrl: string): string | null {
-  let parsed: URL;
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return null;
-  }
-
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-    return null;
-  }
-
-  const hostname = parsed.hostname.toLowerCase();
-  if (PRIVATE_HOST_PATTERN.test(hostname)) {
-    return null;
-  }
-
-  return parsed.toString();
-}
 
 function truncateDescription(description: string): string {
   if (description.length <= DESCRIPTION_TEASER_LENGTH) {
@@ -129,63 +140,97 @@ export class ScanController {
     this.scannerService = new ScannerService();
   }
 
-  private async fetchAndScan(targetUrl: string, includeVitals = true, language: Language = 'en'): Promise<ScanResult> {
-    const [browserResult, supplementary] = await Promise.all([
-      runBrowserAnalysis(targetUrl, language),
-      fetchSupplementaryData(targetUrl)
-    ]);
+  /**
+   * FAS 1.7: SSRF – hostname valideras och anslutning sker mot verifierad IP.
+   * FAS 1.4/5.2: kör genom global kö där Pro prioriteras.
+   */
+  private async fetchAndScan(
+    targetUrl: string,
+    includeVitals: boolean,
+    language: Language,
+    priority: number,
+    log: ReturnType<typeof createLogger>
+  ): Promise<ScanResult> {
+    // DNS-uppslag + IP-validering före Puppeteer/fetch
+    const target = await resolveAndValidateTarget(targetUrl, log);
+    log.info('scan start', { host: hostOnly(target.originalUrl), ip: target.resolvedIp, priority });
 
-    let html: string;
-    let finalUrl: string;
-    let loadTime: number;
-    let ttfb: number;
-    let headers: Headers;
-    let contentLength: number;
-    let isHttps: boolean;
+    const result = await scanQueue.enqueue(priority, async () => {
+      const [browserResult, supplementary] = await Promise.all([
+        runBrowserAnalysis(target.safeUrl, language),
+        fetchSupplementaryData(target.safeUrl)
+      ]);
 
-    if (browserResult) {
-      html = browserResult.html;
-      finalUrl = browserResult.finalUrl;
-      loadTime = browserResult.loadTime;
-      ttfb = browserResult.ttfb;
-      contentLength = Buffer.byteLength(html, 'utf8');
-      isHttps = finalUrl.startsWith('https://');
-      headers = new Headers(browserResult.headers);
-    } else {
-      const fallback = await fetchFallbackHtml(targetUrl);
-      html = fallback.html;
-      finalUrl = fallback.finalUrl;
-      loadTime = fallback.loadTime;
-      ttfb = fallback.ttfb;
-      headers = fallback.headers;
-      contentLength = fallback.contentLength;
-      isHttps = finalUrl.startsWith('https://');
-    }
+      let html: string;
+      let finalUrl: string;
+      let loadTime: number;
+      let ttfb: number;
+      let headers: Headers;
+      let contentLength: number;
+      let isHttps: boolean;
 
-    const context = {
-      url: targetUrl,
-      finalUrl,
-      loadTime,
-      ttfb,
-      isHttps,
-      headers,
-      contentLength,
-      robotsTxt: supplementary.robotsTxt,
-      sitemapFound: supplementary.sitemapFound,
-      language
-    };
+      if (browserResult) {
+        html = browserResult.html;
+        finalUrl = browserResult.finalUrl;
+        loadTime = browserResult.loadTime;
+        ttfb = browserResult.ttfb;
+        contentLength = Buffer.byteLength(html, 'utf8');
+        isHttps = finalUrl.startsWith('https://');
+        headers = new Headers(browserResult.headers);
+      } else {
+        const fallback = await fetchFallbackHtml(target.safeUrl);
+        html = fallback.html;
+        finalUrl = fallback.finalUrl;
+        loadTime = fallback.loadTime;
+        ttfb = fallback.ttfb;
+        headers = fallback.headers;
+        contentLength = fallback.contentLength;
+        isHttps = finalUrl.startsWith('https://');
+      }
 
-    let result = await this.scannerService.scan(html, context, {
-      includeVitals,
-      browserResult,
-      language
+      // FAS 1.7: blockera omdirigeringar till privata adresser.
+      // Undici-agenten filtrerar redan varje anslutning; här re-validerar vi
+      // slut-URL:en efterföljande DNS-stillighet.
+      if (finalUrl) {
+        try {
+          const finalCheck = await resolveAndValidateTarget(finalUrl, log);
+          void finalCheck;
+        } catch (err) {
+          if (err instanceof SsrfError || (err as Error)?.name === 'SsrfError') {
+            throw err;
+          }
+          throw new SsrfError('private');
+        }
+      }
+
+      const context = {
+        url: targetUrl,
+        finalUrl,
+        loadTime,
+        ttfb,
+        isHttps,
+        headers,
+        contentLength,
+        robotsTxt: supplementary.robotsTxt,
+        sitemapFound: supplementary.sitemapFound,
+        language
+      };
+
+      let scanResult = await this.scannerService.scan(html, context, {
+        includeVitals,
+        browserResult,
+        language
+      });
+
+      scanResult = {
+        ...scanResult,
+        issues: await attachIssueScreenshots(finalUrl, scanResult.issues, html)
+      };
+
+      return scanResult;
     });
 
-    result = {
-      ...result,
-      issues: await attachIssueScreenshots(finalUrl, result.issues, html)
-    };
-
+    log.info('scan done', { host: hostOnly(target.originalUrl), score: result.overallScore });
     return result;
   }
 
@@ -219,25 +264,41 @@ export class ScanController {
 
   public scanFree = async (req: Request, res: Response): Promise<void> => {
     const startedAt = Date.now();
+    const correlationId = newCorrelationId();
+    const log = createLogger(correlationId);
     try {
       const { url, language: rawLanguage } = req.body;
       const language = parseScanLanguage(rawLanguage);
 
-      const targetUrl = typeof url === 'string' ? validateTargetUrl(url) : null;
-      if (!targetUrl) {
+      const rawTarget = typeof url === 'string' ? url.trim() : '';
+      if (!rawTarget) {
+        res.status(400).json({ error: apiError(language, 'invalidUrl') });
+        return;
+      }
+      const normalized = /^https?:\/\//i.test(rawTarget) ? rawTarget : `https://${rawTarget}`;
+      try {
+        // Basvalidering – djupare SSRF-kontroll sker i resolveAndValidateTarget
+        new URL(normalized);
+      } catch {
         res.status(400).json({ error: apiError(language, 'invalidUrl') });
         return;
       }
 
       const result = await this.fetchAndScan(
-        targetUrl,
+        normalized,
         isDevServer() || !!process.env.VITALS_API_KEY,
-        language
+        language,
+        1, // gratis – lägre prioritet i kön
+        log
       );
       await ensureMinDuration(startedAt, isDevServer() ? 'premium' : 'free');
       res.json(isDevServer() ? result : this.toPublicResult(result));
     } catch (error: any) {
-      console.error('Free scan error:', error);
+      log.error('Free scan error', { error: error?.message });
+      if (error instanceof SsrfError || error?.name === 'SsrfError') {
+        res.status(400).json({ error: apiError(parseScanLanguage(req.body?.language), 'invalidUrl') });
+        return;
+      }
       if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
         res.status(504).json({ error: apiError(parseScanLanguage(req.body?.language), 'timeout') });
         return;
@@ -248,17 +309,20 @@ export class ScanController {
 
   public scanPremium = async (req: Request, res: Response): Promise<void> => {
     const startedAt = Date.now();
+    const correlationId = newCorrelationId();
+    const log = createLogger(correlationId);
     try {
       const { url, language: rawLanguage } = req.body;
       const language = parseScanLanguage(rawLanguage);
 
-      const targetUrl = typeof url === 'string' ? validateTargetUrl(url) : null;
+      const targetUrl = typeof url === 'string' && url ? url.trim() : '';
       if (!targetUrl) {
         res.status(400).json({ error: apiError(language, 'invalidUrl') });
         return;
       }
+      const normalized = /^https?:\/\//i.test(targetUrl) ? targetUrl : `https://${targetUrl}`;
 
-      const result = await this.fetchAndScan(targetUrl, true, language);
+      const result = await this.fetchAndScan(normalized, true, language, 0, log);
       await ensureMinDuration(startedAt, 'premium');
 
       // VIP: förbrukas först efter lyckad skanning så nätverksfel inte bränner länken.
@@ -278,7 +342,11 @@ export class ScanController {
 
       res.json(result);
     } catch (error: any) {
-      console.error('Premium scan error:', error);
+      log.error('Premium scan error', { error: error?.message });
+      if (error instanceof SsrfError || error?.name === 'SsrfError') {
+        res.status(400).json({ error: apiError(parseScanLanguage(req.body?.language), 'invalidUrl') });
+        return;
+      }
       if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
         res.status(504).json({ error: apiError(parseScanLanguage(req.body?.language), 'timeout') });
         return;

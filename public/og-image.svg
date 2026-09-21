@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#F4F4F0"/>
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#0A0A0A" stroke-width="8"/>
+  <g transform="translate(80,120)">
+    <rect width="72" height="72" rx="14" fill="#0A0A0A"/>
+    <path d="M14 46l11-18 9 11 9-20 15 26" stroke="#FF4E00" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="170" y="172" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="bold" fill="#0A0A0A">SITESCANNER <tspan fill="#FF4E00">PRO</tspan></text>
+  <text x="80" y="300" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="bold" fill="#0A0A0A">ANALYZE.</text>
+  <text x="80" y="400" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="bold" fill="#FF4E00">SECURE.</text>
+  <text x="80" y="500" font-family="Arial, Helvetica, sans-serif" font-size="96" font-weight="bold" fill="#0A0A0A">OPTIMIZE.</text>
+  <text x="80" y="570" font-family="Courier New, monospace" font-size="28" fill="#6B6B66">SEO · Performance · Security · Accessibility · Code</text>
+</svg>

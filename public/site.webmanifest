@@ -1,0 +1,17 @@
+{
+  "name": "SiteScanner Pro – Website Health Analysis",
+  "short_name": "SiteScanner",
+  "description": "Analyze any public website across SEO, performance, security, accessibility, and code quality — in seconds.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F4F4F0",
+  "theme_color": "#FF4E00",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

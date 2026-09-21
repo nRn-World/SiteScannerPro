@@ -74,6 +74,11 @@ const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps,
             {t.scanning.target} {url}
           </span>
         </div>
+
+        {/* FAS 5.1: ärlig förväntan – första skanningen kan ta upp till 60 s om servern vaknar */}
+        <p className="mt-4 text-[10px] font-mono text-ink/40 text-center">
+          {t.scanning.coldStartHint}
+        </p>
       </div>
     </div>
   );

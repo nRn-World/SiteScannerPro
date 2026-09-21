@@ -5,6 +5,19 @@ import { getAxeLocale, localizeAxeViolation } from './axeLocale.service';
 import { ScannerIssue, ScanScreenshots, Severity, IssueDevice } from '../rules/types';
 import { getSharedBrowser, closeSharedBrowser } from './puppeteerBrowser';
 import { deviceSuffix, localizedIssue, scanMsg } from '../i18n/scanLocale';
+import { acquirePageSlot } from '../utils/puppeteerSemaphore';
+
+/** FAS 5.5: hård övre tidsgräns för hela browseranalysen. */
+const ANALYSIS_TIMEOUT_MS = Math.max(30000, Number(process.env.ANALYSIS_TIMEOUT_MS || '') || 120000);
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms).unref?.()
+    )
+  ]);
+}
 
 const require = createRequire(import.meta.url);
 const AXE_SCRIPT_PATH = require.resolve('axe-core/axe.min.js');
@@ -284,6 +297,7 @@ function buildRuntimeIssues(
 export async function runBrowserAnalysis(url: string, language?: Language): Promise<BrowserAnalysisResult | null> {
   const analysisStarted = Date.now();
   let page: Page | null = null;
+  const releaseSlot = await acquirePageSlot();
 
   try {
     const browser = await getSharedBrowser();
@@ -413,6 +427,7 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
     return null;
   } finally {
     if (page) await page.close().catch(() => {});
+    releaseSlot();
   }
 }
 

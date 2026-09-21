@@ -27,8 +27,18 @@ interface VipPayload {
 }
 
 const VIP_PREFIX = 'SSPV1';
-const STORE_DIR = path.join(process.cwd(), 'data');
-const CONSUMED_PATH = path.join(STORE_DIR, 'vip-consumed.json');
+/**
+ * FAS 1.5: Render har flyktigt filsystem – tillståndet måste överleva deploy.
+ * Sätt DATA_DIR till en monterad Render Disk (render.yaml konfigurerar detta).
+ * Lokalt hamnar det i projektets data/-katalog som vanligt.
+ * Läses lazily så tester kan sätta DATA_DIR innan första anropet.
+ */
+function getStoreDir(): string {
+  return process.env.DATA_DIR || path.join(process.cwd(), 'data');
+}
+function getConsumedPath(): string {
+  return path.join(getStoreDir(), 'vip-consumed.json');
+}
 
 function getSigningSecret(): string {
   const secret = process.env.LICENSE_SIGNING_SECRET || '';
@@ -94,18 +104,18 @@ export class VipService {
   private licenseService = new LicenseService();
 
   private ensureStore(): void {
-    if (!fs.existsSync(STORE_DIR)) {
-      fs.mkdirSync(STORE_DIR, { recursive: true });
+    if (!fs.existsSync(getStoreDir())) {
+      fs.mkdirSync(getStoreDir(), { recursive: true });
     }
-    if (!fs.existsSync(CONSUMED_PATH)) {
-      fs.writeFileSync(CONSUMED_PATH, '[]\n', 'utf8');
+    if (!fs.existsSync(getConsumedPath())) {
+      fs.writeFileSync(getConsumedPath(), '[]\n', 'utf8');
     }
   }
 
   private readConsumed(): string[] {
     this.ensureStore();
     try {
-      const raw = fs.readFileSync(CONSUMED_PATH, 'utf8');
+      const raw = fs.readFileSync(getConsumedPath(), 'utf8');
       const parsed = JSON.parse(raw) as string[];
       return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : [];
     } catch {
@@ -115,7 +125,7 @@ export class VipService {
 
   private writeConsumed(ids: string[]): void {
     this.ensureStore();
-    fs.writeFileSync(CONSUMED_PATH, `${JSON.stringify(ids, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(getConsumedPath(), `${JSON.stringify(ids, null, 2)}\n`, 'utf8');
   }
 
   private isConsumed(vipId: string): boolean {

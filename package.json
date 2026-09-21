@@ -1,16 +1,26 @@
 {
-  "name": "react-example",
+  "name": "sitescanner-pro",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Analyze any public website across SEO, performance, security, accessibility, and code quality — in seconds.",
+  "author": "nRn World <bynrnworld@gmail.com>",
+  "license": "CC-BY-NC-4.0",
+  "homepage": "https://nrn-world.github.io/SiteScannerPro/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nRn-World/SiteScannerPro.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "start": "tsx server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "license:generate": "node scripts/generate-license-key.mjs"
+    "test": "node --test --import tsx tests/*.test.ts",
+    "license:generate": "node scripts/generate-license-key.mjs",
+    "license:issue": "tsx scripts/issue-license-key.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

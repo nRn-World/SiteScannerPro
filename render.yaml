@@ -18,7 +18,22 @@ services:
         sync: false
       - key: LICENSE_SIGNING_SECRET
         sync: false
+      # FAS 1.6: wildcard-fallbacken är borttagen; utan matchande origin
+      # skickas ingen CORS-header alls.
       - key: CORS_ORIGIN
         value: https://nrnworld.one,https://nrn-world.github.io,https://sitescannerpro-ten.vercel.app
+      # FAS 1.5: beständig lagring för VIP-länkar och licensnycklar
+      - key: DATA_DIR
+        value: /var/data/sitescanner
+      - key: LOG_LEVEL
+        value: info
+      - key: MAX_CONCURRENT_SCANS
+        value: 2
+      - key: MAX_CONCURRENT_PAGES
+        value: 2
       - key: VITALS_API_KEY
         sync: false
+    disk:
+      name: sitescanner-data
+      mountPath: /var/data
+      sizeGB: 1

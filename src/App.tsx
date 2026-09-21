@@ -16,10 +16,31 @@ import { ScanResult } from './rules/types';
 import { getLanguage, LANGUAGE_STORAGE_KEY, Language, translations } from './i18n/translations';
 import { apiUrl } from './api';
 
+/** FAS 2.3: canonical sätts dynamiskt utifrån faktisk driftsättningsadress. */
+function getCanonicalOrigin(): string {
+  if (typeof window === 'undefined') return 'https://nrn-world.github.io';
+  const { protocol, hostname, port } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+  }
+  return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+}
+
+function getCanonicalBase(): string {
+  const origin = getCanonicalOrigin();
+  const pathBase = (import.meta.env.VITE_PUBLIC_BASE as string | undefined)?.replace(/\/$/, '') || '';
+  return `${origin}${pathBase}`;
+}
+
 interface ScanHistoryItem {
   url: string;
   date: string;
   score: number;
+}
+
+interface ShareInfo {
+  shareUrlPath: string;
+  expiresAt: string;
 }
 
 const readErrorMessage = async (res: Response, fallback: string): Promise<string> => {
@@ -67,6 +88,14 @@ export default function App() {
   const [language, setLanguage] = useState<Language>(() => getLanguage(localStorage.getItem(LANGUAGE_STORAGE_KEY)));
   const t = translations[language];
   const scanSteps = t.scanSteps;
+  const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  /** FAS 3.4: föregående skanning av samma URL ur historiken. */
+  const previousScanForCurrentUrl = (() => {
+    const target = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    return scanHistory.find((h) => h.url === target && h.score !== result?.overallScore) ?? null;
+  })();
 
   const clearVipSession = (message?: string) => {
     localStorage.removeItem(LICENSE_STORAGE_KEY);
@@ -277,9 +306,7 @@ export default function App() {
           // Keep isPremium so this report stays unlocked; next scan without token goes free.
           setVipBanner(t.vip.used);
         }
-      }
-
-      setResult(data);
+      }      setResult(data);
       
       const newHistoryItem: ScanHistoryItem = {
         url: targetUrl,
@@ -287,9 +314,34 @@ export default function App() {
         score: data.overallScore
       };
       
+      
       const updatedHistory = [newHistoryItem, ...scanHistory].slice(0, 10);
       setScanHistory(updatedHistory);
       localStorage.setItem('siteScannerHistory', JSON.stringify(updatedHistory));
+
+      // FAS 3.1/3.2: skapa signerad delbar rapportlänk (visar betyg + domän).
+      void (async () => {
+        try {
+          const shareRes = await fetch(apiUrl('/api/reports/share'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: targetUrl,
+              score: data.overallScore,
+              metrics: data.metrics
+            })
+          });
+          if (shareRes.ok) {
+            const shareData = await shareRes.json();
+            if (shareData?.shareUrlPath) {
+              setShareInfo(shareData);
+              setShareCopied(false);
+            }
+          }
+        } catch (e) {
+          console.error('Share link failed', e);
+        }
+      })();
     } catch (err: any) {
       console.error(err);
       setError(err.message || t.errors.scanFailed);
@@ -378,7 +430,41 @@ export default function App() {
         <Helmet>
           <title>SiteScanner Pro | {t.nav.scanner}</title>
           <meta name="description" content={t.hero.description} />
-          <link rel="canonical" href="https://sitescanner.pro" />
+          <link rel="canonical" href={getCanonicalBase()} />
+          {/* FAS 2.2: OG + Twitter-kort så delningar får förhandsvisning */}
+          <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="SiteScanner Pro" />
+          <meta property="og:title" content="SiteScanner Pro – See what is holding your website back" />
+          <meta property="og:description" content={t.hero.description} />
+          <meta property="og:url" content={getCanonicalBase()} />
+          <meta property="og:image" content={`${getCanonicalBase()}/og-image.svg`} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="SiteScanner Pro – See what is holding your website back" />
+          <meta name="twitter:description" content={t.hero.description} />
+          <meta name="twitter:image" content={`${getCanonicalBase()}/og-image.svg`} />
+          {/* FAS 2.3: hreflang för alla sex språken */}
+          {(['en', 'sv', 'tr', 'es', 'fr', 'ar'] as Language[]).map((lang) => (
+            <link key={lang} rel="alternate" hreflang={lang} href={`${getCanonicalBase()}/?lang=${lang}`} />
+          ))}
+          <link rel="alternate" hreflang="x-default" href={getCanonicalBase()} />
+          <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230A0A0A'/%3E%3Cpath d='M6 20l5-8 4 5 4-9 7 12' stroke='%23FF4E00' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+          {/* FAS 2.5: strukturerad data – SoftwareApplication med pris */}
+          <script type="application/ld+json">{JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SoftwareApplication',
+            name: 'SiteScanner Pro',
+            applicationCategory: 'BusinessApplication',
+            operatingSystem: 'Web',
+            description: t.hero.description,
+            offers: {
+              '@type': 'Offer',
+              price: '10.99',
+              priceCurrency: 'EUR'
+            },
+            aggregateRating: undefined
+          })}</script>
         </Helmet>
 
         <Header
@@ -454,15 +540,61 @@ export default function App() {
               )}
 
               {result && !isScanning && (
-                <Dashboard 
-                  result={result}
-                  url={url} 
-                  selectedCategory={selectedCategory} 
-                  setSelectedCategory={setSelectedCategory}
-                  onUpgradeClick={() => setShowPaywall(true)}
-                  isPremium={isPremium}
-                  t={t}
-                />
+                <>
+                  {shareInfo && (
+                    <div className="max-w-5xl mx-auto mb-4 tech-border bg-white px-4 py-3 font-mono text-xs md:text-sm flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-ink/70">{t.share.ready}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const full = `${getCanonicalBase()}${shareInfo.shareUrlPath}`;
+                            void navigator.clipboard?.writeText(full).then(() => {
+                              setShareCopied(true);
+                              setTimeout(() => setShareCopied(false), 2500);
+                            });
+                          }}
+                          className="uppercase text-[10px] tracking-wider px-3 py-1.5 bg-ink text-paper hover:bg-accent transition-colors"
+                        >
+                          {shareCopied ? t.share.copied : t.share.copy}
+                        </button>
+                        <a
+                          href={shareInfo.shareUrlPath.startsWith('/') ? `${getCanonicalBase()}${shareInfo.shareUrlPath}` : shareInfo.shareUrlPath}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="uppercase text-[10px] tracking-wider px-3 py-1.5 border-2 border-ink hover:bg-ink hover:text-paper transition-colors"
+                        >
+                          {t.share.open}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {previousScanForCurrentUrl && (
+                    <div className="max-w-5xl mx-auto mb-4 tech-border bg-white px-4 py-3 font-mono text-xs md:text-sm text-ink/80 flex flex-wrap items-center gap-2">
+                      <span>{t.share.compare}</span>
+                      <strong className="text-ink">{previousScanForCurrentUrl.score}/100</strong>
+                      <span>→</span>
+                      <strong className={
+                        result.overallScore > previousScanForCurrentUrl.score ? 'text-green-600' :
+                        result.overallScore < previousScanForCurrentUrl.score ? 'text-accent' : 'text-ink'
+                      }>
+                        {result.overallScore}/100
+                      </strong>
+                      <span className="text-ink/50">
+                        ({new Date(previousScanForCurrentUrl.date).toLocaleDateString(language)})
+                      </span>
+                    </div>
+                  )}
+                  <Dashboard 
+                    result={result}
+                    url={url} 
+                    selectedCategory={selectedCategory} 
+                    setSelectedCategory={setSelectedCategory}
+                    onUpgradeClick={() => setShowPaywall(true)}
+                    isPremium={isPremium}
+                    t={t}
+                  />
+                </>
               )}
 
               {!result && !isScanning && (
