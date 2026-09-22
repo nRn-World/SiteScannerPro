@@ -284,6 +284,9 @@ export class ScanController {
         return;
       }
 
+      // Gratis-nivån kör samma djupanalys (headless Chrome) som Pro –
+      // det som låses bakom Pro är lösningarna (rekommendation/kodfix),
+      // inte fynden. Stryp vitals om ingen API-nyckel finns.
       const result = await this.fetchAndScan(
         normalized,
         isDevServer() || !!process.env.VITALS_API_KEY,

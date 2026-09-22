@@ -3,7 +3,7 @@ import { createRequire } from 'module';
 import type { Language } from '../i18n/translations';
 import { getAxeLocale, localizeAxeViolation } from './axeLocale.service';
 import { ScannerIssue, ScanScreenshots, Severity, IssueDevice } from '../rules/types';
-import { getSharedBrowser, closeSharedBrowser } from './puppeteerBrowser';
+import { getSharedBrowser, closeSharedBrowser, registerScanForBrowser, recycleIfStrained } from './puppeteerBrowser';
 import { deviceSuffix, localizedIssue, scanMsg } from '../i18n/scanLocale';
 import { acquirePageSlot } from '../utils/puppeteerSemaphore';
 
@@ -298,10 +298,25 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
   const analysisStarted = Date.now();
   let page: Page | null = null;
   const releaseSlot = await acquirePageSlot();
+  registerScanForBrowser();
 
   try {
     const browser = await getSharedBrowser();
     page = await browser.newPage();
+    // Under free-tier minnesgräns: blockera tunga resurser som inte påverkar
+    // DOM/headers-analysen nämnvärt (bilder, video, typsnitt).
+    const lowMemory = !!process.env.RENDER || process.env.LOW_MEMORY === '1';
+    if (lowMemory) {
+      await page.setRequestInterception(true);
+      page.on('request', (req) => {
+        const type = req.resourceType();
+        if (type === 'image' || type === 'media' || type === 'font') {
+          void req.abort();
+        } else {
+          void req.continue();
+        }
+      });
+    }
     await page.setUserAgent('Mozilla/5.0 (compatible; SiteScannerBot/2.0)');
 
     const consoleErrors: string[] = [];
@@ -408,6 +423,11 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
 
     const uniqueFilmstrip = filmstrip.filter((f) => frameHash(f) !== frameHash(desktopShot));
 
+    // Frigör sidresurser innan resultatet byggs (free-tier-vänligt)
+    await page.close().catch(() => {});
+    page = null;
+    void recycleIfStrained();
+
     return {
       html,
       finalUrl,
@@ -424,6 +444,9 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
     };
   } catch (err) {
     console.warn('Browser analysis failed:', err);
+    // Browsern kan ha hamnat i dåligt tillstånd (t.ex. minne) – recycle så
+    // nästa skanning börjar fräscht istället för att ärva felet.
+    await closeSharedBrowser().catch(() => {});
     return null;
   } finally {
     if (page) await page.close().catch(() => {});

@@ -45,12 +45,13 @@ The analysis engine is a deterministic rule-based scanner: it fetches the page, 
 
 | | Free | Premium |
 |---|---|---|
-| Website health scan | ✓ | ✓ |
+| Deep website health scan (headless Chrome) | ✓ | ✓ |
 | Overall score & categories | ✓ | ✓ |
 | Issue details | ✓ | ✓ |
 | Complete code solutions | — | ✓ |
+| Agent fix JSON | — | ✓ |
 | Unlimited scans | — | ✓ |
-| Faster scans (shorter wait time) | — | ✓ |
+| Faster scans (priority queue) | — | ✓ |
 
 Premium is a **one-time purchase (€10.99, lifetime access)** — no subscription. Purchase [SiteScanner Pro on Ko-fi](https://ko-fi.com/s/b525e21531). The private lifetime code is shown only in the product's post-purchase thank-you message and is activated in SiteScanner.
 
