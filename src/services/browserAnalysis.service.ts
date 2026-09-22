@@ -385,8 +385,11 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
       navTtfb ?? headerTtfb ?? Math.min(documentLoadTime, Date.now() - analysisStarted)
     );
 
-    const desktopShot = toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
-    const filmstrip = await captureFilmstrip(page);
+    const lowMemoryMode = process.env.NODE_ENV === 'production' || !!process.env.RENDER || process.env.LOW_MEMORY === '1';
+    const desktopShot = lowMemoryMode
+      ? undefined
+      : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
+    const filmstrip = lowMemoryMode ? [] : await captureFilmstrip(page);
     const desktopAxe = await runAxeInBrowser(page, language, 'desktop');
     const desktopRuntime = buildRuntimeIssues(
       consoleErrors,
@@ -410,7 +413,9 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
     await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
     await page.goto(finalUrl, { waitUntil: 'networkidle2', timeout: 35000 });
     await new Promise((r) => setTimeout(r, 800));
-    const mobileShot = toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
+    const mobileShot = lowMemoryMode
+      ? undefined
+      : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
     const mobileAxe = await runAxeInBrowser(page, language, 'mobile');
     const mobileRuntime = buildRuntimeIssues(
       consoleErrors,
@@ -421,7 +426,9 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
       language
     );
 
-    const uniqueFilmstrip = filmstrip.filter((f) => frameHash(f) !== frameHash(desktopShot));
+    const uniqueFilmstrip = desktopShot
+      ? filmstrip.filter((f) => frameHash(f) !== frameHash(desktopShot))
+      : [];
 
     // Frigör sidresurser innan resultatet byggs (free-tier-vänligt)
     await page.close().catch(() => {});
@@ -436,8 +443,8 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
       axeIssues: [...desktopAxe, ...mobileAxe],
       runtimeIssues: [...desktopRuntime, ...mobileRuntime],
       screenshots: {
-        desktop: desktopShot,
-        mobile: mobileShot,
+        ...(desktopShot ? { desktop: desktopShot } : {}),
+        ...(mobileShot ? { mobile: mobileShot } : {}),
         filmstrip: uniqueFilmstrip.length >= 2 ? uniqueFilmstrip : undefined
       },
       headers: responseHeaders

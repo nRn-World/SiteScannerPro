@@ -11,7 +11,7 @@ let scansSinceLaunch = 0;
  * läge med mindre cache så djupanalysen ryms. Lokalt behålls standardläge.
  */
 function isLowMemory(): boolean {
-  return !!process.env.RENDER || process.env.LOW_MEMORY === '1';
+  return process.env.NODE_ENV === 'production' || !!process.env.RENDER || process.env.LOW_MEMORY === '1';
 }
 
 function launchArgs(): string[] {
@@ -29,8 +29,8 @@ function launchArgs(): string[] {
   ];
   if (isLowMemory()) {
     base.push(
-      '--single-process',
-      '--no-zygote',
+      '--renderer-process-limit=1',
+      '--disable-software-rasterizer',
       '--js-flags=--max-old-space-size=256'
     );
   }

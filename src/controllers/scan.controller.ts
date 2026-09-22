@@ -222,9 +222,15 @@ export class ScanController {
         language
       });
 
+      const lowMemoryMode = process.env.NODE_ENV === 'production' || !!process.env.RENDER || process.env.LOW_MEMORY === '1';
       scanResult = {
         ...scanResult,
-        issues: await attachIssueScreenshots(finalUrl, scanResult.issues, html)
+        // Issue-annotated screenshots start another expensive browser pass.
+        // Keep the deep Chrome findings on Render, but avoid a second browser
+        // allocation in the low-memory tier.
+        issues: lowMemoryMode
+          ? scanResult.issues
+          : await attachIssueScreenshots(finalUrl, scanResult.issues, html)
       };
 
       return scanResult;
