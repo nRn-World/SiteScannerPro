@@ -108,6 +108,27 @@ export default function App() {
     }
   };
 
+  const handleRemovePremium = () => {
+    if (!window.confirm(t.nav.removePremiumConfirm)) return;
+
+    localStorage.removeItem(LICENSE_STORAGE_KEY);
+    localStorage.removeItem(VIP_FLAG_KEY);
+    setLicenseToken(null);
+    setIsPremium(false);
+    setIsVip(false);
+    setLicenseMessage(null);
+    setVipBanner(null);
+    setShareInfo(null);
+    // Strip Pro-only fields so solutions do not remain after removing Premium.
+    setResult((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        issues: prev.issues.map(({ recommendation: _r, codeSnippet: _c, agentFix: _a, ...issue }) => issue)
+      };
+    });
+  };
+
   useEffect(() => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     document.documentElement.lang = language;
@@ -475,6 +496,7 @@ export default function App() {
           language={language}
           setLanguage={setLanguage}
           t={t}
+          onRemovePremium={handleRemovePremium}
           onOpenVipOwner={
             typeof window !== 'undefined' &&
             (window.location.hostname === 'localhost' ||

@@ -11,6 +11,7 @@ interface HeaderProps {
   setLanguage: (language: Language) => void;
   t: TranslationSet;
   onOpenVipOwner?: () => void;
+  onRemovePremium?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -21,12 +22,13 @@ const Header: React.FC<HeaderProps> = ({
   language,
   setLanguage,
   t,
-  onOpenVipOwner
+  onOpenVipOwner,
+  onRemovePremium
 }) => {
   return (
     <header className="tech-border-b bg-paper sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div 
+        <div
           className="flex items-center gap-4 cursor-pointer"
           onClick={() => {
             // Full page restart (same idea as Ctrl+F5): clear SPA state and reload.
@@ -40,19 +42,28 @@ const Header: React.FC<HeaderProps> = ({
         >
           <div className="w-10 h-10 bg-ink text-paper flex items-center justify-center tech-border">
             <Activity className="w-6 h-6" />
-          </div >
+          </div>
           <span className="text-2xl font-display font-bold tracking-tighter uppercase hidden sm:block">
             SiteScanner <span className="text-accent">Pro<span className="animate-cursor-blink">_</span></span>
-          </span >
+          </span>
           {isPremium && (
-            <span className="ml-2 inline-flex items-center gap-1 px-3 py-1 bg-accent text-white text-xs font-mono font-bold uppercase tech-border">
+            <button
+              type="button"
+              className="ml-2 inline-flex items-center gap-1 px-3 py-1 bg-accent text-white text-xs font-mono font-bold uppercase tech-border hover:brightness-110 transition-[filter]"
+              title={t.nav.removePremium}
+              aria-label={t.nav.removePremium}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemovePremium?.();
+              }}
+            >
               <Crown className="w-3.5 h-3.5" /> {isVip ? 'VIP' : t.nav.premium}
-            </span >
+            </button>
           )}
-        </div >
+        </div>
         <nav className="flex items-center gap-8 text-sm font-mono font-bold uppercase">
-          <button 
-            onClick={() => setView('home')} 
+          <button
+            onClick={() => setView('home')}
             className={`hover:text-accent transition-colors ${view === 'home' ? 'text-accent' : ''}`}
           >
             {t.nav.scanner}
@@ -60,14 +71,14 @@ const Header: React.FC<HeaderProps> = ({
           <select aria-label={t.languageName} value={language} onChange={(event) => setLanguage(event.target.value as Language)} className="bg-paper tech-border px-2 py-2 text-xs font-mono font-bold uppercase">
             {LANGUAGE_OPTIONS.map(option => <option key={option.code} value={option.code}>{option.label}</option>)}
           </select>
-          <button 
-            onClick={() => setView('about')} 
+          <button
+            onClick={() => setView('about')}
             className={`hover:text-accent transition-colors ${view === 'about' ? 'text-accent' : ''}`}
           >
             {t.nav.about}
           </button>
-          <button 
-            onClick={() => setView('contact')} 
+          <button
+            onClick={() => setView('contact')}
             className={`hover:text-accent transition-colors ${view === 'contact' ? 'text-accent' : ''}`}
           >
             {t.nav.contact}
@@ -83,7 +94,7 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
         </nav>
-      </div >
+      </div>
     </header>
   );
 };
