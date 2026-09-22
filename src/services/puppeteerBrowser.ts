@@ -29,9 +29,8 @@ function launchArgs(): string[] {
   ];
   if (isLowMemory()) {
     base.push(
-      '--renderer-process-limit=1',
       '--disable-software-rasterizer',
-      '--js-flags=--max-old-space-size=256'
+      '--disable-features=Translate,BackForwardCache'
     );
   }
   return base;
