@@ -2,7 +2,9 @@ services:
   - type: web
     name: sitescanner-pro
     runtime: node
-    plan: free
+    # Starter krävs för stabil headless Chrome-djupanalys online.
+    # Free-tier fallbackar annars till light-läge när Chromium träffar minnesgränsen.
+    plan: starter
     buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
