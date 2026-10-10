@@ -12,7 +12,7 @@ Analyze any public website across SEO, performance, security, accessibility, and
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
 
-**[Launch SiteScanner Pro →](https://nrn-world.github.io/SiteScannerPro/)**
+**[Launch SiteScanner Pro →](https://nrnworld.one/SiteScannerPro/)**
 
 </div>
 
