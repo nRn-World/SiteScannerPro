@@ -147,9 +147,19 @@ export interface AnalysisMeta {
   accessibilityChecks: number;
   vitalsEnabled: boolean;
   engines: string[];
+  /** Deterministic rule set version, so scores stay comparable over time. */
+  rulesetVersion: string;
+  /** Categories included in this run. Older saved reports omit this (all five). */
+  categories?: string[];
+  /** Devices included in this run. Older saved reports omit this (both). */
+  devices?: DeviceMode[];
+  /** Whether the user asked for the slower, deeper pass. */
+  thorough?: boolean;
 }
 
 export interface ScanResult {
+  /** Server-side saved report id (present when persistence succeeded). */
+  reportId?: string;
   overallScore: number;
   summary: string;
   metrics: ScanMetrics;

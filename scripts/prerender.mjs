@@ -102,7 +102,13 @@ function prerender() {
   }
 
   fs.writeFileSync(INDEX, html, 'utf8');
+
+  // GitHub Pages serves 404.html for deep links such as /SiteScannerPro/r/<id>.
+  // Copying the SPA shell there keeps saved-report permalinks working.
+  fs.copyFileSync(INDEX, path.join(DIST, '404.html'));
+
   console.log(`[prerender] ${INDEX} uppdaterad med statiska meta + skeleton.`);
+  console.log('[prerender] dist/404.html skapad för SPA-deeplänkar.');
 }
 
 prerender();

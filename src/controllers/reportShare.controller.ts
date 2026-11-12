@@ -1,42 +1,106 @@
 import { Request, Response } from 'express';
 import { createShareToken, decodeShareToken } from '../services/reportShare.service';
+import { getReport, getReportAsset } from '../services/reportStore.service';
+import { LicenseService } from '../services/license.service';
+import { isDevServer } from '../utils/devMode.server';
+import { toPublicResult } from '../utils/reportPresenter';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('report-share');
+const licenseService = new LicenseService();
 
 export class ReportShareController {
-  /** POST /api/reports/share – skapar signerad delbar länk (gratis, inget konto). */
+  /**
+   * POST /api/reports/:id/share
+   * Creates a share link and badge token from a report that is already stored
+   * on the server. The client can no longer supply its own score.
+   */
   public createShare = async (req: Request, res: Response): Promise<void> => {
     try {
-      const url = typeof req.body?.url === 'string' ? req.body.url : '';
-      const score = Number(req.body?.score);
-      const metrics = req.body?.metrics;
+      const reportId = String(req.params.id || '');
+      const report = getReport(reportId);
 
-      if (!url || !Number.isFinite(score)) {
-        res.status(400).json({ error: 'url och score krävs.' });
+      if (!report) {
+        res.status(404).json({ error: 'Rapporten finns inte eller har gått ut.' });
         return;
       }
 
       const share = createShareToken({
-        url,
-        score,
-        metrics: {
-          seo: Number(metrics?.seo ?? 0),
-          performance: Number(metrics?.performance ?? 0),
-          security: Number(metrics?.security ?? 0),
-          accessibility: Number(metrics?.accessibility ?? 0),
-          code: Number(metrics?.code ?? 0)
-        }
+        reportId: report.id,
+        url: report.url,
+        score: report.result.overallScore,
+        metrics: report.result.metrics
       });
 
-      res.json(share);
+      res.json({
+        ...share,
+        reportId: report.id,
+        badgeUrlPath: `/api/badge/${encodeURIComponent(share.token)}.svg`,
+        rulesetVersion: report.rulesetVersion,
+        createdAt: report.createdAt
+      });
     } catch (error: any) {
       log.error('Share create failed', { error: error?.message });
       res.status(500).json({ error: 'Kunde inte skapa delbar länk.' });
     }
   };
 
-  /** GET /api/reports/:token – hämtar signerad rapportdata. */
+  /**
+   * GET /api/reports/:id
+   * Full saved report. Paid fields are only included for a valid Pro/VIP token.
+   */
+  public getReport = async (req: Request, res: Response): Promise<void> => {
+    const report = getReport(String(req.params.id || ''));
+
+    if (!report) {
+      res.status(404).json({ error: 'Rapporten finns inte eller har gått ut.' });
+      return;
+    }
+
+    const token = req.header('x-license-token') || '';
+    let unlocked = isDevServer();
+
+    if (!unlocked && token) {
+      try {
+        const license = await licenseService.validateLicense(token);
+        unlocked = !!license;
+      } catch {
+        // An invalid or unreadable token simply keeps the report locked.
+        unlocked = false;
+      }
+    }
+
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.json({
+      report: {
+        id: report.id,
+        createdAt: report.createdAt,
+        rulesetVersion: report.rulesetVersion,
+        url: report.url,
+        host: report.host,
+        unlocked
+      },
+      result: {
+        ...(unlocked ? report.result : toPublicResult(report.result)),
+        reportId: report.id
+      }
+    });
+  };
+
+  /** GET /api/reports/:id/assets/:file – screenshot files for a saved report. */
+  public getAsset = async (req: Request, res: Response): Promise<void> => {
+    const asset = getReportAsset(String(req.params.id || ''), String(req.params.file || ''));
+
+    if (!asset) {
+      res.status(404).end();
+      return;
+    }
+
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    res.type(asset.contentType).sendFile(asset.filePath);
+  };
+
+  /** Legacy signed-token endpoint (kept for already-issued links). */
   public getShared = async (req: Request, res: Response): Promise<void> => {
     const token = String(req.params.token || '');
     const payload = decodeShareToken(token);
@@ -48,8 +112,8 @@ export class ReportShareController {
   };
 
   /**
-   * GET /api/badge/:token.svg – FAS 3.3: inbäddningsbar badge.
-   * Varje badge är en inkommande länk till produktens sida.
+   * GET /api/badge/:token.svg – embeddable badge.
+   * The token can only be minted by the server from a stored report.
    */
   public badgeSvg = async (req: Request, res: Response): Promise<void> => {
     const token = String(req.params.token || '');

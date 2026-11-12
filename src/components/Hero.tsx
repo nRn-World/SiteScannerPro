@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, ArrowRight, Lock } from 'lucide-react';
-import { TranslationSet } from '../i18n/translations';
+import { Language, TranslationSet } from '../i18n/translations';
+import type { ScanRunOptions } from '../utils/scanOptions';
+import ScanOptionsPanel from './ScanOptionsPanel';
+import DataNotice from './DataNotice';
 
 interface HeroProps {
   url: string;
@@ -10,9 +13,24 @@ interface HeroProps {
   error: string | null;
   isScanning: boolean;
   t: TranslationSet;
+  language: Language;
+  scanOptions: ScanRunOptions;
+  setScanOptions: (options: ScanRunOptions) => void;
+  onOpenPrivacy: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning, t }) => {
+const Hero: React.FC<HeroProps> = ({
+  url,
+  setUrl,
+  onScan,
+  error,
+  isScanning,
+  t,
+  language,
+  scanOptions,
+  setScanOptions,
+  onOpenPrivacy
+}) => {
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -57,6 +75,9 @@ const Hero: React.FC<HeroProps> = ({ url, setUrl, onScan, error, isScanning, t }
           {t.hero.scan} <ArrowRight className="w-6 h-6" />
         </button>
       </form>
+
+      <ScanOptionsPanel value={scanOptions} onChange={setScanOptions} language={language} />
+      <DataNotice kind="scan" language={language} onOpenPrivacy={onOpenPrivacy} />
 
       {error && (
         <motion.div 

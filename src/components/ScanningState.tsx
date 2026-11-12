@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe } from 'lucide-react';
+import { Globe, RefreshCw } from 'lucide-react';
 import { TranslationSet } from '../i18n/translations';
 import LoadingState, { LoadingStateVariant } from './ui/loading-state';
 
@@ -8,6 +8,7 @@ interface ScanningStateProps {
   scanStep: number;
   scanSteps: string[];
   t: TranslationSet;
+  retryNotice?: string | null;
 }
 
 /** Mappar analyssteg till pixel-loader-variant för tydlig progression. */
@@ -18,7 +19,7 @@ function variantForStep(step: number, total: number): LoadingStateVariant {
   return 'Orbit';
 }
 
-const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps, t }) => {
+const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps, t, retryNotice }) => {
   const progress = scanSteps.length > 0 ? (scanStep + 1) / scanSteps.length : 0;
   const label = (scanSteps[scanStep] ?? '').replace(/\.\.\.$/, '').trim() || 'Analyserar';
   const variant = variantForStep(scanStep, scanSteps.length);
@@ -74,6 +75,13 @@ const ScanningState: React.FC<ScanningStateProps> = ({ url, scanStep, scanSteps,
             {t.scanning.target} {url}
           </span>
         </div>
+
+        {retryNotice && (
+          <p className="mt-4 flex items-center justify-center gap-2 text-center font-mono text-[10px] font-bold uppercase tracking-wider text-accent">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            <span>{retryNotice}</span>
+          </p>
+        )}
 
         {/* FAS 5.1: ärlig förväntan – första skanningen kan ta upp till 60 s om servern vaknar */}
         <p className="mt-4 text-[10px] font-mono text-ink/40 text-center">

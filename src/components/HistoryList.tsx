@@ -1,6 +1,8 @@
 import React from 'react';
-import { History, Globe } from 'lucide-react';
+import { History, Globe, Trash2 } from 'lucide-react';
 import { Language, TranslationSet } from '../i18n/translations';
+import { getVerifyCopy } from '../i18n/verifyCopy';
+import DataNotice from './DataNotice';
 
 interface HistoryItem {
   url: string;
@@ -12,17 +14,32 @@ interface HistoryListProps {
   history: HistoryItem[];
   language: Language;
   t: TranslationSet;
+  onClear?: () => void;
 }
 
-const HistoryList: React.FC<HistoryListProps> = ({ history, language, t }) => {
+const HistoryList: React.FC<HistoryListProps> = ({ history, language, t, onClear }) => {
+  const copy = getVerifyCopy(language);
   if (history.length === 0) return null;
 
   return (
     <div className="mt-32 max-w-5xl">
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
         <History className="w-6 h-6 text-accent" />
         <h2 className="text-2xl md:text-3xl font-display font-bold uppercase">{t.history.title}</h2>
+        </div>
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="inline-flex items-center gap-2 border border-ink/20 bg-white px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-ink/60 hover:border-accent hover:text-accent transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {copy.data.clear}
+          </button>
+        )}
       </div >
+      <DataNotice kind="history" language={language} className="mb-4" />
       <div className="bg-white tech-border overflow-hidden">
         <div className="grid grid-cols-12 gap-4 p-4 bg-paper border-b-2 border-ink font-mono text-xs font-bold uppercase">
           <div className="col-span-6 md:col-span-8">{t.history.target}</div >

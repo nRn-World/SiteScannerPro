@@ -106,6 +106,15 @@ export interface TranslationSet {
     codeExample: string;
     copy: string;
     copied: string;
+    actionPlan: {
+      title: string;
+      subtitle: string;
+      whyItMatters: string;
+      showAll: string;
+      locked: string;
+      severity: Record<'High' | 'Medium' | 'Low', string>;
+      categoryImpact: Record<CategoryKey, string>;
+    };
   };
   paywall: {
     title: string;
@@ -268,7 +277,22 @@ const english: TranslationSet = {
     agentFixHint: 'Copy this JSON and paste it to your coding agent. It contains exact steps, code changes and acceptance criteria.',
     codeExample: 'Code example',
     copy: 'Copy',
-    copied: 'Copied!'
+    copied: 'Copied!',
+    actionPlan: {
+      title: 'Priority action plan',
+      subtitle: 'Start with the three highest-priority findings for the selected device.',
+      whyItMatters: 'Why it matters',
+      showAll: 'Show all findings',
+      locked: 'Unlock Pro to see the exact fix.',
+      severity: { High: 'Critical', Medium: 'Warning', Low: 'Improvement' },
+      categoryImpact: {
+        SEO: 'Search engines and social previews use this to understand and rank the page. Fixing it improves discoverability and click-through.',
+        Performance: 'Load speed shapes whether visitors stay and convert. Slow pages hurt mobile users and search ranking.',
+        Security: 'These settings protect visitors and your reputation. Missing protections can expose data or trigger browser warnings.',
+        Accessibility: 'Accessible pages work for more people, including keyboard and screen-reader users, and reduce legal risk.',
+        Code: 'Cleaner code is less likely to break and is faster to maintain as the site grows.'
+      }
+    }
   },
   paywall: {
     title: 'Pro\nRequired.',
@@ -461,6 +485,86 @@ localized.sv.share = {
   compare: 'Föregående skanning av denna sajt:'
 };
 localized.sv.scanning = { target: 'Mål:', coldStartHint: 'Djupskanningar tar 20–40 s. Om servern precis vaknat kan första skanningen ta upp till en minut.' };
+
+localized.sv.dashboard.actionPlan = {
+  title: 'Prioriterad åtgärdsplan',
+  subtitle: 'Börja med de tre viktigaste fynden för vald enhet.',
+  whyItMatters: 'Varför det spelar roll',
+  showAll: 'Visa alla fynd',
+  locked: 'Lås upp Pro för att se den exakta åtgärden.',
+  severity: { High: 'Kritisk', Medium: 'Varning', Low: 'Förbättring' },
+  categoryImpact: {
+    SEO: 'Sökmotorer och sociala förhandsvisningar använder detta för att förstå och rangordna sidan. Åtgärden förbättrar synlighet och klickfrekvens.',
+    Performance: 'Laddningstiden avgör om besökare stannar och konverterar. Långsamma sidor drabbar mobilanvändare och sökranking.',
+    Security: 'Inställningarna skyddar besökare och ditt rykte. Saknade skydd kan exponera data eller ge varningar i webbläsaren.',
+    Accessibility: 'Tillgängliga sidor fungerar för fler, även tangentbords- och skärmläsaranvändare, och minskar juridisk risk.',
+    Code: 'Renare kod går sönder mer sällan och är snabbare att underhålla när sajten växer.'
+  }
+};
+
+localized.tr.dashboard.actionPlan = {
+  title: 'Öncelikli eylem planı',
+  subtitle: 'Seçili cihaz için en yüksek öncelikli üç bulguyla başlayın.',
+  whyItMatters: 'Neden önemli',
+  showAll: 'Tüm bulguları göster',
+  locked: 'Tam düzeltmeyi görmek için Pro’yu açın.',
+  severity: { High: 'Kritik', Medium: 'Uyarı', Low: 'İyileştirme' },
+  categoryImpact: {
+    SEO: 'Arama motorları ve sosyal önizlemeler sayfayı anlamak ve sıralamak için bunu kullanır. Düzeltmek görünürlüğü ve tıklama oranını artırır.',
+    Performance: 'Yükleme hızı ziyaretçilerin kalıp kalma ve dönüşümünü belirler. Yavaş sayfalar mobil kullanıcıları ve sıralamayı olumsuz etkiler.',
+    Security: 'Bu ayarlar ziyaretçileri ve itibarınızı korur. Eksik korumalar verileri açığa çıkarabilir veya tarayıcı uyarılarına yol açabilir.',
+    Accessibility: 'Erişilebilir sayfalar klavye ve ekran okuyucu kullanıcıları dahil daha fazla kişiye hizmet eder ve yasal riski azaltır.',
+    Code: 'Daha temiz kod daha az bozulur ve site büyüdükçe bakımı hızlanır.'
+  }
+};
+
+localized.es.dashboard.actionPlan = {
+  title: 'Plan de acción prioritario',
+  subtitle: 'Empieza por los tres hallazgos de mayor prioridad para el dispositivo seleccionado.',
+  whyItMatters: 'Por qué importa',
+  showAll: 'Ver todos los hallazgos',
+  locked: 'Desbloquea Pro para ver la corrección exacta.',
+  severity: { High: 'Crítico', Medium: 'Aviso', Low: 'Mejora' },
+  categoryImpact: {
+    SEO: 'Los buscadores y las vistas previas sociales usan esto para entender y posicionar la página. Corregirlo mejora la visibilidad y el CTR.',
+    Performance: 'La velocidad decide si los visitantes se quedan y convierten. Las páginas lentas perjudican a móviles y al ranking.',
+    Security: 'Estos ajustes protegen a los visitantes y tu reputación. Las protecciones ausentes pueden exponer datos o generar avisos.',
+    Accessibility: 'Las páginas accesibles sirven a más personas, incluidas las que usan teclado o lector de pantalla, y reducen el riesgo legal.',
+    Code: 'El código más limpio se rompe menos y es más rápido de mantener a medida que el sitio crece.'
+  }
+};
+
+localized.fr.dashboard.actionPlan = {
+  title: 'Plan d’action prioritaire',
+  subtitle: 'Commencez par les trois constats les plus prioritaires pour l’appareil sélectionné.',
+  whyItMatters: 'Pourquoi c’est important',
+  showAll: 'Voir tous les constats',
+  locked: 'Débloquez Pro pour voir la correction exacte.',
+  severity: { High: 'Critique', Medium: 'Avertissement', Low: 'Amélioration' },
+  categoryImpact: {
+    SEO: 'Les moteurs et les aperçus sociaux utilisent ces éléments pour comprendre et classer la page. Corriger améliore la visibilité et le taux de clic.',
+    Performance: 'La vitesse conditionne la rétention et la conversion. Les pages lentes pénalisent les mobiles et le classement.',
+    Security: 'Ces réglages protègent les visiteurs et votre réputation. Des protections manquantes peuvent exposer des données ou déclencher des alertes.',
+    Accessibility: 'Les pages accessibles servent plus de monde, y compris au clavier et au lecteur d’écran, et réduisent le risque juridique.',
+    Code: 'Un code plus propre casse moins et se maintient plus vite quand le site grandit.'
+  }
+};
+
+localized.ar.dashboard.actionPlan = {
+  title: 'خطة عمل مرتبة حسب الأولوية',
+  subtitle: 'ابدأ بأهم ثلاث نتائج للجهاز المحدد.',
+  whyItMatters: 'لماذا يهم',
+  showAll: 'عرض كل النتائج',
+  locked: 'افتح Pro لرؤية الإصلاح الدقيق.',
+  severity: { High: 'حرج', Medium: 'تحذير', Low: 'تحسين' },
+  categoryImpact: {
+    SEO: 'تستخدم محركات البحث والمعاينات الاجتماعية هذا لفهم الصفحة وترتيبها. الإصلاح يحسّن الظهور ونسبة النقر.',
+    Performance: 'تحدد سرعة التحميل بقاء الزوار وتحويلهم. الصفحات البطيئة تضر مستخدمي الجوال والترتيب.',
+    Security: 'تحمي هذه الإعدادات الزوار وسمعتك. غياب الحماية قد يكشف البيانات أو يظهر تحذيرات في المتصفح.',
+    Accessibility: 'الصفحات المتاحة تخدم عددًا أكبر من الناس، بمن فيهم مستخدمو لوحة المفاتيح وقارئ الشاشة، وتقلل المخاطر القانونية.',
+    Code: 'الكود الأنظف أقل عرضة للعطل وأسرع في الصيانة مع نمو الموقع.'
+  }
+};
 
 export const translations: Record<Language, TranslationSet> = { en: english, ...localized };
 export const LANGUAGE_STORAGE_KEY = 'siteScannerLanguage';
