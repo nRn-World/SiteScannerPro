@@ -84,6 +84,8 @@ const ScreenshotPanel: React.FC<ScreenshotPanelProps> = ({
         >
           <img
             src={mainShot}
+            width={view === 'mobile' ? 390 : 1350}
+            height={view === 'mobile' ? 844 : 900}
             alt={view === 'mobile' ? s.mobilePreview : s.desktopPreview}
             className="w-full h-auto block"
             decoding="async"
@@ -126,6 +128,8 @@ const ScreenshotPanel: React.FC<ScreenshotPanelProps> = ({
           <div className={isLh ? 'overflow-hidden bg-gray-100 rounded-lg border border-gray-200' : 'tech-border overflow-hidden bg-paper'}>
             <img
               src={filmstrip[filmIndex]}
+              width={1350}
+              height={900}
               alt={`${s.filmstrip} ${filmIndex + 1}`}
               className="w-full h-auto block max-h-64 object-cover object-top"
               decoding="async"

@@ -82,6 +82,7 @@ const VipOwnerPanel: React.FC<VipOwnerPanelProps> = ({ t, onClose }) => {
         <form onSubmit={handleCreate} className="space-y-3">
           <input
             type="password"
+            aria-label={t.vip.secretPlaceholder}
             value={adminSecret}
             onChange={(event) => setAdminSecret(event.target.value)}
             placeholder={t.vip.secretPlaceholder}

@@ -12,6 +12,8 @@ export default defineConfig({
     },
   },
   server: {
+    // Allow Arena's proxied preview hostname as well as normal local development.
+    allowedHosts: ['.e2b.app'],
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
     hmr: process.env.DISABLE_HMR !== 'true',
   },
