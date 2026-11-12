@@ -1,12 +1,17 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Globe, Download, ExternalLink, Monitor, Smartphone } from 'lucide-react';
+import { Globe, Download, ExternalLink, Monitor, Smartphone, RefreshCw } from 'lucide-react';
 import ScoreGauge from './ui/ScoreGauge';
 import AuditList from './ui/AuditList';
 import VitalsPanel from './ui/VitalsPanel';
 import ScreenshotPanel from './ui/ScreenshotPanel';
+import PriorityPlan from './PriorityPlan';
+import ComparePanel from './ComparePanel';
+import ScoreExplanation from './ScoreExplanation';
+import ScanDiffPanel from './ScanDiffPanel';
 import { DeviceMode, IssueDevice, ScanMetrics, ScanResult } from '../rules/types';
-import { CategoryKey, TranslationSet } from '../i18n/translations';
+import { CategoryKey, Language, TranslationSet } from '../i18n/translations';
+import { getVerifyCopy } from '../i18n/verifyCopy';
 
 interface DashboardProps {
   result: ScanResult;
@@ -15,20 +20,38 @@ interface DashboardProps {
   setSelectedCategory: (category: string | null) => void;
   onUpgradeClick: () => void;
   isPremium?: boolean;
+  language: Language;
+  licenseToken?: string | null;
   t: TranslationSet;
+  onRescan?: () => void;
+  previousResult?: ScanResult | null;
 }
 
 const CATEGORIES: CategoryKey[] = ['SEO', 'Performance', 'Security', 'Accessibility', 'Code'];
+
+const METRIC_BY_CATEGORY: Record<CategoryKey, keyof ScanMetrics> = {
+  SEO: 'seo',
+  Performance: 'performance',
+  Security: 'security',
+  Accessibility: 'accessibility',
+  Code: 'code'
+};
 
 function issueAppliesToDevice(deviceHint: IssueDevice | undefined, mode: DeviceMode): boolean {
   const d = deviceHint ?? 'both';
   return d === 'both' || d === mode;
 }
 
-function metricsForDevice(result: ScanResult, device: DeviceMode): { metrics: ScanMetrics; overall: number } {
+function metricsForDevice(
+  result: ScanResult,
+  device: DeviceMode,
+  categories: CategoryKey[]
+): { metrics: ScanMetrics; overall: number } {
   const metrics = result.metricsByDevice?.[device] ?? result.metrics;
+  const selected = categories.length ? categories : CATEGORIES;
   const overall = Math.round(
-    (metrics.seo + metrics.performance + metrics.security + metrics.accessibility + metrics.code) / 5
+    selected.reduce((sum, category) => sum + metrics[METRIC_BY_CATEGORY[category]], 0) /
+      selected.length
   );
   return { metrics, overall };
 }
@@ -48,13 +71,47 @@ const Dashboard: React.FC<DashboardProps> = ({
   setSelectedCategory,
   onUpgradeClick,
   isPremium = false,
-  t
+  language,
+  licenseToken,
+  t,
+  onRescan,
+  previousResult
 }) => {
-  const [device, setDevice] = useState<DeviceMode>('mobile');
+  const copy = getVerifyCopy(language);
+  const scopeCategories = useMemo(() => {
+    const fromAnalysis = (result.analysis?.categories ?? []).filter(
+      (category): category is CategoryKey => CATEGORIES.includes(category as CategoryKey)
+    );
+    return fromAnalysis.length ? fromAnalysis : CATEGORIES;
+  }, [result.analysis?.categories]);
+  const availableDevices = useMemo<DeviceMode[]>(() => {
+    const devices = result.analysis?.devices?.filter(
+      (item): item is DeviceMode => item === 'mobile' || item === 'desktop'
+    );
+    return devices?.length ? devices : (['mobile', 'desktop'] as DeviceMode[]);
+  }, [result.analysis?.devices]);
+  const deviceScopeKey = availableDevices.join('|');
+
+  const [device, setDevice] = useState<DeviceMode>(() =>
+    availableDevices.includes('mobile') ? 'mobile' : 'desktop'
+  );
+  const auditsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!availableDevices.includes(device)) {
+      setDevice(availableDevices[0]);
+    }
+  }, [deviceScopeKey, device]);
+
+  useEffect(() => {
+    if (selectedCategory && !scopeCategories.includes(selectedCategory as CategoryKey)) {
+      setSelectedCategory(null);
+    }
+  }, [scopeCategories, selectedCategory, setSelectedCategory]);
 
   const { metrics: deviceMetrics, overall: deviceOverall } = useMemo(
-    () => metricsForDevice(result, device),
-    [result, device]
+    () => metricsForDevice(result, device, scopeCategories),
+    [result, device, scopeCategories]
   );
 
   const activeVitals = result.vitalsByDevice?.[device] ?? (device === 'mobile' ? result.vitals : undefined);
@@ -71,6 +128,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const toggleCategory = (cat: CategoryKey) => {
     setSelectedCategory(selectedCategory === cat ? null : cat);
+  };
+
+  const showAllFindings = () => {
+    // "Show all" should always reveal the complete list, even when a category
+    // filter is active. Scroll and move focus so keyboard users land there too.
+    setSelectedCategory(null);
+    const target = auditsRef.current;
+    if (!target) return;
+    // Focus first: focusing after a scroll can move it again. The state update
+    // above also re-renders the audit list, so an instant scroll is reliable.
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ block: 'start' });
   };
 
   const deviceTabClass = (active: boolean) =>
@@ -107,15 +176,28 @@ const Dashboard: React.FC<DashboardProps> = ({
               <p className="text-sm text-gray-600 mt-2 leading-relaxed">{result.summary}</p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="shrink-0 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            {t.dashboard.exportPdf}
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {onRescan && (
+              <button
+                type="button"
+                onClick={onRescan}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#1a73e8] rounded-lg hover:bg-[#1765cc] transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {copy.rescan}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              {t.dashboard.exportPdf}
+            </button>
+          </div>
         </div>
+        {onRescan && <p className="mt-3 text-xs text-gray-500">{copy.rescanHint}</p>}
       </div>
 
       {/* Mobil / Dator – två resultatlägen */}
@@ -123,30 +205,35 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="text-sm font-medium text-gray-900">{t.dashboard.deviceMode.title}</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{t.dashboard.deviceMode.subtitle}</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {availableDevices.length > 1
+                ? t.dashboard.deviceMode.subtitle
+                : language === 'sv'
+                  ? 'Den här skanningen analyserade bara en enhet.'
+                  : 'This scan analysed a single device.'}
+            </p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto" role="tablist" aria-label={t.dashboard.deviceMode.title}>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={device === 'mobile'}
-              onClick={() => setDevice('mobile')}
-              className={deviceTabClass(device === 'mobile')}
-            >
-              <Smartphone className="w-4 h-4" />
-              {t.dashboard.deviceMode.mobile}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={device === 'desktop'}
-              onClick={() => setDevice('desktop')}
-              className={deviceTabClass(device === 'desktop')}
-            >
-              <Monitor className="w-4 h-4" />
-              {t.dashboard.deviceMode.desktop}
-            </button>
-          </div>
+          {availableDevices.length > 1 ? (
+            <div className="flex gap-2 w-full sm:w-auto" role="tablist" aria-label={t.dashboard.deviceMode.title}>
+              {availableDevices.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  role="tab"
+                  aria-selected={device === mode}
+                  onClick={() => setDevice(mode)}
+                  className={deviceTabClass(device === mode)}
+                >
+                  {mode === 'mobile' ? <Smartphone className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+                  {mode === 'mobile' ? t.dashboard.deviceMode.mobile : t.dashboard.deviceMode.desktop}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs font-medium text-gray-500">
+              {availableDevices[0] === 'mobile' ? copy.options.mobile : copy.options.desktop}
+            </p>
+          )}
         </div>
         <p className="text-xs text-[#1a73e8] mt-3">
           {device === 'mobile' ? t.dashboard.deviceMode.showingMobile : t.dashboard.deviceMode.showingDesktop}
@@ -164,7 +251,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </h3>
         <div className="flex flex-wrap justify-center gap-2 md:gap-4">
           <ScoreGauge score={deviceOverall} label={t.dashboard.totalScore} size={96} />
-          {CATEGORIES.map((cat) => (
+          {scopeCategories.map((cat) => (
             <ScoreGauge
               key={cat}
               score={categoryScores[cat]}
@@ -189,6 +276,29 @@ const Dashboard: React.FC<DashboardProps> = ({
           </p>
         )}
       </div>
+
+      <ScoreExplanation result={result} device={device} language={language} t={t} />
+
+      {previousResult && (
+        <ScanDiffPanel previous={previousResult} current={result} language={language} />
+      )}
+
+      <PriorityPlan
+        issues={filteredIssues}
+        t={t}
+        isPremium={isPremium}
+        onUpgradeClick={onUpgradeClick}
+        onShowAll={showAllFindings}
+      />
+
+      <ComparePanel
+        baseUrl={url}
+        language={language}
+        licenseToken={licenseToken}
+        isPremium={isPremium}
+        onUpgradeClick={onUpgradeClick}
+        t={t}
+      />
 
       {/* Skärmdumpar för aktiv enhet */}
       {result.screenshots && (
@@ -226,7 +336,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {/* Granskningar – Lighthouse-lista */}
-      <div>
+      <div ref={auditsRef} tabIndex={-1} className="scroll-mt-24 outline-none">
         <div className="flex items-center justify-between mb-3 px-1">
           <h3 className="text-base font-medium text-gray-900">
             {selectedCategory
@@ -254,7 +364,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           >
             {t.dashboard.filterAll}
           </button>
-          {CATEGORIES.map((cat) => (
+          {scopeCategories.map((cat) => (
             <button
               key={cat}
               type="button"

@@ -2,7 +2,7 @@ import { Page, HTTPResponse } from 'puppeteer';
 import { createRequire } from 'module';
 import type { Language } from '../i18n/translations';
 import { getAxeLocale, localizeAxeViolation } from './axeLocale.service';
-import { ScannerIssue, ScanScreenshots, Severity, IssueDevice } from '../rules/types';
+import { ScannerIssue, ScanScreenshots, Severity, IssueDevice, DeviceMode } from '../rules/types';
 import { getSharedBrowser, closeSharedBrowser, registerScanForBrowser, recycleIfStrained } from './puppeteerBrowser';
 import { deviceSuffix, localizedIssue, scanMsg } from '../i18n/scanLocale';
 import { acquirePageSlot } from '../utils/puppeteerSemaphore';
@@ -33,6 +33,12 @@ export interface BrowserAnalysisResult {
   runtimeIssues: ScannerIssue[];
   screenshots: ScanScreenshots;
   headers: Record<string, string>;
+}
+
+export interface BrowserAnalysisOptions {
+  devices?: DeviceMode[];
+  thorough?: boolean;
+  categories?: string[];
 }
 
 function mapImpact(impact: string | null | undefined): Severity {
@@ -294,11 +300,23 @@ function buildRuntimeIssues(
   return issues;
 }
 
-export async function runBrowserAnalysis(url: string, language?: Language): Promise<BrowserAnalysisResult | null> {
+export async function runBrowserAnalysis(
+  url: string,
+  language?: Language,
+  options: BrowserAnalysisOptions = {}
+): Promise<BrowserAnalysisResult | null> {
   const analysisStarted = Date.now();
   let page: Page | null = null;
   const releaseSlot = await acquirePageSlot();
   registerScanForBrowser();
+
+  const devices = new Set<DeviceMode>(
+    options.devices?.length ? options.devices : ['mobile', 'desktop']
+  );
+  const runDesktop = devices.has('desktop');
+  const runMobile = devices.has('mobile');
+  const includeAccessibility = !options.categories?.length || options.categories.includes('Accessibility');
+  const thorough = options.thorough !== false;
 
   try {
     const browser = await getSharedBrowser();
@@ -386,19 +404,23 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
     );
 
     const lowMemoryMode = process.env.NODE_ENV === 'production' || !!process.env.RENDER || process.env.LOW_MEMORY === '1';
-    const desktopShot = lowMemoryMode
-      ? undefined
-      : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
-    const filmstrip = lowMemoryMode ? [] : await captureFilmstrip(page);
-    const desktopAxe = await runAxeInBrowser(page, language, 'desktop');
-    const desktopRuntime = buildRuntimeIssues(
-      consoleErrors,
-      pageErrors,
-      failedResponses,
-      failedRequests,
-      'desktop',
-      language
-    );
+    const desktopShot =
+      !lowMemoryMode && runDesktop
+        ? toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }))
+        : undefined;
+    const filmstrip = !lowMemoryMode && runDesktop && thorough ? await captureFilmstrip(page) : [];
+    const desktopAxe =
+      runDesktop && includeAccessibility ? await runAxeInBrowser(page, language, 'desktop') : [];
+    const desktopRuntime = runDesktop
+      ? buildRuntimeIssues(
+          consoleErrors,
+          pageErrors,
+          failedResponses,
+          failedRequests,
+          'desktop',
+          language
+        )
+      : [];
 
     // Reset runtime collectors before mobile pass
     consoleErrors.length = 0;
@@ -406,25 +428,31 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
     failedResponses.length = 0;
     failedRequests.length = 0;
 
-    // True mobile viewport + UA for the mobile result mode
-    await page.setUserAgent(
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
-    );
-    await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
-    await page.goto(finalUrl, { waitUntil: 'networkidle2', timeout: 35000 });
-    await new Promise((r) => setTimeout(r, 800));
-    const mobileShot = lowMemoryMode
-      ? undefined
-      : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
-    const mobileAxe = await runAxeInBrowser(page, language, 'mobile');
-    const mobileRuntime = buildRuntimeIssues(
-      consoleErrors,
-      pageErrors,
-      failedResponses,
-      failedRequests,
-      'mobile',
-      language
-    );
+    let mobileShot: string | undefined;
+    let mobileAxe: ScannerIssue[] = [];
+    let mobileRuntime: ScannerIssue[] = [];
+
+    if (runMobile) {
+      // True mobile viewport + UA for the mobile result mode
+      await page.setUserAgent(
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+      );
+      await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+      await page.goto(finalUrl, { waitUntil: 'networkidle2', timeout: 35000 });
+      await new Promise((r) => setTimeout(r, 800));
+      mobileShot = lowMemoryMode
+        ? undefined
+        : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
+      mobileAxe = includeAccessibility ? await runAxeInBrowser(page, language, 'mobile') : [];
+      mobileRuntime = buildRuntimeIssues(
+        consoleErrors,
+        pageErrors,
+        failedResponses,
+        failedRequests,
+        'mobile',
+        language
+      );
+    }
 
     const uniqueFilmstrip = desktopShot
       ? filmstrip.filter((f) => frameHash(f) !== frameHash(desktopShot))
@@ -443,8 +471,8 @@ export async function runBrowserAnalysis(url: string, language?: Language): Prom
       axeIssues: [...desktopAxe, ...mobileAxe],
       runtimeIssues: [...desktopRuntime, ...mobileRuntime],
       screenshots: {
-        ...(desktopShot ? { desktop: desktopShot } : {}),
-        ...(mobileShot ? { mobile: mobileShot } : {}),
+        ...(desktopShot && runDesktop ? { desktop: desktopShot } : {}),
+        ...(mobileShot && runMobile ? { mobile: mobileShot } : {}),
         filmstrip: uniqueFilmstrip.length >= 2 ? uniqueFilmstrip : undefined
       },
       headers: responseHeaders

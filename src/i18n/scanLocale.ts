@@ -994,25 +994,72 @@ export function deviceSuffix(lang: Language | undefined, device: 'mobile' | 'des
   return ` (${label})`;
 }
 
+export interface ScanSummaryScope {
+  rulesChecked: number;
+  accessibilityChecks: number;
+  categories?: string[];
+  devices?: string[];
+}
+
 export function summarizeScan(
   lang: Language | undefined,
   score: number,
   issueCount: number,
   hasVitals: boolean,
-  hasBrowser: boolean
+  hasBrowser: boolean,
+  scope?: ScanSummaryScope
 ): string {
   const isSv = lang === 'sv';
-  const depth = hasBrowser
-    ? isSv
-      ? 'Djupanalys med headless Chrome (runtime, nätverk, skärmdumpar) och utökade WCAG-kontroller.'
-      : 'Deep analysis with headless Chrome (runtime, network, screenshots) and extended WCAG checks.'
-    : hasVitals
-      ? isSv
-        ? 'Analysen inkluderar Core Web Vitals och WCAG-tillgänglighetskontroller.'
-        : 'The analysis includes Core Web Vitals and WCAG accessibility checks.'
+  const categoryCount = scope?.categories?.length ?? 5;
+  const deviceCount = scope?.devices?.length ?? 2;
+  const isPartial = Boolean(scope) && (categoryCount < 5 || deviceCount < 2);
+  const checks = scope
+    ? `${scope.rulesChecked} ${isSv ? 'regelkontroller' : 'rule checks'}${
+        scope.accessibilityChecks > 0
+          ? `${isSv ? ' och ' : ' and '}${scope.accessibilityChecks} ${
+              isSv ? 'WCAG-kontroller' : 'WCAG checks'
+            }`
+          : ''
+      }`
+    : isSv
+      ? '80+ regler och WCAG-tillgänglighetskontroller via axe-core'
+      : '80+ rules and WCAG accessibility checks via axe-core';
+
+  const deviceLabel = scope
+    ? scope.devices?.length === 1
+      ? scope.devices[0] === 'mobile'
+        ? isSv
+          ? 'endast mobil'
+          : 'mobile only'
+        : isSv
+          ? 'endast dator'
+          : 'desktop only'
       : isSv
-        ? 'Analysen inkluderar 80+ regler och WCAG-tillgänglighetskontroller via axe-core.'
-        : 'The analysis includes 80+ rules and WCAG accessibility checks via axe-core.';
+        ? 'mobil och dator'
+        : 'mobile and desktop'
+    : '';
+
+  const depth = scope
+    ? isPartial
+      ? isSv
+        ? `Partiell analys (${categoryCount} av 5 kategorier, ${deviceLabel}): ${checks}. Poängen gäller bara det valda omfånget.`
+        : `Partial analysis (${categoryCount} of 5 categories, ${deviceLabel}): ${checks}. The score covers only the selected scope.`
+      : isSv
+        ? `${hasBrowser ? 'Djupanalys med headless Chrome (runtime, nätverk, skärmdumpar)' : 'Analys'}: ${checks}${
+            hasVitals ? ' samt Core Web Vitals' : ''
+          }.`
+        : `${hasBrowser ? 'Deep analysis with headless Chrome (runtime, network, screenshots)' : 'Analysis'}: ${checks}${
+            hasVitals ? ' and Core Web Vitals' : ''
+          }.`
+    : hasBrowser
+      ? isSv
+        ? 'Djupanalys med headless Chrome (runtime, nätverk, skärmdumpar) och utökade WCAG-kontroller.'
+        : 'Deep analysis with headless Chrome (runtime, network, screenshots) and extended WCAG checks.'
+      : hasVitals
+        ? isSv
+          ? 'Analysen inkluderar Core Web Vitals och WCAG-tillgänglighetskontroller.'
+          : 'The analysis includes Core Web Vitals and WCAG accessibility checks.'
+        : checks;
 
   if (score >= 90) {
     return isSv
@@ -1026,8 +1073,12 @@ export function summarizeScan(
   }
   if (score >= 50) {
     return isSv
-      ? `${issueCount} brister hittades som påverkar SEO, prestanda eller säkerhet. ${depth}`
-      : `${issueCount} issues were found that affect SEO, performance or security. ${depth}`;
+      ? isPartial
+        ? `${issueCount} brister hittades i det valda omfånget. ${depth}`
+        : `${issueCount} brister hittades som påverkar SEO, prestanda eller säkerhet. ${depth}`
+      : isPartial
+        ? `${issueCount} issues were found in the selected scope. ${depth}`
+        : `${issueCount} issues were found that affect SEO, performance or security. ${depth}`;
   }
   return isSv
     ? `Webbplatsen behöver omfattande åtgärder – ${issueCount} problem identifierades. ${depth}`

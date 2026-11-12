@@ -10,6 +10,8 @@ const SHARE_PREFIX = 'SSPR1';
 
 export interface SharePayload {
   v: 1;
+  /** Saved report the share was created from. */
+  reportId?: string;
   host: string;        // endast host, aldrig path/query (integritet)
   score: number;       // totalpoäng 0-100
   metrics: { seo: number; performance: number; security: number; accessibility: number; code: number };
@@ -58,6 +60,8 @@ export function createShareToken(input: {
   url: string;
   score: number;
   metrics: { seo: number; performance: number; security: number; accessibility: number; code: number };
+  /** When present, the share link points at the saved report permalink. */
+  reportId?: string;
 }): ShareToken {
   let host = '(invalid)';
   try {
@@ -68,6 +72,7 @@ export function createShareToken(input: {
 
   const payload: SharePayload = {
     v: 1,
+    ...(input.reportId ? { reportId: input.reportId } : {}),
     host,
     score: Math.max(0, Math.min(100, Math.round(input.score))),
     metrics: input.metrics,
@@ -81,7 +86,9 @@ export function createShareToken(input: {
   return {
     token,
     expiresAt: new Date(payload.exp * 1000).toISOString(),
-    shareUrlPath: `/report?t=${encodeURIComponent(token)}`
+    shareUrlPath: input.reportId
+      ? `/r/${input.reportId}`
+      : `/report?t=${encodeURIComponent(token)}`
   };
 }
 
@@ -98,6 +105,9 @@ export function decodeShareToken(token: string): SharePayload | null {
   try {
     const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8')) as SharePayload;
     if (payload.v !== 1 || typeof payload.host !== 'string' || typeof payload.exp !== 'number') {
+      return null;
+    }
+    if (payload.reportId !== undefined && typeof payload.reportId !== 'string') {
       return null;
     }
     if (payload.exp <= Math.floor(Date.now() / 1000)) {

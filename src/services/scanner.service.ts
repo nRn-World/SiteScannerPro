@@ -16,11 +16,16 @@ import { runVitalsAnalysis } from './vitalsApi.service';
 import { BrowserAnalysisResult } from './browserAnalysis.service';
 import { attachAgentFixes } from './agentFix.service';
 import { summarizeScan, localizeHardcodedIssues } from '../i18n/scanLocale';
+import { RULESET_VERSION } from '../rules/version';
+import { SCAN_CATEGORIES, type ScanCategory } from '../utils/scanOptions';
 
 export interface ScanOptions {
   includeVitals?: boolean;
   browserResult?: BrowserAnalysisResult | null;
   language?: Language;
+  categories?: string[];
+  devices?: DeviceMode[];
+  thorough?: boolean;
 }
 
 /** Rules that mainly affect mobile UX / scoring */
@@ -58,18 +63,30 @@ export class ScannerService {
   ): Promise<ScanResult> {
     const engines: string[] = ['SiteScanner Rules'];
     const browser = options.browserResult;
+    const selectedCategories = (
+      options.categories?.length ? options.categories : SCAN_CATEGORIES
+    ) as ScanCategory[];
+    const selectedSet = new Set<string>(selectedCategories);
+    const includeAccessibility = selectedSet.has('Accessibility');
+    const includeVitals =
+      options.includeVitals !== false &&
+      (selectedSet.has('Performance') || selectedSet.has('SEO') || selectedSet.has('Accessibility'));
+    const rules = ALL_RULES.filter((rule) => selectedSet.has(rule.category));
+    const devices = options.devices?.length ? options.devices : (['mobile', 'desktop'] as DeviceMode[]);
 
     if (browser) engines.push('Headless Chrome + runtime');
 
     const [ruleResults, axeFromDom, vitalsResult] = await Promise.all([
-      Promise.all(ALL_RULES.map((rule) => rule.run(html, context))),
+      Promise.all(rules.map((rule) => rule.run(html, context))),
       browser?.axeIssues?.length
         ? Promise.resolve([] as ScannerIssue[])
-        : runAxeAudit(html, context.finalUrl, options.language).catch((err) => {
-            console.warn('axe audit failed:', err);
-            return [] as ScannerIssue[];
-          }),
-      options.includeVitals !== false
+        : includeAccessibility
+          ? runAxeAudit(html, context.finalUrl, options.language).catch((err) => {
+              console.warn('axe audit failed:', err);
+              return [] as ScannerIssue[];
+            })
+          : Promise.resolve([] as ScannerIssue[]),
+      includeVitals
         ? runVitalsAnalysis(context.finalUrl, options.language)
         : Promise.resolve(null)
     ]);
@@ -78,7 +95,7 @@ export class ScannerService {
       ...issue,
       device: issue.device ?? ('both' as IssueDevice)
     }));
-    engines.push('axe-core (WCAG 2.x / 2.1 / 2.2)');
+    if (includeAccessibility) engines.push('axe-core (WCAG 2.x / 2.1 / 2.2)');
     if (browser?.runtimeIssues?.length) engines.push('Browser runtime (console/network)');
     if (vitalsResult) engines.push('Core Web Vitals API');
 
@@ -102,7 +119,7 @@ export class ScannerService {
       ...axeIssues,
       ...runtimeIssues,
       ...vitalsIssues
-    ];
+    ].filter((issue) => selectedSet.has(issue.category));
 
     const deduped = this.deduplicateIssues(allIssues);
     // Agent-fix JSON always from English issue text (for coding agents).
@@ -115,9 +132,10 @@ export class ScannerService {
     const withAgentFixes = localized;
 
     const metricsByDevice = this.buildMetricsByDevice(withAgentFixes, vitalsResult?.vitalsByDevice);
-    // Default/public metrics = mobile (PageSpeed default)
-    const metrics = metricsByDevice.mobile;
-    const overallScore = this.overallFromMetrics(metrics);
+    // Public metrics follow the narrowest selected scope; mobile is the default.
+    const primaryDevice: DeviceMode = devices.includes('mobile') ? 'mobile' : 'desktop';
+    const metrics = metricsByDevice[primaryDevice];
+    const overallScore = this.overallFromMetrics(metrics, selectedCategories);
 
     const screenshots: ScanScreenshots = {
       desktop: browser?.screenshots?.desktop ?? vitalsResult?.screenshots?.desktop,
@@ -133,26 +151,44 @@ export class ScannerService {
 
     return {
       overallScore,
-      summary: summarizeScan(options.language, overallScore, withAgentFixes.length, !!vitalsResult, !!browser),
+      summary: summarizeScan(options.language, overallScore, withAgentFixes.length, !!vitalsResult, !!browser, {
+        rulesChecked: rules.length,
+        accessibilityChecks: includeAccessibility ? countAxeRules() : 0,
+        categories: selectedCategories,
+        devices
+      }),
       metrics,
       metricsByDevice,
       issues: withAgentFixes,
-      vitals: vitalsResult?.vitalsByDevice?.mobile ?? vitalsResult?.vitals,
+      vitals: vitalsResult?.vitalsByDevice?.[primaryDevice] ?? vitalsResult?.vitals,
       vitalsByDevice: vitalsResult?.vitalsByDevice,
       screenshots: Object.keys(cleanedScreenshots).length ? cleanedScreenshots : undefined,
       analysis: {
-        rulesChecked: ALL_RULES.length,
-        accessibilityChecks: countAxeRules(),
+        rulesChecked: rules.length,
+        accessibilityChecks: includeAccessibility ? countAxeRules() : 0,
         vitalsEnabled: !!vitalsResult,
-        engines
+        engines,
+        rulesetVersion: RULESET_VERSION,
+        categories: selectedCategories,
+        devices,
+        thorough: options.thorough !== false
       }
     };
   }
 
-  private overallFromMetrics(metrics: ScanMetrics): number {
-    return Math.round(
-      (metrics.seo + metrics.performance + metrics.security + metrics.accessibility + metrics.code) / 5
-    );
+  private overallFromMetrics(metrics: ScanMetrics, categories: string[]): number {
+    const categoryToMetric: Record<string, keyof ScanMetrics> = {
+      SEO: 'seo',
+      Performance: 'performance',
+      Security: 'security',
+      Accessibility: 'accessibility',
+      Code: 'code'
+    };
+    const keys = categories
+      .map((category) => categoryToMetric[category])
+      .filter((key): key is keyof ScanMetrics => Boolean(key));
+    const scopedKeys = keys.length ? keys : (Object.keys(metrics) as Array<keyof ScanMetrics>);
+    return Math.round(scopedKeys.reduce((sum, key) => sum + metrics[key], 0) / scopedKeys.length);
   }
 
   private buildMetricsByDevice(
