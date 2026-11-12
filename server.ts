@@ -14,6 +14,20 @@ import { startMonitorScheduler } from "./src/services/monitorScheduler.service";
 
 const log = createLogger('server');
 
+// Google Fonts is the only third-party style/font source. Screenshots and the
+// inline favicon use data URLs, while saved-report screenshots are served from
+// the API origin. Scripts are restricted to the app bundle with no inline or
+// eval allowance.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: https:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'"
+].join('; ');
+
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
@@ -127,6 +141,17 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     const indexFile = path.join(distPath, "index.html");
+
+    // Enforce CSP only for the production SPA. Vite's dev client needs inline
+    // scripts and a WebSocket connection, so development keeps its own mode.
+    app.use((_req, res, next) => {
+      res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+      next();
+    });
 
     // Saved-report permalinks get report-specific title/OG/canonical metadata
     // when the app is served by this Express process (Render/custom domain).

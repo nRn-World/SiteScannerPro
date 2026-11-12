@@ -46,6 +46,13 @@ function prerender() {
 
   let html = fs.readFileSync(INDEX, 'utf8');
 
+  // Vite strips the explicit defer attribute from module bundles even though
+  // module scripts are deferred by default. Keep it in the served HTML so
+  // performance audits can verify that the app bundle is non-blocking.
+  html = html.replace(/<script([^>]*\btype="module"[^>]*\bsrc="[^"]+"[^>]*)>/g, (tag, attrs) =>
+    /\bdefer\b/.test(attrs) ? tag : `<script defer${attrs}>`
+  );
+
   const canonical = `${SITE_URL}/`;
   const hreflangTags = LANGUAGES.map(
     (lang) => `<link rel="alternate" hreflang="${lang}" href="${SITE_URL}/?lang=${lang}" />`
