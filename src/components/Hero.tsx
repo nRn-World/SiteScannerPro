@@ -60,6 +60,7 @@ const Hero: React.FC<HeroProps> = ({
           </div >
           <input
             type="text"
+            aria-label={t.hero.urlPlaceholder}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={t.hero.urlPlaceholder}

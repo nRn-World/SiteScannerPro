@@ -54,7 +54,7 @@ function mapImpact(impact: string | null | undefined): Severity {
 }
 
 function toDataUrl(base64: string): string {
-  return `data:image/jpeg;base64,${base64}`;
+  return `data:image/webp;base64,${base64}`;
 }
 
 function frameHash(dataUrl: string): string {
@@ -84,7 +84,7 @@ async function captureFilmstrip(page: Page): Promise<string[]> {
     if (y - lastY < 80 && lastY >= 0) continue;
     await page.evaluate((scrollY) => window.scrollTo(0, scrollY), y);
     await new Promise((r) => setTimeout(r, 400));
-    const shot = toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 70 }));
+    const shot = toDataUrl(await page.screenshot({ encoding: 'base64', type: 'webp', quality: 70 }));
     const hash = frameHash(shot);
     if (seen.has(hash)) continue;
     seen.add(hash);
@@ -406,7 +406,7 @@ export async function runBrowserAnalysis(
     const lowMemoryMode = process.env.NODE_ENV === 'production' || !!process.env.RENDER || process.env.LOW_MEMORY === '1';
     const desktopShot =
       !lowMemoryMode && runDesktop
-        ? toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }))
+        ? toDataUrl(await page.screenshot({ encoding: 'base64', type: 'webp', quality: 78 }))
         : undefined;
     const filmstrip = !lowMemoryMode && runDesktop && thorough ? await captureFilmstrip(page) : [];
     const desktopAxe =
@@ -442,7 +442,7 @@ export async function runBrowserAnalysis(
       await new Promise((r) => setTimeout(r, 800));
       mobileShot = lowMemoryMode
         ? undefined
-        : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 78 }));
+        : toDataUrl(await page.screenshot({ encoding: 'base64', type: 'webp', quality: 78 }));
       mobileAxe = includeAccessibility ? await runAxeInBrowser(page, language, 'mobile') : [];
       mobileRuntime = buildRuntimeIssues(
         consoleErrors,

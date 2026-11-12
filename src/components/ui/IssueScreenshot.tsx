@@ -60,6 +60,8 @@ const IssueScreenshot: React.FC<IssueScreenshotProps> = ({ src, title, descripti
             </div>
             <img
               src={src}
+              width={1350}
+              height={900}
               alt={title}
               decoding="async"
               className="w-full h-auto max-h-[80vh] object-contain bg-paper"
@@ -86,7 +88,7 @@ const IssueScreenshot: React.FC<IssueScreenshotProps> = ({ src, title, descripti
         className="group relative w-full block text-left"
         aria-label={t.dashboard.screenshots.viewIssue}
       >
-        <img src={src} alt={title} decoding="async" className="w-full h-auto block" />
+        <img src={src} width={1350} height={900} alt={title} decoding="async" className="w-full h-auto block" />
         <span className="absolute bottom-3 right-3 bg-ink/80 text-paper font-mono text-[10px] uppercase px-2 py-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <ZoomIn className="w-3 h-3" /> {t.dashboard.screenshots.viewIssue}
         </span>

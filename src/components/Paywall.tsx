@@ -95,6 +95,7 @@ const Paywall: React.FC<PaywallProps> = ({
             }}
           >
             <input
+              aria-label={paywallText.codePlaceholder}
               value={licenseInput}
               onChange={(event) => setLicenseInput(event.target.value.toUpperCase())}
               placeholder={paywallText.codePlaceholder}

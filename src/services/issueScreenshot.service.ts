@@ -369,8 +369,8 @@ export async function attachIssueScreenshots(
 
         await highlightElement(page, handle, issue.title, issue.description);
         await new Promise((r) => setTimeout(r, 600));
-        const base64 = await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 85 });
-        updated[index] = { ...updated[index], screenshot: `data:image/jpeg;base64,${base64}` };
+        const base64 = await page.screenshot({ encoding: 'base64', type: 'webp', quality: 85 });
+        updated[index] = { ...updated[index], screenshot: `data:image/webp;base64,${base64}` };
         captured++;
       } catch (err) {
         console.warn('Issue screenshot skipped:', issue.title, err);

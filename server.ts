@@ -168,8 +168,27 @@ async function startServer() {
       }
     });
 
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      setHeaders: (res, filePath) => {
+        // Vite's generated asset filenames are content-hashed and safe to cache long-term.
+        if (
+          filePath.includes(`${path.sep}assets${path.sep}`) &&
+          /-[\w-]{8,}\./.test(path.basename(filePath))
+        ) {
+          res.setHeader("Cache-Control", "public, max-age=2592000, immutable");
+          return;
+        }
+        res.setHeader(
+          "Cache-Control",
+          "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
+        );
+      }
+    }));
     app.get("*", (req, res) => {
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
+      );
       res.sendFile(indexFile);
     });
   }
