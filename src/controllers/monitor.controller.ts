@@ -6,6 +6,7 @@ import {
   getMonitorForUser,
   listMonitors,
   MAX_MONITORS_PER_USER,
+  MONITOR_INTERVALS,
   updateMonitor
 } from '../services/monitorStore.service';
 import { checkMonitorNow } from '../services/monitor.service';
@@ -70,6 +71,17 @@ export class MonitorController {
   /** PATCH /api/monitors/:id */
   public update = (req: Request, res: Response): void => {
     const language = languageFor(req);
+
+    // Reject an unsupported interval as a validation error (400) instead of
+    // letting the store return null, which would be reported as a 404.
+    if (typeof req.body?.intervalHours !== 'undefined') {
+      const interval = Number(req.body.intervalHours);
+      if (!MONITOR_INTERVALS.includes(interval as (typeof MONITOR_INTERVALS)[number])) {
+        res.status(400).json({ error: errorFor('invalid_interval', language) });
+        return;
+      }
+    }
+
     const monitor = updateMonitor(req.user!.id, String(req.params.id || ''), {
       enabled: typeof req.body?.enabled === 'boolean' ? req.body.enabled : undefined,
       intervalHours: req.body?.intervalHours

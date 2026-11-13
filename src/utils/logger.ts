@@ -20,7 +20,7 @@ function minLevel(): LogLevel {
   return process.env.NODE_ENV === 'production' ? 'info' : 'debug';
 }
 
-const RANK = { info: 1, warn: 2, error: 3, debug: 0 } as const;
+const LEVEL_LETTER: Record<LogLevel, string> = { debug: 'D', info: 'I', warn: 'W', error: 'E' };
 
 /** Maskera allt som kan se ut som en nyckel/token/signeringshemlighet. */
 export function maskSecrets(value: string): string {
@@ -55,8 +55,8 @@ export function createLogger(correlationId?: string): Logger {
     const metaStr = meta && Object.keys(meta).length
       ? ` ${maskSecrets(JSON.stringify(meta))}`
       : '';
-    const line = `${new Date().toISOString()} ${RANK[level] >= RANK.warn ? 'W' : level === 'error' ? 'E' : 'I'} ${prefix} ${clean}${metaStr}`;
-    if (RANK[level] >= RANK.warn || level === 'error') {
+    const line = `${new Date().toISOString()} ${LEVEL_LETTER[level]} ${prefix} ${clean}${metaStr}`;
+    if (level === 'warn' || level === 'error') {
       console.error(line);
     } else {
       console.log(line);

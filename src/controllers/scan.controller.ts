@@ -9,7 +9,7 @@ import type { Language } from '../i18n/translations';
 import { apiError } from '../i18n/scanLocale';
 import { VipService } from '../services/vip.service';
 import { scanQueue } from '../services/scanQueue.instance';
-import { resolveAndValidateTarget, revalidateHost, SsrfError } from '../utils/ssrf';
+import { resolveAndValidateTarget, SsrfError } from '../utils/ssrf';
 import { createLogger, hostOnly, newCorrelationId } from '../utils/logger';
 import { saveReport } from '../services/reportStore.service';
 import { getCachedScan, scanCacheKey, setCachedScan } from '../services/scanCache.service';

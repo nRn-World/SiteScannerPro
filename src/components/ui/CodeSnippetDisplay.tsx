@@ -24,10 +24,16 @@ const CodeSnippetDisplay: React.FC<CodeSnippetDisplayProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard?.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access can be denied (e.g. insecure context); keep the
+      // snippet selectable instead of surfacing an unhandled rejection.
+      setCopied(false);
+    }
   };
 
   const label = labelProp ?? codeExampleLabel ?? t?.dashboard.codeExample ?? 'Code example';

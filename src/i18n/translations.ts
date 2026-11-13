@@ -405,7 +405,7 @@ localized.sv.scanSteps = [
   'SAMMANSTÄLLER SLUTRAPPORT...'
 ];
 localized.sv.features = {
-  heading: 'Enterprise-Grade', headingAccent: 'Funktioner',
+  heading: 'Funktioner i', headingAccent: 'företagsklass',
   items: [
     { title: '80+ djupa analyskontroller', description: 'Djup HTML/JS-grävning, runtime-fel, SEO, säkerhet, tillgänglighet och kodkvalitet i en rapport.' },
     { title: 'Core Web Vitals', description: 'Riktiga LCP, CLS, INP, FCP och TTFB (med vitals API-nyckel).' },

@@ -53,6 +53,17 @@ function prerender() {
     /\bdefer\b/.test(attrs) ? tag : `<script defer${attrs}>`
   );
 
+  // Remove any generic tags that index.html/Vite already emitted so the
+  // prerendered HTML does not end up with duplicate description/OG tags.
+  html = html
+    .replace(/<meta\s+name="description"[^>]*>/gi, '')
+    .replace(/<meta\s+property="og:[^"]+"[^>]*>/gi, '')
+    .replace(/<meta\s+name="twitter:[^"]+"[^>]*>/gi, '')
+    .replace(/<link\s+rel="canonical"[^>]*>/gi, '')
+    .replace(/<link\s+rel="alternate"[^>]*>/gi, '')
+    .replace(/<link\s+rel="icon"[^>]*>/gi, '')
+    .replace(/<link\s+rel="manifest"[^>]*>/gi, '');
+
   const canonical = `${SITE_URL}/`;
   const hreflangTags = LANGUAGES.map(
     (lang) => `<link rel="alternate" hreflang="${lang}" href="${SITE_URL}/?lang=${lang}" />`

@@ -61,7 +61,7 @@ const Footer: React.FC<FooterProps> = ({ language, onNavigate }) => {
             {text.cookies}
           </button>
           <a href="mailto:bynrnworld@gmail.com" className="hover:text-accent transition-colors">
-            byrnworld@gmail.com
+            bynrnworld@gmail.com
           </a>
         </nav>
       </div>

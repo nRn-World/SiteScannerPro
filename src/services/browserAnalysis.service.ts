@@ -135,6 +135,7 @@ async function runAxeInBrowser(
       description: v.description,
       impact: v.impact,
       helpUrl: v.helpUrl,
+      nodeCount: v.nodes.length,
       nodes: v.nodes.slice(0, 5)
     }));
   }, locale ?? null);
@@ -151,10 +152,12 @@ async function runAxeInBrowser(
       language
     );
 
+    // v.nodes is capped at 5 for transfer size; nodeCount keeps the real total.
+    const totalNodes = v.nodeCount ?? v.nodes.length;
     const occurrenceLabel =
       language === 'sv'
-        ? `${v.nodes.length} förekomst${v.nodes.length === 1 ? '' : 'er'}`
-        : `${v.nodes.length} occurrence${v.nodes.length === 1 ? '' : 's'}`;
+        ? `${totalNodes} förekomst${totalNodes === 1 ? '' : 'er'}`
+        : `${totalNodes} occurrence${totalNodes === 1 ? '' : 's'}`;
 
     issues.push({
       category: 'Accessibility',

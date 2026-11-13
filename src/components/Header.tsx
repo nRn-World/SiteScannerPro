@@ -34,17 +34,26 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const account = getAccountCopy(language);
 
+  const goHome = () => {
+    // Always return to the app root, even from a saved report permalink.
+    const base = ((import.meta.env.BASE_URL as string | undefined) || '/').replace(/\/$/, '');
+    window.location.replace(`${window.location.origin}${base}/`);
+  };
+
   return (
     <header className="tech-border-b bg-paper sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         <div
           className="flex items-center gap-2 sm:gap-4 cursor-pointer"
-          onClick={() => {
-            // Always return to the app root, even from a saved report permalink.
-            const base = ((import.meta.env.BASE_URL as string | undefined) || '/').replace(/\/$/, '');
-            window.location.replace(`${window.location.origin}${base}/`);
-          }}
+          onClick={goHome}
           role="link"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              goHome();
+            }
+          }}
           aria-label="SiteScanner Pro"
           title="SiteScanner Pro"
         >

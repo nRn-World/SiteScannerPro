@@ -15,6 +15,7 @@ export interface MonitorCopy {
   interval168: string;
   add: string;
   adding: string;
+  loading: string;
   empty: string;
   emptyBody: string;
   lastCheck: string;
@@ -65,6 +66,7 @@ const english: MonitorCopy = {
   interval168: 'Every week',
   add: 'Start monitoring',
   adding: 'Adding…',
+  loading: 'Loading monitored sites…',
   empty: 'No monitored sites yet',
   emptyBody: 'Add your site above. The first check normally runs within a few minutes.',
   lastCheck: 'Last check',
@@ -116,6 +118,7 @@ const swedish: MonitorCopy = {
   interval168: 'Varje vecka',
   add: 'Starta övervakning',
   adding: 'Lägger till…',
+  loading: 'Laddar övervakade sajter…',
   empty: 'Inga övervakade sajter ännu',
   emptyBody: 'Lägg till din sajt ovan. Första kontrollen körs normalt inom några minuter.',
   lastCheck: 'Senaste kontroll',

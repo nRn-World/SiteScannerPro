@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle, RefreshCw, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { TranslationSet } from '../i18n/translations';
+import { apiUrl } from '../api';
 
 interface ContactFormProps {
   onSuccess: () => void;
@@ -18,7 +19,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess, onError, t }) => {
     setStatus('submitting');
 
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch(apiUrl('/api/contact'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

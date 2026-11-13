@@ -24,9 +24,10 @@ export interface RateLimitOptions {
 }
 
 function clientKey(req: Request, name: string, keyExtractor?: (req: Request) => string): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  const ip = (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : '') ||
-    req.socket.remoteAddress || 'unknown';
+  // Use Express's trust-proxy-aware req.ip instead of reading X-Forwarded-For
+  // directly: the raw header is client-controlled and can be spoofed to bypass
+  // rate limits. Missing IPs fall back to the socket address.
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
   return `${name}:${keyExtractor ? keyExtractor(req) : ip}`;
 }
 

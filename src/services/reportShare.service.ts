@@ -98,7 +98,17 @@ export function decodeShareToken(token: string): SharePayload | null {
   if (parts.length !== 3 || parts[0] !== SHARE_PREFIX) return null;
 
   const [, encodedPayload, signature] = parts;
-  if (!encodedPayload || !signature || !safeEqual(signature, sign(encodedPayload))) {
+  if (!encodedPayload || !signature) return null;
+
+  // A missing/too-short LICENSE_SIGNING_SECRET must degrade to "invalid link"
+  // instead of throwing inside public badge/share handlers.
+  let expectedSignature: string;
+  try {
+    expectedSignature = sign(encodedPayload);
+  } catch {
+    return null;
+  }
+  if (!safeEqual(signature, expectedSignature)) {
     return null;
   }
 

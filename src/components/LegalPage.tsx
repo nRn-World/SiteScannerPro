@@ -70,7 +70,7 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '7. Tillämplig lag och kontakt',
         paragraphs: [
-          'Dessa villkor styrs av svensk lag. Frågor om köp, licenser eller dessa villkor skickas till byrnworld@gmail.com.'
+          'Dessa villkor styrs av svensk lag. Frågor om köp, licenser eller dessa villkor skickas till bynrnworld@gmail.com.'
         ]
       }
     ]
@@ -84,7 +84,7 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '1. Personuppgiftsansvarig',
         paragraphs: [
-          'nRn World ansvarar för behandlingen av personuppgifter i SiteScanner Pro. Kontakt: byrnworld@gmail.com.'
+          'nRn World ansvarar för behandlingen av personuppgifter i SiteScanner Pro. Kontakt: bynrnworld@gmail.com.'
         ]
       },
       {
@@ -144,7 +144,7 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '8. Kontakt',
         paragraphs: [
-          'Skicka frågor om integritet och dataskydd till byrnworld@gmail.com. Vi svarar så snart vi kan.'
+          'Skicka frågor om integritet och dataskydd till bynrnworld@gmail.com. Vi svarar så snart vi kan.'
         ]
       }
     ]
@@ -237,7 +237,7 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '7. Governing law and contact',
         paragraphs: [
-          'These terms are governed by Swedish law. Questions about purchases, licences or these terms can be sent to byrnworld@gmail.com.'
+          'These terms are governed by Swedish law. Questions about purchases, licences or these terms can be sent to bynrnworld@gmail.com.'
         ]
       }
     ]
@@ -251,7 +251,7 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '1. Data controller',
         paragraphs: [
-          'nRn World is the controller of personal data processed by SiteScanner Pro. Contact: byrnworld@gmail.com.'
+          'nRn World is the controller of personal data processed by SiteScanner Pro. Contact: bynrnworld@gmail.com.'
         ]
       },
       {
@@ -311,7 +311,7 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '8. Contact',
         paragraphs: [
-          'Send privacy and data protection questions to byrnworld@gmail.com. We reply as soon as we can.'
+          'Send privacy and data protection questions to bynrnworld@gmail.com. We reply as soon as we can.'
         ]
       }
     ]
@@ -396,7 +396,7 @@ const LegalPage: React.FC<LegalPageProps> = ({ kind, language }) => {
       </div>
 
       <p className="font-mono text-xs text-ink/40 border-t border-ink/10 pt-4">
-        SiteScanner Pro · nRn World · byrnworld@gmail.com
+        SiteScanner Pro · nRn World · bynrnworld@gmail.com
       </p>
     </article>
   );

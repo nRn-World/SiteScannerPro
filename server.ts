@@ -119,6 +119,12 @@ async function startServer() {
   // API Routes
   app.use("/api", apiRouter);
 
+  // Unknown API routes must return a JSON 404 instead of falling through to
+  // the SPA (which would answer with HTML and HTTP 200).
+  app.use("/api", (_req, res) => {
+    res.status(404).json({ error: 'not_found' });
+  });
+
   const appUrl = (process.env.APP_URL || '').toLowerCase();
   const isLocalApp =
     appUrl.includes('localhost') ||

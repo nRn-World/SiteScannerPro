@@ -64,7 +64,12 @@ export async function failureFromResponse(
   }
 
   const code = typeof payload?.code === 'string' ? payload.code : undefined;
-  const detail = typeof payload?.error === 'string' ? payload.error : undefined;
+  // Some endpoints use `error` for a machine code (e.g. "rate_limit") instead
+  // of a human message; do not show that raw code as the technical detail.
+  const detail =
+    typeof payload?.error === 'string' && payload.error !== code
+      ? payload.error
+      : undefined;
   return createScanFailure(kindFromResponse(res.status, code), language, detail, res.status);
 }
 

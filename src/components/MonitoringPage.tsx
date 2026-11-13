@@ -298,7 +298,7 @@ const MonitoringPage: React.FC<MonitoringPageProps> = ({ user, language, onSignI
 
       {loading && monitors.length === 0 ? (
         <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
-          <Loader2 className="h-4 w-4 animate-spin" /> {copy.adding}
+          <Loader2 className="h-4 w-4 animate-spin" /> {copy.loading}
         </div>
       ) : monitors.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">

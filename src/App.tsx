@@ -42,9 +42,6 @@ import {
 function getCanonicalOrigin(): string {
   if (typeof window === 'undefined') return 'https://nrn-world.github.io';
   const { protocol, hostname, port } = window.location;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
-  }
   return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
 }
 
@@ -610,7 +607,11 @@ export default function App() {
   };
 
   const handleSetView = (nextView: AppView) => {
-    if (nextView === 'home' && (reportId || comparisonId)) {
+    // The URL can point at a saved report even when this component does not
+    // hold reportId (a fresh scan replaces the URL without remounting), so
+    // detect the permalink path as well.
+    const onPermalink = /\/(?:r|c)\/[a-f0-9]{8,64}\/?$/i.test(window.location.pathname);
+    if (nextView === 'home' && (reportId || comparisonId || onPermalink)) {
       window.location.assign(`${getCanonicalBase()}/`);
       return;
     }
@@ -626,7 +627,10 @@ export default function App() {
       return;
     }
 
-    if (/\/monitors\/?$/i.test(window.location.pathname)) {
+    // Contact/About/Terms (and the other footer views) are not routes. Drop a
+    // saved report/comparison permalink from the URL so a refresh lands on the
+    // normal entry page instead of reopening the report.
+    if (onPermalink || /\/monitors\/?$/i.test(window.location.pathname)) {
       window.history.pushState({}, document.title, `${base}/`);
     }
     setView(nextView);
@@ -677,7 +681,16 @@ export default function App() {
       });
 
       if (!res.ok) {
-        throw new Error(await readErrorMessage(res, t.errors.licenseInvalid));
+        const serverMessage = await readErrorMessage(res, t.errors.licenseInvalid);
+        // Server-side licence errors are Swedish; keep them for the Swedish UI
+        // and fall back to localized copy everywhere else.
+        const message =
+          language === 'sv'
+            ? serverMessage
+            : res.status === 429
+              ? verifyCopy.errors.rate_limit.title
+              : t.errors.licenseInvalid;
+        throw new Error(message);
       }
 
       const data = await res.json();
@@ -897,10 +910,12 @@ export default function App() {
                           type="button"
                           onClick={() => {
                             const full = reportUrl(shareInfo.shareUrlPath);
-                            void navigator.clipboard?.writeText(full).then(() => {
-                              setShareCopied(true);
-                              setTimeout(() => setShareCopied(false), 2500);
-                            });
+                            void navigator.clipboard?.writeText(full)
+                              .then(() => {
+                                setShareCopied(true);
+                                setTimeout(() => setShareCopied(false), 2500);
+                              })
+                              .catch(() => setShareCopied(false));
                           }}
                           className="uppercase text-[10px] tracking-wider px-3 py-1.5 bg-ink text-paper hover:bg-accent transition-colors"
                         >
@@ -1000,7 +1015,8 @@ export default function App() {
         <Footer
           language={language}
           onNavigate={(target) => {
-            setView(target);
+            // Route through handleSetView so leaving /monitors also resets the URL.
+            handleSetView(target);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
