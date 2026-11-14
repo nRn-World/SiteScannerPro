@@ -1,90 +1,126 @@
 <div align="center">
 
+<a href="https://nrnworld.one/SiteScannerPro/">
+  <img src="docs/screenshots/home.png" alt="SiteScanner Pro — Analyze. Secure. Optimize." width="100%" />
+</a>
+
+<br />
+<br />
+
 # SiteScanner Pro
 
 **See what is holding your website back.**
 
-Analyze any public website across SEO, performance, security, accessibility, and code quality — in seconds.
+SiteScanner Pro turns any public URL into a clear, prioritized website health report — covering SEO, performance, security, accessibility and code quality.
 
-[![Deploy Status](https://github.com/nRn-World/SiteScannerPro/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/nRn-World/SiteScannerPro/actions/workflows/deploy-pages.yml)
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
+[![Live demo](https://img.shields.io/badge/Live_demo-nrnworld.one-FF4E00?style=for-the-badge)](https://nrnworld.one/SiteScannerPro/)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-2E7D32?style=for-the-badge)](LICENSE)
+[![Deploy status](https://img.shields.io/github/actions/workflow/status/nRn-World/SiteScannerPro/deploy-pages.yml?branch=main&style=for-the-badge&label=deploy)](https://github.com/nRn-World/SiteScannerPro/actions/workflows/deploy-pages.yml)
+
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
-
-**[Launch SiteScanner Pro →](https://nrnworld.one/SiteScannerPro/)**
 
 </div>
 
 ---
 
-## About
+## Why SiteScanner Pro
 
-SiteScanner Pro is a free website health analysis service for businesses, freelancers, creators, and web agencies. Enter a public URL and get a clear, prioritized report of what can be improved — no guesswork, no complicated dashboards.
+Most website checkers stop at a score. SiteScanner Pro shows you **what is wrong, why it matters and exactly how to fix it**.
 
-The analysis engine is a deterministic rule-based scanner: it fetches the page, evaluates measurable technical signals, and turns each finding into a prioritized issue with a practical recommendation and a ready-to-use code fix.
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>One scan. Five dimensions.</h3>
+      <p>SEO, performance, security, accessibility and code quality analyzed together in a single report.</p>
+    </td>
+    <td width="33%" valign="top">
+      <h3>Evidence, not guesses.</h3>
+      <p>Real browser measurements, runtime and network signals, screenshots and WCAG checks back every finding.</p>
+    </td>
+    <td width="33%" valign="top">
+      <h3>Built for action.</h3>
+      <p>Every issue includes a prioritized recommendation, a ready-to-use code fix and an agent-ready JSON task.</p>
+    </td>
+  </tr>
+</table>
 
-The service is completely free. There is no paywall, licence, checkout, VIP link, subscription or locked feature. Every scan returns the complete result.
+## A report you can act on
 
-## What the analysis covers
+<p align="center">
+  <img src="docs/screenshots/report.png" alt="SiteScanner Pro report with overall score, SEO, performance, security, accessibility and code scores" width="100%" />
+</p>
 
-| Category | What you learn |
+<p align="center"><em>One overall score, five category scores and a prioritized action plan — with mobile and desktop result modes.</em></p>
+
+## From finding to fix
+
+<p align="center">
+  <img src="docs/screenshots/audit.png" alt="Expanded SiteScanner Pro audit with a recommendation, agent fix JSON and code example" width="100%" />
+</p>
+
+<p align="center"><em>Expand any finding to see the explanation, the exact fix, a copy-ready code example and a structured agent task.</em></p>
+
+## Compare with confidence
+
+<p align="center">
+  <img src="docs/screenshots/comparison.png" alt="SiteScanner Pro competitor comparison between example.com and example.org" width="100%" />
+</p>
+
+<p align="center"><em>Compare up to two competitors with the same ruleset and device — and see where the real gaps are.</em></p>
+
+## Everything included
+
+| Capability | What you get |
 |---|---|
-| **SEO** | Page structure and metadata signals that affect how search engines understand the site |
-| **Performance** | Resource and page choices that may slow down load times |
-| **Security** | Transport and security signals worth attention |
-| **Accessibility** | Common barriers affecting visitors with different needs |
-| **Code quality** | Technical patterns impacting reliability and maintainability |
+| **Deep website scan** | Headless Chrome analysis, deterministic rules and axe-core WCAG audits |
+| **Prioritized findings** | Severity, category, explanation, evidence and a recommended fix |
+| **Code solutions** | Ready-to-use HTML, CSS, JavaScript and HTTP-header snippets |
+| **Agent fix JSON** | Structured tasks with steps, code changes, constraints and acceptance criteria |
+| **Screenshots** | Full-page captures and issue-level visual evidence |
+| **Competitor comparison** | Benchmark up to two sites on the same device and ruleset |
+| **Saved reports** | Shareable report links, PDF export and a 30-day report window |
+| **Accounts & monitoring** | Optional accounts, saved sites, scheduled checks and score alerts |
+| **Six languages** | English, Svenska, Türkçe, Español, Français and العربية |
+
+> **Free by design.** There is no paywall, checkout, subscription or locked result. Every scan returns the complete report.
 
 ## How it works
 
-1. Enter the address of a public website.
-2. The scanning engine retrieves the page and evaluates its technical signals.
-3. Receive an overall score with category-based results.
-4. Act on prioritized recommendations, exact code solutions and agent-ready fix JSON.
+1. **Enter a public URL** and choose the device scope and categories you care about.
+2. **The engine gets to work** — headless Chrome loads the page while deterministic rules and WCAG checks evaluate the evidence.
+3. **Get a clear report** with scores, prioritized findings and the exact changes that will improve them.
+4. **Fix, rescan and compare** to verify the impact of every change.
 
-## Included for everyone
+## Tech stack
 
-| Feature | Included |
+| Layer | Tools |
 |---|---|
-| Deep website health scan (headless Chrome) | ✓ |
-| Overall score, categories and issue details | ✓ |
-| Complete recommendations and code solutions | ✓ |
-| Agent fix JSON | ✓ |
-| Issue screenshots | ✓ |
-| Competitor comparison | ✓ |
-| Shareable saved reports and PDF export | ✓ |
-| Accounts and website monitoring | ✓ |
+| **Interface** | React 19, TypeScript, Vite 6, Tailwind CSS v4, Motion, Lucide |
+| **Analysis** | Puppeteer, Cheerio, JSDOM, axe-core |
+| **Server** | Node.js, Express, Nodemailer |
+| **Delivery** | GitHub Pages for the frontend, Render for the API |
+| **Testing** | Node.js test runner, TypeScript, deterministic regression tests |
 
-## Features
+## Architecture
 
-- Multilingual interface: English, Svenska, Türkçe, Español, Français, العربية
-- PDF export of analysis reports
-- Local scan history (stored in your browser, never sold)
-- Anonymous scanning — no account required
-- Optional account for monitoring and report history
-- Responsive design for desktop and mobile
-
-## Built with
-
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Motion, Lucide Icons
-- **Backend:** Node.js, Express, Cheerio
-- **Email:** Nodemailer
-
-### Architecture
-
+```mermaid
+flowchart LR
+    U[Browser] --> FE[React app]
+    FE -->|REST| API[Express API]
+    API --> Q[Global scan queue]
+    Q --> CH[Headless Chrome]
+    Q --> RE[Rule engine + axe-core]
+    API --> ST[(Reports · accounts · monitors)]
+    CH --> RE
 ```
-┌─────────────────────┐         ┌──────────────────────┐
-│  Frontend (static)  │  HTTPS  │   Backend API        │
-│  GitHub Pages       │ ──────> │   Render (Node)      │
-│  nrn-world.github.io│ <────── │   sitescanner-pro    │
-└─────────────────────┘         │                      │
-                                │   • Scan engine      │
-                                │   • Saved reports    │
-                                │   • Accounts         │
-                                │   • Monitoring       │
-                                └──────────────────────┘
-```
+
+- The frontend is a static Vite build that can be hosted on GitHub Pages.
+- The Express API owns scanning, saved reports, accounts, monitoring and share-link signing.
+- Scans run through a bounded queue so concurrent browser work cannot overwhelm the host.
+- The same ruleset and device scope are used for both sides of a competitor comparison.
 
 ## Running locally
 
@@ -98,71 +134,75 @@ cd SiteScannerPro
 # 2. Install dependencies
 npm install
 
-# 3. Configure environment variables
+# 3. Create your environment file
 cp .env.example .env
-```
 
-Edit `.env`:
-
-```env
-LICENSE_SIGNING_SECRET=""             # Signs share links, minimum 32 random characters
-APP_URL="http://localhost:3000"
-LOG_LEVEL="info"                      # debug | info | warn | error
-MAX_CONCURRENT_SCANS="2"              # Global scan queue width
-MAX_CONCURRENT_PAGES="2"              # Simultaneous Puppeteer pages
-REPORT_SHARE_TTL_DAYS="30"            # Shared report link lifetime (days)
-EMAIL_USER="..."                     # Optional: Gmail for contact form
-EMAIL_PASS="..."                     # Optional: Gmail app password
-CONTACT_RECEIVER_EMAIL="..."         # Optional: Where contact emails are sent
-```
-
-```bash
-# 4. Start the dev server (frontend + backend on one port)
+# 4. Start the frontend and API on one port
 npm run dev
 ```
 
-Open http://localhost:3000 (set `PORT` to change).
+Open **http://localhost:3000**. Set `PORT` in `.env` to use a different port.
+
+### Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `LICENSE_SIGNING_SECRET` | Signs share links. Use at least 32 random characters. |
+| `APP_URL` | Public URL of the app, used for canonical links and share URLs. |
+| `PORT` | Server port. Defaults to `3000`. |
+| `DATA_DIR` | Persistent directory for reports, accounts and monitors. |
+| `LOG_LEVEL` | `debug`, `info`, `warn` or `error`. |
+| `MAX_CONCURRENT_SCANS` | Maximum queued scan concurrency. |
+| `MAX_CONCURRENT_PAGES` | Maximum simultaneous Puppeteer pages. |
+| `REPORT_SHARE_TTL_DAYS` | Lifetime of shared report links in days. |
+| `EMAIL_USER` / `EMAIL_PASS` | Optional Gmail credentials for the contact form. |
+| `CONTACT_RECEIVER_EMAIL` | Optional recipient for contact-form messages. |
 
 ### Useful scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start dev server (Vite middleware + Express) |
-| `npm run build` | Build frontend + prerender SEO meta into `dist/` |
-| `npm start` | Serve production build |
-| `npm run lint` | Type-check with TypeScript |
-| `npm test` | Run unit tests (full scan/report results, share links, contact mail, navigation, SSRF) |
+| `npm run dev` | Start the Vite middleware and Express API together |
+| `npm run build` | Build the frontend and prerender static SEO metadata |
+| `npm start` | Serve the production build |
+| `npm run lint` | Type-check the project |
+| `npm test` | Run the full unit and regression test suite |
 
 ## Deployment
 
-This project deploys automatically on push to `main`:
+Pushes to `main` deploy automatically:
 
-- **Frontend** → GitHub Pages via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) (configured with `VITE_PUBLIC_BASE` and `VITE_API_BASE`)
-- **Backend** → Render via [`render.yaml`](render.yaml) Blueprint (Node web service)
+- **Frontend** → GitHub Pages via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)
+- **Backend** → Render via [`render.yaml`](render.yaml)
 
-Environment variables used in production: `LICENSE_SIGNING_SECRET` (for share-link signatures), `APP_URL`, `CORS_ORIGIN`, `DATA_DIR` (persistent disk for saved reports and accounts), `LOG_LEVEL`, `MAX_CONCURRENT_SCANS`, `MAX_CONCURRENT_PAGES`, `REPORT_SHARE_TTL_DAYS`.
+Production environment variables: `APP_URL`, `CORS_ORIGIN`, `DATA_DIR`, `LICENSE_SIGNING_SECRET`, `LOG_LEVEL`, `MAX_CONCURRENT_SCANS`, `MAX_CONCURRENT_PAGES` and `REPORT_SHARE_TTL_DAYS`.
 
-### Security & reliability
+## Security & reliability
 
-- Rate limiting per IP on scan/contact/account endpoints — returns `429` with `Retry-After`.
-- Global scan queue with bounded Puppeteer concurrency (`MAX_CONCURRENT_PAGES`).
-- SSRF protection: DNS resolution validated against private/link-local ranges (incl. IPv4-mapped IPv6 and decimal notation) before fetching.
+- Per-IP rate limits on scan, contact and account endpoints, with `429` and `Retry-After`.
+- A global scan queue with bounded Puppeteer concurrency.
+- SSRF protection validates resolved addresses against private and link-local ranges before fetching.
 - CORS has no wildcard fallback: unknown origins receive no `Access-Control-Allow-Origin` header.
-- Saved reports and share links are signed server-side with `LICENSE_SIGNING_SECRET`; no personal data is embedded in a share token.
-- Structured, level-based logging with per-scan correlation IDs; full scan URLs are never logged (host only), secrets are masked.
+- Share links are signed server-side; no personal data is embedded in a share token.
+- Structured logging with per-scan correlation IDs; full scan URLs are never logged, only the host.
+- Browser analysis fetches fresh pages rather than reusing the shared browser cache.
 
 ## Important information
 
-SiteScanner Pro provides automated analysis and recommendations. Results are intended as a starting point and should be reviewed by a qualified developer before production changes are made. A scan cannot replace a complete security, accessibility, legal, or performance audit.
-
-## Contact
-
-For support and business enquiries: **bynrnworld@gmail.com**
+SiteScanner Pro provides automated analysis and recommendations. Results are a starting point and should be reviewed by a qualified developer before production changes are made. A scan cannot replace a complete security, accessibility, legal or performance audit.
 
 ## License
 
-SiteScanner Pro is released under the Creative Commons Attribution-NonCommercial 4.0 International Public License. Commercial use requires separate written permission from the copyright holder. See [LICENSE](LICENSE) for the complete license terms.
+SiteScanner Pro is released under the **Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0)**.
+
+You may share and adapt the project for non-commercial purposes with attribution. Commercial use requires separate written permission from the copyright holder. See [LICENSE](LICENSE) for the complete official English license text.
+
+## Contact
+
+For support, feedback and business enquiries: **bynrnworld@gmail.com**
 
 ---
 
-Created by ❤️ © nRn World
+<p align="center">
+  Created with care by <strong>nRn World</strong> · © 2026
+</p>
