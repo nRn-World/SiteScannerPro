@@ -71,6 +71,16 @@ Most website checkers stop at a score. SiteScanner Pro shows you **what is wrong
 
 <p align="center"><em>Compare up to two competitors with the same ruleset and device — and see where the real gaps are.</em></p>
 
+## Responsive by design
+
+<p align="center">
+  <img src="docs/screenshots/mobile-home.png" alt="SiteScanner Pro landing page on mobile" width="300" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-report.png" alt="SiteScanner Pro report with scores on mobile" width="300" />
+</p>
+
+<p align="center"><em>Scan, review scores and act on findings from a phone — the same complete workflow, adapted to a smaller screen.</em></p>
+
 ## Everything included
 
 | Capability | What you get |
