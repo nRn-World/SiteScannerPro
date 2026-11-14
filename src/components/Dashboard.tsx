@@ -18,10 +18,7 @@ interface DashboardProps {
   url: string;
   selectedCategory: string | null;
   setSelectedCategory: (category: string | null) => void;
-  onUpgradeClick: () => void;
-  isPremium?: boolean;
   language: Language;
-  licenseToken?: string | null;
   t: TranslationSet;
   onRescan?: () => void;
   previousResult?: ScanResult | null;
@@ -69,10 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   url,
   selectedCategory,
   setSelectedCategory,
-  onUpgradeClick,
-  isPremium = false,
   language,
-  licenseToken,
   t,
   onRescan,
   previousResult
@@ -286,17 +280,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       <PriorityPlan
         issues={filteredIssues}
         t={t}
-        isPremium={isPremium}
-        onUpgradeClick={onUpgradeClick}
         onShowAll={showAllFindings}
       />
 
       <ComparePanel
         baseUrl={url}
         language={language}
-        licenseToken={licenseToken}
-        isPremium={isPremium}
-        onUpgradeClick={onUpgradeClick}
         t={t}
       />
 
@@ -383,8 +372,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         <AuditList
           issues={filteredIssues}
           t={t}
-          isPremium={isPremium}
-          onUpgradeClick={onUpgradeClick}
         />
       </div>
     </motion.div>

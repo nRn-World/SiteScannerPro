@@ -77,10 +77,7 @@ export interface ScannerIssue {
   severity: Severity;
   title: string;
   description: string;
-  /**
-   * Rekommendationen är endast inkluderad för Pro-användare -
-   * servern strippar fältet helt ur gratis-svar.
-   */
+  /** Prioriterad rekommendation som alltid ingår i resultatet. */
   recommendation?: string;
   codeSnippet?: string;
   /** CSS-selector för visuell markering / skärmdump */
@@ -91,7 +88,7 @@ export interface ScannerIssue {
   /** Vilket resultatläge felet hör till */
   device?: IssueDevice;
   /**
-   * Strukturerad JSON-fix för AI-agenter (Premium).
+   * Strukturerad JSON-fix för AI-agenter.
    * Ge hela objektet till agenten.
    */
   agentFix?: AgentFix;

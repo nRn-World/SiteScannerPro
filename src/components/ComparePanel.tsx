@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, Copy, ExternalLink, Loader2, Lock, Printer, RefreshCw, Trophy } from 'lucide-react';
+import { Check, Copy, ExternalLink, Loader2, Printer, RefreshCw, Trophy } from 'lucide-react';
 import { apiUrl, reportUrl } from '../api';
 import { getCompareCopy } from '../i18n/compareCopy';
 import { Language, TranslationSet } from '../i18n/translations';
@@ -9,9 +9,6 @@ import ComparisonView from './ComparisonView';
 interface ComparePanelProps {
   baseUrl: string;
   language: Language;
-  licenseToken?: string | null;
-  isPremium: boolean;
-  onUpgradeClick: () => void;
   t: TranslationSet;
 }
 
@@ -24,9 +21,6 @@ interface CompareResultState {
 const ComparePanel: React.FC<ComparePanelProps> = ({
   baseUrl,
   language,
-  licenseToken,
-  isPremium,
-  onUpgradeClick,
   t
 }) => {
   const copy = getCompareCopy(language);
@@ -56,12 +50,9 @@ const ComparePanel: React.FC<ComparePanelProps> = ({
     setError(null);
 
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (licenseToken) headers['x-license-token'] = licenseToken;
-
       const res = await fetch(apiUrl('/api/compare'), {
         method: 'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: baseUrl,
           competitors: competitorsToScan,
@@ -73,9 +64,7 @@ const ComparePanel: React.FC<ComparePanelProps> = ({
       const payload = await res.json().catch(() => null);
 
       if (!res.ok) {
-        if (res.status === 403) {
-          setError(payload?.error || copy.errorPro);
-        } else if (res.status === 504) {
+        if (res.status === 504) {
           setError(copy.errorTimeout);
         } else {
           setError(payload?.error || copy.error);
@@ -175,22 +164,7 @@ const ComparePanel: React.FC<ComparePanelProps> = ({
         )}
       </div>
 
-      {!result && !isPremium && (
-        <div className="border-t border-gray-200 bg-gray-50 p-5 md:p-6">
-          <p className="font-medium text-gray-900">{copy.proTitle}</p>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-gray-600">{copy.proBody}</p>
-          <button
-            type="button"
-            onClick={onUpgradeClick}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#1a73e8] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1765cc]"
-          >
-            <Lock className="h-4 w-4" />
-            {copy.unlock}
-          </button>
-        </div>
-      )}
-
-      {!result && isPremium && !loading && (
+      {!result && !loading && (
         <form onSubmit={runComparison} className="border-t border-gray-200 bg-gray-50 p-5 md:p-6">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
@@ -247,7 +221,7 @@ const ComparePanel: React.FC<ComparePanelProps> = ({
         </form>
       )}
 
-      {!result && isPremium && loading && (
+      {!result && loading && (
         <div className="border-t border-gray-200 bg-gray-50 p-8 text-center">
           <Loader2 className="mx-auto h-6 w-6 animate-spin text-[#1a73e8]" />
           <p className="mt-3 text-sm font-medium text-gray-900">{copy.running}</p>

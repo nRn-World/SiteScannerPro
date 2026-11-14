@@ -1,18 +1,14 @@
 import React from 'react';
-import { Activity, Crown, Radar, UserRound } from 'lucide-react';
+import { Activity, Radar, UserRound } from 'lucide-react';
 import { LANGUAGE_OPTIONS, Language, TranslationSet } from '../i18n/translations';
 import { getAccountCopy } from '../i18n/accountCopy';
 
 interface HeaderProps {
   view: string;
   setView: (view: any) => void;
-  isPremium: boolean;
-  isVip?: boolean;
   language: Language;
   setLanguage: (language: Language) => void;
   t: TranslationSet;
-  onOpenVipOwner?: () => void;
-  onRemovePremium?: () => void;
   userEmail?: string | null;
   onOpenAccount?: () => void;
   onOpenMonitors?: () => void;
@@ -21,13 +17,9 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   view,
   setView,
-  isPremium,
-  isVip,
   language,
   setLanguage,
   t,
-  onOpenVipOwner,
-  onRemovePremium,
   userEmail,
   onOpenAccount,
   onOpenMonitors
@@ -63,21 +55,6 @@ const Header: React.FC<HeaderProps> = ({
           <span className="text-2xl font-display font-bold tracking-tighter uppercase hidden sm:block">
             SiteScanner <span className="text-accent">Pro<span className="animate-cursor-blink">_</span></span>
           </span>
-          {isPremium && (
-            <button
-              type="button"
-              className="ml-2 inline-flex items-center gap-1 px-3 py-1 bg-accent text-white text-xs font-mono font-bold uppercase tech-border hover:brightness-110 transition-[filter]"
-              title={t.nav.removePremium}
-              aria-label={t.nav.removePremium}
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemovePremium?.();
-              }}
-            >
-              <Crown className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isVip ? 'VIP' : t.nav.premium}</span>
-            </button>
-          )}
         </div>
         <nav className="flex items-center gap-2 text-sm font-mono font-bold uppercase lg:gap-6">
           <button
@@ -128,16 +105,6 @@ const Header: React.FC<HeaderProps> = ({
           >
             {t.nav.contact}
           </button>
-          {onOpenVipOwner && (
-            <button
-              type="button"
-              onClick={onOpenVipOwner}
-              className="text-ink/25 hover:text-accent transition-colors text-[10px] tracking-widest"
-              title={t.vip.ownerTitle}
-            >
-              VIP
-            </button>
-          )}
         </nav>
       </div>
     </header>

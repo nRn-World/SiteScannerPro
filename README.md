@@ -20,9 +20,11 @@ Analyze any public website across SEO, performance, security, accessibility, and
 
 ## About
 
-SiteScanner Pro is a website health analysis service for businesses, freelancers, creators, and web agencies. Enter a public URL and get a clear, prioritized report of what can be improved — no guesswork, no complicated dashboards.
+SiteScanner Pro is a free website health analysis service for businesses, freelancers, creators, and web agencies. Enter a public URL and get a clear, prioritized report of what can be improved — no guesswork, no complicated dashboards.
 
-The analysis engine is a deterministic rule-based scanner: it fetches the page, evaluates measurable technical signals, and turns each finding into a prioritized issue with a practical recommendation. Premium unlocks the exact code fixes.
+The analysis engine is a deterministic rule-based scanner: it fetches the page, evaluates measurable technical signals, and turns each finding into a prioritized issue with a practical recommendation and a ready-to-use code fix.
+
+The service is completely free. There is no paywall, licence, checkout, VIP link, subscription or locked feature. Every scan returns the complete result.
 
 ## What the analysis covers
 
@@ -39,21 +41,20 @@ The analysis engine is a deterministic rule-based scanner: it fetches the page, 
 1. Enter the address of a public website.
 2. The scanning engine retrieves the page and evaluates its technical signals.
 3. Receive an overall score with category-based results.
-4. Act on prioritized recommendations — Premium unlocks exact code fixes.
+4. Act on prioritized recommendations, exact code solutions and agent-ready fix JSON.
 
-## Access
+## Included for everyone
 
-| | Free | Premium |
-|---|---|---|
-| Deep website health scan (headless Chrome) | ✓ | ✓ |
-| Overall score & categories | ✓ | ✓ |
-| Issue details | ✓ | ✓ |
-| Complete code solutions | — | ✓ |
-| Agent fix JSON | — | ✓ |
-| Unlimited scans | — | ✓ |
-| Faster scans (priority queue) | — | ✓ |
-
-Premium is a **one-time purchase (€10.99, lifetime access)** — no subscription. Purchase [SiteScanner Pro on Ko-fi](https://ko-fi.com/s/b525e21531). The private lifetime code is shown only in the product's post-purchase thank-you message and is activated in SiteScanner.
+| Feature | Included |
+|---|---|
+| Deep website health scan (headless Chrome) | ✓ |
+| Overall score, categories and issue details | ✓ |
+| Complete recommendations and code solutions | ✓ |
+| Agent fix JSON | ✓ |
+| Issue screenshots | ✓ |
+| Competitor comparison | ✓ |
+| Shareable saved reports and PDF export | ✓ |
+| Accounts and website monitoring | ✓ |
 
 ## Features
 
@@ -61,13 +62,13 @@ Premium is a **one-time purchase (€10.99, lifetime access)** — no subscripti
 - PDF export of analysis reports
 - Local scan history (stored in your browser, never sold)
 - Anonymous scanning — no account required
+- Optional account for monitoring and report history
 - Responsive design for desktop and mobile
 
 ## Built with
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Motion, Lucide Icons
 - **Backend:** Node.js, Express, Cheerio
-- **Payments:** Ko-fi + permanent Pro license codes
 - **Email:** Nodemailer
 
 ### Architecture
@@ -79,8 +80,9 @@ Premium is a **one-time purchase (€10.99, lifetime access)** — no subscripti
 │  nrn-world.github.io│ <────── │   sitescanner-pro    │
 └─────────────────────┘         │                      │
                                 │   • Scan engine      │
-        Ko-fi checkout ────────>│   • Pro code verify  │
-        (redirect flow)         │   • License store    │
+                                │   • Saved reports    │
+                                │   • Accounts         │
+                                │   • Monitoring       │
                                 └──────────────────────┘
 ```
 
@@ -103,9 +105,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-KOFI_PRO_URL="https://ko-fi.com/s/b525e21531"
-KOFI_LICENSE_KEY_HASH=""              # Optional: legacy single shared key (SHA-256)
-LICENSE_SIGNING_SECRET=""             # Private random secret, minimum 32 characters
+LICENSE_SIGNING_SECRET=""             # Signs share links, minimum 32 random characters
 APP_URL="http://localhost:3000"
 LOG_LEVEL="info"                      # debug | info | warn | error
 MAX_CONCURRENT_SCANS="2"              # Global scan queue width
@@ -123,23 +123,6 @@ npm run dev
 
 Open http://localhost:3000 (set `PORT` to change).
 
-### Issuing Pro license keys
-
-Each purchase gets a **unique** key (revocable independently). Generate and register one:
-
-```bash
-npm run license:issue          # prints one key; hash is stored in data/license-keys.json
-npx tsx scripts/issue-license-key.ts 5   # batch of 5
-```
-
-Paste the printed key into the buyer's Ko-fi thank-you message. To revoke a leaked key:
-
-```bash
-npx tsx -e "new (await import('./src/services/license.service')).LicenseService().revokeKey('SSP-PRO-XXXX-XXXX-XXXX')"
-```
-
-Legacy keys validated via `KOFI_LICENSE_KEY_HASH` keep working during migration.
-
 ### Useful scripts
 
 | Command | Description |
@@ -148,8 +131,7 @@ Legacy keys validated via `KOFI_LICENSE_KEY_HASH` keep working during migration.
 | `npm run build` | Build frontend + prerender SEO meta into `dist/` |
 | `npm start` | Serve production build |
 | `npm run lint` | Type-check with TypeScript |
-| `npm test` | Run unit tests (license, VIP, share links, SSRF) |
-| `npm run license:issue` | Generate a unique, revocable Pro key |
+| `npm test` | Run unit tests (full scan/report results, share links, contact mail, navigation, SSRF) |
 
 ## Deployment
 
@@ -158,16 +140,15 @@ This project deploys automatically on push to `main`:
 - **Frontend** → GitHub Pages via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) (configured with `VITE_PUBLIC_BASE` and `VITE_API_BASE`)
 - **Backend** → Render via [`render.yaml`](render.yaml) Blueprint (Node web service)
 
-Environment variables used in production: `KOFI_PRO_URL`, `KOFI_LICENSE_KEY_HASH` (legacy), `LICENSE_SIGNING_SECRET`, `APP_URL`, `CORS_ORIGIN`, `DATA_DIR` (persistent disk for VIP/license state), `LOG_LEVEL`, `MAX_CONCURRENT_SCANS`, `MAX_CONCURRENT_PAGES`, `REPORT_SHARE_TTL_DAYS`.
+Environment variables used in production: `LICENSE_SIGNING_SECRET` (for share-link signatures), `APP_URL`, `CORS_ORIGIN`, `DATA_DIR` (persistent disk for saved reports and accounts), `LOG_LEVEL`, `MAX_CONCURRENT_SCANS`, `MAX_CONCURRENT_PAGES`, `REPORT_SHARE_TTL_DAYS`.
 
 ### Security & reliability
 
-- Rate limiting per IP on scan/contact/license endpoints (free tier is stricter) — returns `429` with `Retry-After`.
-- Global scan queue with Pro priority and bounded Puppeteer concurrency (`MAX_CONCURRENT_PAGES`).
+- Rate limiting per IP on scan/contact/account endpoints — returns `429` with `Retry-After`.
+- Global scan queue with bounded Puppeteer concurrency (`MAX_CONCURRENT_PAGES`).
 - SSRF protection: DNS resolution validated against private/link-local ranges (incl. IPv4-mapped IPv6 and decimal notation) before fetching.
 - CORS has no wildcard fallback: unknown origins receive no `Access-Control-Allow-Origin` header.
-- License session tokens are short-lived (`exp`, 30 days); the purchased key itself remains lifetime. Old tokens without `exp` stay valid (migration).
-- VIP one-scan links and license key hashes persist on a Render Disk (`DATA_DIR`), surviving redeploys.
+- Saved reports and share links are signed server-side with `LICENSE_SIGNING_SECRET`; no personal data is embedded in a share token.
 - Structured, level-based logging with per-scan correlation IDs; full scan URLs are never logged (host only), secrets are masked.
 
 ## Important information
@@ -183,7 +164,5 @@ For support and business enquiries: **bynrnworld@gmail.com**
 SiteScanner Pro is released under the Creative Commons Attribution-NonCommercial 4.0 International Public License. Commercial use requires separate written permission from the copyright holder. See [LICENSE](LICENSE) for the complete license terms.
 
 ---
-
-☕ **Get lifetime Pro access**: [Buy SiteScanner Pro on Ko-fi 💜](https://ko-fi.com/s/b525e21531)
 
 Created by ❤️ © nRn World

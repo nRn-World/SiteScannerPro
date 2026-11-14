@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 /**
  * FAS 3.1: signerade delbara rapport-URL:er med kontrollerad livslängd.
- * Samma HMAC-mönster som licenserna. Ingen persondata i nyckeln –
+ * Signeras med LICENSE_SIGNING_SECRET. Ingen persondata i nyckeln –
  * bara host, poäng och utgångstid.
  */
 

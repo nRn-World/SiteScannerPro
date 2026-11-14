@@ -1,13 +1,9 @@
 import { Request, Response } from 'express';
 import { createShareToken, decodeShareToken } from '../services/reportShare.service';
 import { getReport, getReportAsset } from '../services/reportStore.service';
-import { LicenseService } from '../services/license.service';
-import { isDevServer } from '../utils/devMode.server';
-import { toPublicResult } from '../utils/reportPresenter';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('report-share');
-const licenseService = new LicenseService();
 
 export class ReportShareController {
   /**
@@ -47,7 +43,7 @@ export class ReportShareController {
 
   /**
    * GET /api/reports/:id
-   * Full saved report. Paid fields are only included for a valid Pro/VIP token.
+   * Full saved report. Every field is public.
    */
   public getReport = async (req: Request, res: Response): Promise<void> => {
     const report = getReport(String(req.params.id || ''));
@@ -57,19 +53,6 @@ export class ReportShareController {
       return;
     }
 
-    const token = req.header('x-license-token') || '';
-    let unlocked = isDevServer();
-
-    if (!unlocked && token) {
-      try {
-        const license = await licenseService.validateLicense(token);
-        unlocked = !!license;
-      } catch {
-        // An invalid or unreadable token simply keeps the report locked.
-        unlocked = false;
-      }
-    }
-
     res.setHeader('Cache-Control', 'private, no-store');
     res.json({
       report: {
@@ -77,11 +60,10 @@ export class ReportShareController {
         createdAt: report.createdAt,
         rulesetVersion: report.rulesetVersion,
         url: report.url,
-        host: report.host,
-        unlocked
+        host: report.host
       },
       result: {
-        ...(unlocked ? report.result : toPublicResult(report.result)),
+        ...report.result,
         reportId: report.id
       }
     });

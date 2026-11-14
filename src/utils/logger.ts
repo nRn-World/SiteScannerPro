@@ -28,7 +28,7 @@ export function maskSecrets(value: string): string {
     .replace(/(SSP-(?:PRO|V1)-[A-Z0-9-]+)/gi, 'SSP-***')
     .replace(/(sk_live_|sk_test_|rk_live_|rk_test_)[A-Za-z0-9]+/g, '$1***')
     .replace(/(Bearer\s+)\S+/gi, '$1***')
-    .replace(/(LICENSE_SIGNING_SECRET|KOFI_LICENSE_KEY_HASH|VIP_ADMIN_SECRET|EMAIL_PASS|API_KEY)(=|:\s*")[^"\s,}]+/gi, '$1=***');
+    .replace(/(LICENSE_SIGNING_SECRET|EMAIL_PASS|API_KEY)(=|:\s*")[^"\s,}]+/gi, '$1=***');
 }
 
 /** Logga endast host, aldrig path/query – skyddar besökarnas integritet. */

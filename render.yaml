@@ -14,17 +14,13 @@ services:
         value: 3000
       - key: APP_URL
         sync: false
-      - key: KOFI_PRO_URL
-        value: https://ko-fi.com/s/b525e21531
-      - key: KOFI_LICENSE_KEY_HASH
-        sync: false
       - key: LICENSE_SIGNING_SECRET
         sync: false
       # FAS 1.6: wildcard-fallbacken är borttagen; utan matchande origin
       # skickas ingen CORS-header alls.
       - key: CORS_ORIGIN
         value: https://nrnworld.one,https://nrn-world.github.io,https://sitescannerpro-ten.vercel.app
-      # FAS 1.5: beständig lagring för VIP-länkar och licensnycklar
+      # FAS 1.5: beständig lagring för sparade rapporter och jämförelser
       - key: DATA_DIR
         value: /var/data/sitescanner
       - key: LOG_LEVEL

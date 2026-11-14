@@ -1,8 +1,8 @@
 import { createLogger } from './logger';
 
 /**
- * Kö med prioritet: Pro-skanningar prioriteras framför gratis.
- * Global gräns för samtidiga Puppeteer-jobb skyddar minnesgränsen på Render.
+ * Kö med prioritet och en global gräns för samtidiga Puppeteer-jobb som
+ * skyddar minnesgränsen på Render.
  */
 
 const log = createLogger('scan-queue');
@@ -28,7 +28,7 @@ export class ScanQueue {
     return this.active;
   }
 
-  /** priority: 0 = premium/pro, 1 = gratis */
+  /** priority: lower numbers run first; ties keep FIFO order */
   public enqueue<T>(priority: number, run: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const job: QueueJob<unknown> = { run: run as () => Promise<unknown>, priority, resolve: resolve as (v: unknown) => void, reject };

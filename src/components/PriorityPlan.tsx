@@ -1,13 +1,11 @@
 import React from 'react';
-import { ArrowRight, ListChecks, Lock } from 'lucide-react';
+import { ArrowRight, ListChecks } from 'lucide-react';
 import { CategoryKey, TranslationSet } from '../i18n/translations';
 import { ScannerIssue, Severity } from '../rules/types';
 
 interface PriorityPlanProps {
   issues: ScannerIssue[];
   t: TranslationSet;
-  isPremium: boolean;
-  onUpgradeClick: () => void;
   onShowAll: () => void;
 }
 
@@ -33,8 +31,6 @@ const SEVERITY_STYLES: Record<Severity, string> = {
 const PriorityPlan: React.FC<PriorityPlanProps> = ({
   issues,
   t,
-  isPremium,
-  onUpgradeClick,
   onShowAll
 }) => {
   const plan = [...issues]
@@ -64,16 +60,6 @@ const PriorityPlan: React.FC<PriorityPlanProps> = ({
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          {!isPremium && (
-            <button
-              type="button"
-              onClick={onUpgradeClick}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#1a73e8] px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1765cc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1a73e8] focus-visible:ring-offset-2"
-            >
-              <Lock className="h-4 w-4" />
-              {t.dashboard.unlockCta}
-            </button>
-          )}
           <button
             type="button"
             onClick={onShowAll}
@@ -130,7 +116,7 @@ const PriorityPlan: React.FC<PriorityPlanProps> = ({
                   </div>
                 )}
 
-                {issue.recommendation ? (
+                {issue.recommendation && (
                   <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3.5">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                       {t.dashboard.howToFix}
@@ -139,12 +125,7 @@ const PriorityPlan: React.FC<PriorityPlanProps> = ({
                       {issue.recommendation}
                     </p>
                   </div>
-                ) : !isPremium ? (
-                  <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-gray-500">
-                    <Lock className="h-3.5 w-3.5" />
-                    {t.dashboard.actionPlan.locked}
-                  </p>
-                ) : null}
+                )}
               </div>
             </li>
           );

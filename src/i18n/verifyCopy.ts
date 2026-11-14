@@ -5,7 +5,6 @@ export type ScanFailureKind =
   | 'blocked'
   | 'unavailable'
   | 'rate_limit'
-  | 'license'
   | 'invalid_url'
   | 'network'
   | 'server';
@@ -164,15 +163,6 @@ const sv: VerifyCopy = {
         'Kontakta oss om gränsen känns felaktig.'
       ]
     },
-    license: {
-      title: 'Pro-licensen kunde inte verifieras',
-      message: 'Licensen är ogiltig, har gått ut eller är redan använd för en VIP-länk.',
-      steps: [
-        'Aktivera Pro igen med din licensnyckel.',
-        'Kontrollera att du använder rätt webbläsare och profil.',
-        'Skanna utan Pro om du bara behöver de kostnadsfria fynden.'
-      ]
-    },
     invalid_url: {
       title: 'Webbadressen är ogiltig',
       message: 'Adressen kunde inte tolkas som en publik http- eller https-URL.',
@@ -323,15 +313,6 @@ const en: VerifyCopy = {
         'Wait a minute and try again.',
         'Avoid scanning the same address repeatedly in quick succession.',
         'Contact us if the limit seems incorrect.'
-      ]
-    },
-    license: {
-      title: 'The Pro licence could not be verified',
-      message: 'The licence is invalid, expired or already used by a VIP link.',
-      steps: [
-        'Activate Pro again with your licence key.',
-        'Check that you are using the right browser and profile.',
-        'Scan without Pro if you only need the free findings.'
       ]
     },
     invalid_url: {

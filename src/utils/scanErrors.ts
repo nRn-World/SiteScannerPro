@@ -42,7 +42,7 @@ export function createScanFailure(
 }
 
 function kindFromResponse(status: number, code: string | undefined): ScanFailureKind {
-  if (status === 401 || status === 403) return 'license';
+  if (status === 403) return 'blocked';
   if (status === 408 || status === 504 || code === 'timeout') return 'timeout';
   if (status === 429) return 'rate_limit';
   if (code === 'blocked') return 'blocked';

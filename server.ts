@@ -60,8 +60,8 @@ async function startServer() {
       res.setHeader('Vary', 'Origin');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-license-token');
-    res.setHeader('Access-Control-Expose-Headers', 'X-Vip-Consumed, Retry-After');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Expose-Headers', 'Retry-After');
     if (req.method === 'OPTIONS') {
       res.sendStatus(204);
       return;
@@ -230,7 +230,7 @@ async function startServer() {
   });
 }
 
-/** Global skanningskö (Pro prioriteras) – skapas i separat modul för testbarhet. */
+/** Global skanningskö med begränsad samtidighet – skapas i separat modul för testbarhet. */
 import { scanQueue } from "./src/services/scanQueue.instance";
 
 startServer();

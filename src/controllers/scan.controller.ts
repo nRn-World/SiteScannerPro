@@ -7,13 +7,11 @@ import { parseScanLanguage } from '../services/axeLocale.service';
 import { isDevServer } from '../utils/devMode.server';
 import type { Language } from '../i18n/translations';
 import { apiError } from '../i18n/scanLocale';
-import { VipService } from '../services/vip.service';
 import { scanQueue } from '../services/scanQueue.instance';
 import { resolveAndValidateTarget, SsrfError } from '../utils/ssrf';
 import { createLogger, hostOnly, newCorrelationId } from '../utils/logger';
 import { saveReport } from '../services/reportStore.service';
 import { getCachedScan, scanCacheKey, setCachedScan } from '../services/scanCache.service';
-import { toPublicResult } from '../utils/reportPresenter';
 import { Agent, setGlobalDispatcher, request as undiciRequest } from 'undici';
 import {
   DEFAULT_SCAN_OPTIONS,
@@ -132,7 +130,6 @@ async function fetchFallbackHtml(targetUrl: string): Promise<{
 
 export class ScanController {
   private scannerService: ScannerService;
-  private vipService = new VipService();
 
   constructor() {
     this.scannerService = new ScannerService();
@@ -140,7 +137,7 @@ export class ScanController {
 
   /**
    * FAS 1.7: SSRF – hostname valideras och anslutning sker mot verifierad IP.
-   * FAS 1.4/5.2: kör genom global kö där Pro prioriteras.
+   * FAS 1.4/5.2: kör genom den globala kön med begränsad samtidighet.
    */
   private async fetchAndScan(
     targetUrl: string,
@@ -230,14 +227,12 @@ export class ScanController {
       });
 
       // Issue-annotated screenshots are the strongest proof. Capture them for
-      // Pro scans (priority 0) and in local development; free production scans
-      // keep the cheaper full-page screenshots. LOW_MEMORY=1 disables them.
+      // every thorough scan. LOW_MEMORY=1 disables them.
       const lowMemoryMode = process.env.LOW_MEMORY === '1';
       const shouldCaptureIssueShots =
         captureScreenshots &&
         scanOptions.thorough &&
-        !lowMemoryMode &&
-        (priority === 0 || isDevServer());
+        !lowMemoryMode;
       scanResult = {
         ...scanResult,
         issues: shouldCaptureIssueShots
@@ -285,95 +280,9 @@ export class ScanController {
         return;
       }
 
-      // Gratis-nivån kör samma djupanalys (headless Chrome) som Pro –
-      // det som låses bakom Pro är lösningarna (rekommendation/kodfix),
-      // inte fynden. Stryp vitals om ingen API-nyckel finns.
+      // Alla skanningar kör samma djupanalys (headless Chrome) och får samma
+      // fullständiga resultat. Stryp vitals om ingen API-nyckel finns.
       const includeVitals = isDevServer() || !!process.env.VITALS_API_KEY;
-      const cacheKey = scanCacheKey(
-        normalized,
-        language,
-        includeVitals,
-        scanOptionsCacheKey(scanOptions)
-      );
-      let result = forceFresh ? null : getCachedScan(cacheKey);
-
-      if (forceFresh) {
-        log.info('scan cache bypass', { host: hostOnly(normalized) });
-      } else if (result) {
-        log.info('scan cache hit', { host: hostOnly(normalized) });
-      }
-
-      if (!result) {
-        result = await this.fetchAndScan(
-          normalized,
-          includeVitals,
-          language,
-          1, // gratis – lägre prioritet i kön
-          log,
-          true,
-          scanOptions
-        );
-      }
-
-      // Spara hela resultatet så rapporten får en permalänk som överlever refresh.
-      if (!result.reportId) {
-        const saved = saveReport({
-          result,
-          url: normalized,
-          language,
-          apiOrigin: getApiOrigin(req)
-        });
-        if (saved) result = { ...result, reportId: saved.id };
-      }
-
-      setCachedScan(cacheKey, result);
-      res.json(isDevServer() ? result : toPublicResult(result));
-    } catch (error: any) {
-      log.error('Free scan error', { error: error?.message });
-      if (error instanceof SsrfError || error?.name === 'SsrfError') {
-        res.status(400).json({
-          error: apiError(parseScanLanguage(req.body?.language), 'invalidUrl'),
-          code: 'blocked'
-        });
-        return;
-      }
-      if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
-        res.status(504).json({
-          error: apiError(parseScanLanguage(req.body?.language), 'timeout'),
-          code: 'timeout'
-        });
-        return;
-      }
-      res.status(500).json({
-        error: apiError(parseScanLanguage(req.body?.language), 'failed', error.message),
-        code: 'unavailable'
-      });
-    }
-  };
-
-  public scanPremium = async (req: Request, res: Response): Promise<void> => {
-    const correlationId = newCorrelationId();
-    const log = createLogger(correlationId);
-    try {
-      const { url, language: rawLanguage } = req.body;
-      const language = parseScanLanguage(rawLanguage);
-      const scanOptions = parseScanOptions(req.body);
-      const forceFresh = req.body?.force === true;
-
-      const targetUrl = typeof url === 'string' && url ? url.trim() : '';
-      if (!targetUrl) {
-        res.status(400).json({ error: apiError(language, 'invalidUrl'), code: 'invalid_url' });
-        return;
-      }
-      const normalized = /^https?:\/\//i.test(targetUrl) ? targetUrl : `https://${targetUrl}`;
-      try {
-        new URL(normalized);
-      } catch {
-        res.status(400).json({ error: apiError(language, 'invalidUrl'), code: 'invalid_url' });
-        return;
-      }
-
-      const includeVitals = true;
       const cacheKey = scanCacheKey(
         normalized,
         language,
@@ -400,21 +309,7 @@ export class ScanController {
         );
       }
 
-      // VIP: förbrukas först efter lyckad skanning så nätverksfel inte bränner länken.
-      const license = req.license;
-      let vipConsumed = false;
-      if ((license?.kind === 'vip' || license?.source === 'vip') && license.vipId) {
-        vipConsumed = this.vipService.consumeScan(license.vipId);
-        if (!vipConsumed) {
-          res.status(403).json({ error: 'VIP-länken är redan använd.', code: 'license' });
-          return;
-        }
-      }
-
-      if (vipConsumed) {
-        res.setHeader('X-Vip-Consumed', '1');
-      }
-
+      // Spara hela resultatet så rapporten får en permalänk som överlever refresh.
       if (!result.reportId) {
         const saved = saveReport({
           result,
@@ -428,7 +323,7 @@ export class ScanController {
       setCachedScan(cacheKey, result);
       res.json(result);
     } catch (error: any) {
-      log.error('Premium scan error', { error: error?.message });
+      log.error('Free scan error', { error: error?.message });
       if (error instanceof SsrfError || error?.name === 'SsrfError') {
         res.status(400).json({
           error: apiError(parseScanLanguage(req.body?.language), 'invalidUrl'),

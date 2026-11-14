@@ -12,7 +12,7 @@ const COPY = {
   sv: {
     product: 'SiteScanner Pro',
     tagline: 'Mätbart, repeterbart och spårbart – webbplatsens hälsa i en rapport.',
-    terms: 'Köpvillkor',
+    terms: 'Användarvillkor',
     privacy: 'Integritet',
     cookies: 'Cookies',
     contact: 'Kontakt',

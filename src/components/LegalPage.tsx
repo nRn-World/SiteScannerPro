@@ -16,15 +16,15 @@ interface LegalContent {
   sections: LegalSection[];
 }
 
-const UPDATED_SV = 'Senast uppdaterad: 12 november 2026';
-const UPDATED_EN = 'Last updated: 12 November 2026';
+const UPDATED_SV = 'Senast uppdaterad: 14 november 2026';
+const UPDATED_EN = 'Last updated: 14 November 2026';
 
 const SV: Record<LegalKind, LegalContent> = {
   terms: {
-    title: 'Köpvillkor',
+    title: 'Användarvillkor',
     updated: UPDATED_SV,
     intro:
-      'Dessa villkor gäller när du använder SiteScanner Pro och när du köper en Pro-licens. Läs igenom dem innan du använder tjänsten.',
+      'Dessa villkor gäller när du använder SiteScanner Pro. Tjänsten är kostnadsfri och kräver inget köp. Läs igenom villkoren innan du använder tjänsten.',
     sections: [
       {
         heading: '1. Om tjänsten',
@@ -34,10 +34,10 @@ const SV: Record<LegalKind, LegalContent> = {
         ]
       },
       {
-        heading: '2. Pro-licens och betalning',
+        heading: '2. Kostnadsfri tjänst',
         paragraphs: [
-          'Pro är ett engångsköp på 10,99 EUR som ger en personlig, livslång licens för den aktuella versionen av tjänsten. Betalning sker via Ko-fi.',
-          'Licensnyckeln är personlig och får inte delas, säljas vidare eller publiceras. Vi kan spärra en nyckel vid missbruk eller läckage. Om du tappar bort din nyckel kan du kontakta oss med köpbevis.'
+          'SiteScanner Pro är helt gratis. Alla funktioner – skanning, rekommendationer, kodfixar, jämförelser och rapporter – ingår utan betalning, licens eller prenumeration.',
+          'Vi tar inte betalt och begär inga betaluppgifter. Tjänsten finansieras inte av annonser och vi säljer inte dina uppgifter.'
         ]
       },
       {
@@ -57,7 +57,7 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '5. Ansvarsbegränsning',
         paragraphs: [
-          'Vi ansvarar inte för indirekta skador, förlorade intäkter eller beslut som fattas utifrån en rapport. Vårt sammanlagda ansvar är begränsat till det belopp du betalat för Pro-licensen.',
+          'Vi ansvarar inte för indirekta skador, förlorade intäkter eller beslut som fattas utifrån en rapport. Eftersom tjänsten är gratis finns ingen betalning att återbetala.',
           'Inget i dessa villkor begränsar ansvar som inte får begränsas enligt tvingande lag.'
         ]
       },
@@ -70,7 +70,7 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '7. Tillämplig lag och kontakt',
         paragraphs: [
-          'Dessa villkor styrs av svensk lag. Frågor om köp, licenser eller dessa villkor skickas till bynrnworld@gmail.com.'
+          'Dessa villkor styrs av svensk lag. Frågor om tjänsten eller dessa villkor skickas till bynrnworld@gmail.com.'
         ]
       }
     ]
@@ -92,7 +92,6 @@ const SV: Record<LegalKind, LegalContent> = {
         bullets: [
           'Webbadressen till den sida du skannar samt tekniska data som hämtas från sidan.',
           'IP-adress och tekniska förfrågningsuppgifter i samband med hastighetsbegränsning och säkerhet.',
-          'Licensnyckel och sessions-token som sparas lokalt i din webbläsare när du aktiverar Pro.',
           'E-postadress och en hash av lösenordet om du skapar ett konto.',
           'Övervakade webbadresser, intervall, poänghistorik och rapportlänkar om du använder övervakning.',
           'En HttpOnly-sessionscookie när du är inloggad.',
@@ -121,7 +120,6 @@ const SV: Record<LegalKind, LegalContent> = {
         bullets: [
           'Sparade rapporter och tillhörande skärmdumpar: upp till 30 dagar.',
           'Serverloggar: kortast tid som behövs för drift och säkerhet.',
-          'Licensuppgifter: så länge licensen är aktiv eller tills den spärras.',
           'Kontouppgifter: tills du begär radering; inloggningssessioner löper ut efter 30 dagar.',
           'Övervakningshistorik: tills du tar bort den övervakade sajten.',
           'Kontaktärenden: tills ärendet är avslutat, därefter så länge som krävs enligt lag.'
@@ -130,7 +128,7 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '6. Underleverantörer',
         paragraphs: [
-          'Vi använder Render för drift av applikationen, Ko-fi för betalningar och kan använda Google PageSpeed Insights för att hämta Core Web Vitals när en API-nyckel är konfigurerad. Dessa leverantörer behandlar uppgifter enligt sina egna villkor och dataskyddsavtal.',
+          'Vi använder Render för drift av applikationen och kan använda Google PageSpeed Insights för att hämta Core Web Vitals när en API-nyckel är konfigurerad. Dessa leverantörer behandlar uppgifter enligt sina egna villkor och dataskyddsavtal.',
           'Vi säljer inte personuppgifter och använder dem inte för reklam.'
         ]
       },
@@ -158,28 +156,26 @@ const SV: Record<LegalKind, LegalContent> = {
       {
         heading: '1. Cookies',
         paragraphs: [
-          'När du loggar in sätter vi en nödvändig HttpOnly-cookie (ssp_session) för att hålla dig inloggad. Den används inte för analys, annonsering eller profilering. När du går vidare till Ko-fi för betalning kan Ko-fi sätta cookies enligt sina egna villkor.'
+          'När du loggar in sätter vi en nödvändig HttpOnly-cookie (ssp_session) för att hålla dig inloggad. Den används inte för analys, annonsering eller profilering.'
         ]
       },
       {
         heading: '2. Lokal lagring i din webbläsare',
         bullets: [
           'siteScannerLanguage – sparar ditt språkval.',
-          'siteScannerHistory – sparar dina senaste skanningar lokalt.',
-          'siteScannerLicenseToken – sparar din Pro-session så att du slipper aktivera nyckeln varje gång.',
-          'siteScannerVipSession – markerar en pågående VIP-session.'
+          'siteScannerHistory – sparar dina senaste skanningar lokalt.'
         ]
       },
       {
         heading: '3. Varför lokal lagring behövs',
         paragraphs: [
-          'Utan lokal lagring skulle språkval, historik och Pro-aktivering försvinna varje gång du laddar om sidan. Uppgifterna stannar i din webbläsare och skickas inte till oss om du inte aktivt använder en funktion som kräver dem.'
+          'Utan lokal lagring skulle språkval och historik försvinna varje gång du laddar om sidan. Uppgifterna stannar i din webbläsare och skickas inte till oss om du inte aktivt använder en funktion som kräver dem.'
         ]
       },
       {
         heading: '4. Så rensar du uppgifterna',
         paragraphs: [
-          'Du kan rensa lokal lagring via webbläsarens inställningar för webbplatsdata. Om du rensar Pro-token behöver du aktivera din licensnyckel igen.'
+          'Du kan rensa lokal lagring via webbläsarens inställningar för webbplatsdata.'
         ]
       }
     ]
@@ -191,7 +187,7 @@ const EN: Record<LegalKind, LegalContent> = {
     title: 'Terms of Service',
     updated: UPDATED_EN,
     intro:
-      'These terms apply when you use SiteScanner Pro and when you purchase a Pro licence. Please read them before using the service.',
+      'These terms apply when you use SiteScanner Pro. The service is free and requires no purchase. Please read them before using the service.',
     sections: [
       {
         heading: '1. The service',
@@ -201,10 +197,10 @@ const EN: Record<LegalKind, LegalContent> = {
         ]
       },
       {
-        heading: '2. Pro licence and payment',
+        heading: '2. Free service',
         paragraphs: [
-          'Pro is a one-time purchase of EUR 10.99 granting a personal, lifetime licence for the current version of the service. Payment is handled by Ko-fi.',
-          'The licence key is personal and may not be shared, resold or published. We may revoke a key in case of abuse or leakage. If you lose your key, contact us with proof of purchase.'
+          'SiteScanner Pro is completely free. Every feature – scanning, recommendations, code fixes, comparisons and reports – is included without payment, licence or subscription.',
+          'We do not charge and never ask for payment details. The service is not funded by advertising and we do not sell your data.'
         ]
       },
       {
@@ -224,7 +220,7 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '5. Limitation of liability',
         paragraphs: [
-          'We are not liable for indirect damages, lost revenue or decisions made based on a report. Our total liability is limited to the amount you paid for the Pro licence.',
+          'We are not liable for indirect damages, lost revenue or decisions made based on a report. Because the service is free, there is no payment to refund.',
           'Nothing in these terms limits liability that cannot be limited under mandatory law.'
         ]
       },
@@ -237,7 +233,7 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '7. Governing law and contact',
         paragraphs: [
-          'These terms are governed by Swedish law. Questions about purchases, licences or these terms can be sent to bynrnworld@gmail.com.'
+          'These terms are governed by Swedish law. Questions about the service or these terms can be sent to bynrnworld@gmail.com.'
         ]
       }
     ]
@@ -259,7 +255,6 @@ const EN: Record<LegalKind, LegalContent> = {
         bullets: [
           'The URL of the page you scan and technical data retrieved from that page.',
           'IP address and technical request data used for rate limiting and security.',
-          'The licence key and session token stored locally in your browser when you activate Pro.',
           'Email address and a password hash if you create an account.',
           'Monitored URLs, intervals, score history and report links if you use monitoring.',
           'An HttpOnly session cookie while you are signed in.',
@@ -288,7 +283,6 @@ const EN: Record<LegalKind, LegalContent> = {
         bullets: [
           'Saved reports and screenshots: up to 30 days.',
           'Server logs: the shortest period needed for operations and security.',
-          'Licence data: while the licence is active or until it is revoked.',
           'Account data: until you request deletion; sign-in sessions expire after 30 days.',
           'Monitoring history: until you remove the monitored site.',
           'Contact cases: until the case is closed, then as long as required by law.'
@@ -297,7 +291,7 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '6. Subprocessors',
         paragraphs: [
-          'We use Render to host the application, Ko-fi for payments, and may use Google PageSpeed Insights to retrieve Core Web Vitals when an API key is configured. These providers process data under their own terms and data processing agreements.',
+          'We use Render to host the application and may use Google PageSpeed Insights to retrieve Core Web Vitals when an API key is configured. These providers process data under their own terms and data processing agreements.',
           'We do not sell personal data and do not use it for advertising.'
         ]
       },
@@ -325,28 +319,26 @@ const EN: Record<LegalKind, LegalContent> = {
       {
         heading: '1. Cookies',
         paragraphs: [
-          'When you sign in, we set a necessary HttpOnly cookie (ssp_session) to keep you signed in. It is not used for analytics, advertising or profiling. When you continue to Ko-fi for payment, Ko-fi may set cookies under its own policy.'
+          'When you sign in, we set a necessary HttpOnly cookie (ssp_session) to keep you signed in. It is not used for analytics, advertising or profiling.'
         ]
       },
       {
         heading: '2. Local storage in your browser',
         bullets: [
           'siteScannerLanguage – stores your language choice.',
-          'siteScannerHistory – stores your recent scans locally.',
-          'siteScannerLicenseToken – stores your Pro session so you do not need to activate the key every time.',
-          'siteScannerVipSession – marks an active VIP session.'
+          'siteScannerHistory – stores your recent scans locally.'
         ]
       },
       {
         heading: '3. Why local storage is needed',
         paragraphs: [
-          'Without local storage, your language choice, history and Pro activation would disappear on every page reload. The data stays in your browser and is only sent to us when you actively use a feature that requires it.'
+          'Without local storage, your language choice and history would disappear on every page reload. The data stays in your browser and is only sent to us when you actively use a feature that requires it.'
         ]
       },
       {
         heading: '4. How to clear it',
         paragraphs: [
-          'You can clear local storage from your browser settings for site data. If you clear the Pro token, you will need to activate your licence key again.'
+          'You can clear local storage from your browser settings for site data.'
         ]
       }
     ]

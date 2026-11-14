@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "dist", "scripts/prerender.mjs", "scripts/generate-license-key.mjs"],
+  "exclude": ["node_modules", "dist", "scripts/prerender.mjs"],
   "compilerOptions": {
     "target": "ES2022",
     "experimentalDecorators": true,

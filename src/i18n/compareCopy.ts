@@ -3,9 +3,6 @@ import type { Language } from './translations';
 export interface CompareCopy {
   title: string;
   subtitle: string;
-  proTitle: string;
-  proBody: string;
-  unlock: string;
   openForm: string;
   collapseForm: string;
   yourSite: string;
@@ -17,8 +14,6 @@ export interface CompareCopy {
   runningHint: string;
   needCompetitor: string;
   error: string;
-  errorPro: string;
-  errorVip: string;
   errorInvalid: string;
   errorTooMany: string;
   errorDuplicate: string;
@@ -63,10 +58,6 @@ export interface CompareCopy {
 const english: CompareCopy = {
   title: 'Competitor comparison',
   subtitle: 'Compare your site with up to two competitors – same rules, same device, same moment.',
-  proTitle: 'Compare with competitors',
-  proBody:
-    'See how your site stacks up on SEO, performance, security, accessibility and code quality.',
-  unlock: 'Unlock Pro',
   openForm: 'Compare now',
   collapseForm: 'Hide',
   yourSite: 'Your site',
@@ -78,8 +69,6 @@ const english: CompareCopy = {
   runningHint: 'Two competitors can take up to a minute. Keep this tab open.',
   needCompetitor: 'Enter at least one competitor.',
   error: 'The comparison failed.',
-  errorPro: 'Competitor comparison is a Pro feature.',
-  errorVip: 'VIP links cover one scan. Use a Pro license for comparisons.',
   errorInvalid: 'One of the addresses is invalid.',
   errorTooMany: 'Compare with at most two competitors.',
   errorDuplicate: 'The same site cannot appear twice.',
@@ -125,10 +114,6 @@ const english: CompareCopy = {
 const swedish: CompareCopy = {
   title: 'Konkurrentjämförelse',
   subtitle: 'Jämför din sajt med upp till två konkurrenter – samma regler, samma enhet, samma tillfälle.',
-  proTitle: 'Jämför med konkurrenter',
-  proBody:
-    'Se hur din sajt står sig inom SEO, prestanda, säkerhet, tillgänglighet och kodkvalitet.',
-  unlock: 'Lås upp Pro',
   openForm: 'Jämför nu',
   collapseForm: 'Dölj',
   yourSite: 'Din sajt',
@@ -140,8 +125,6 @@ const swedish: CompareCopy = {
   runningHint: 'Två konkurrenter kan ta upp till en minut. Låt fliken vara öppen.',
   needCompetitor: 'Ange minst en konkurrent.',
   error: 'Jämförelsen misslyckades.',
-  errorPro: 'Konkurrentjämförelse ingår i Pro.',
-  errorVip: 'VIP-länkar gäller en skanning. Använd en Pro-licens för jämförelser.',
   errorInvalid: 'En av adresserna är ogiltig.',
   errorTooMany: 'Jämför med högst två konkurrenter.',
   errorDuplicate: 'Samma sajt kan inte förekomma två gånger.',

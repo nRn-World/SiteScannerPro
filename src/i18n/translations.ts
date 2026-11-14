@@ -18,9 +18,6 @@ export interface TranslationSet {
     scanner: string;
     about: string;
     contact: string;
-    premium: string;
-    removePremium: string;
-    removePremiumConfirm: string;
   };
   hero: {
     secure: string;
@@ -45,9 +42,6 @@ export interface TranslationSet {
     categoryIssues: string;
     recommendation: string;
     noIssues: string;
-    solutionLocked: string;
-    lockedHint: string;
-    unlockCta: string;
     categories: Record<CategoryKey, string>;
     analysisDepth: string;
     vitals: {
@@ -111,23 +105,9 @@ export interface TranslationSet {
       subtitle: string;
       whyItMatters: string;
       showAll: string;
-      locked: string;
       severity: Record<'High' | 'Medium' | 'Low', string>;
       categoryImpact: Record<CategoryKey, string>;
     };
-  };
-  paywall: {
-    title: string;
-    description: string;
-    benefits: string[];
-    buy: string;
-    codeTitle: string;
-    afterPurchase: string;
-    codePlaceholder: string;
-    activate: string;
-    activating: string;
-    activated: string;
-    cancel: string;
   };
   contact: {
     successTitle: string;
@@ -145,21 +125,7 @@ export interface TranslationSet {
     send: string;
     sendError: string;
   };
-  errors: { freeScan: string; premiumScan: string; scanFailed: string; payment: string; licenseInvalid: string; vipInvalid?: string; vipUsed?: string };
   share: { ready: string; copy: string; copied: string; open: string; compare: string };
-  vip: {
-    banner: string;
-    used: string;
-    ownerTitle: string;
-    ownerHint: string;
-    secretPlaceholder: string;
-    create: string;
-    creating: string;
-    copy: string;
-    copied: string;
-    created: string;
-    createError: string;
-  };
 }
 
 const english: TranslationSet = {
@@ -167,10 +133,7 @@ const english: TranslationSet = {
   nav: {
     scanner: 'Scanner',
     about: 'About',
-    contact: 'Contact',
-    premium: 'Premium',
-    removePremium: 'Remove Premium',
-    removePremiumConfirm: 'Remove Premium from this browser? You can activate your Pro code again anytime.'
+    contact: 'Contact'
   },
   hero: {
     secure: 'Secure & anonymous analysis',
@@ -212,14 +175,13 @@ const english: TranslationSet = {
       { title: 'Core Web Vitals', description: 'Real LCP, CLS, INP, FCP and TTFB metrics when a vitals API key is configured.' },
       { title: 'WCAG Accessibility (axe-core)', description: 'Industry-standard accessibility engine – detects contrast, labels, ARIA and more.' },
       { title: 'Security Header Audit', description: 'HTTPS, HSTS, CSP, X-Frame-Options, Referrer-Policy, mixed content and server exposure checks.' },
-      { title: 'Actionable Code Fixes', description: 'Every issue includes a prioritized recommendation and ready-to-use code snippet (Premium).' },
+      { title: 'Actionable Code Fixes', description: 'Every issue includes a prioritized recommendation and ready-to-use code snippet.' },
       { title: 'Zero Impact On Your Site', description: 'Scans run on our servers against your public HTML and headers - nothing is installed and your site is never modified.' }
     ]
   },
   history: { title: 'Previous Scans', target: 'Target', score: 'Score', date: 'Date' },
   dashboard: {
     report: 'Analysis Report', exportPdf: 'Export PDF', totalScore: 'Total Score', details: 'Showing details', clickForDetails: 'Click for details', identifiedIssues: 'Identified Issues', categoryIssues: '{category} Issues',     recommendation: 'Recommendation', noIssues: 'No issues found in this category.',
-    solutionLocked: 'Solution locked', lockedHint: 'Get the exact fix with step-by-step instructions and ready-to-use code.', unlockCta: 'Unlock – €10.99',
     categories: { SEO: 'SEO', Performance: 'Performance', Security: 'Security', Accessibility: 'Accessibility', Code: 'Code' },
     analysisDepth: '{rules} custom rules · {axe} WCAG checks · {engines}',
     vitals: {
@@ -283,7 +245,6 @@ const english: TranslationSet = {
       subtitle: 'Start with the three highest-priority findings for the selected device.',
       whyItMatters: 'Why it matters',
       showAll: 'Show all findings',
-      locked: 'Unlock Pro to see the exact fix.',
       severity: { High: 'Critical', Medium: 'Warning', Low: 'Improvement' },
       categoryImpact: {
         SEO: 'Search engines and social previews use this to understand and rank the page. Fixing it improves discoverability and click-through.',
@@ -294,29 +255,7 @@ const english: TranslationSet = {
       }
     }
   },
-  paywall: {
-    title: 'Pro\nRequired.',
-    description: 'You can see which issues were found. Unlock Pro for lifetime access to full fixes, exact code snippets and deeper scans.',
-    benefits: ['Lifetime Pro access', 'Complete code solutions', 'Unlimited premium scans'],
-    buy: 'Buy Pro on Ko-fi – €10.99',
-    codeTitle: 'Already have a Pro code?',
-    afterPurchase: 'After Ko-fi payment, paste the license code from the thank-you page.',
-    codePlaceholder: 'SSP-PRO-XXXX-XXXX-XXXX',
-    activate: 'Activate',
-    activating: 'Activating...',
-    activated: 'Pro activated.',
-    cancel: 'Cancel'
-  },
   contact: { successTitle: 'Thank you for your message!', successDescription: 'We received your email and will get back to you as soon as we can.', sendAnother: 'Send another message', name: 'Name', namePlaceholder: 'Your name', email: 'Email', emailPlaceholder: 'you@email.com', subject: 'Subject', subjectPlaceholder: 'What is it about?', message: 'Message', messagePlaceholder: 'Write your message here...', sending: 'Sending...', send: 'Send Message', sendError: 'Something went wrong while sending.' },
-  errors: {
-    freeScan: 'An error occurred during the analysis.',
-    premiumScan: 'The premium analysis failed.',
-    scanFailed: 'Could not analyze the website.',
-    payment: 'Could not connect to the payment server.',
-    licenseInvalid: 'Your Pro license could not be verified. Try again or contact support.',
-    vipInvalid: 'This VIP link is invalid.',
-    vipUsed: 'This VIP link has already been used.'
-  },
   share: {
     ready: 'Share this report (link expires automatically):',
     copy: 'Copy link',
@@ -324,29 +263,17 @@ const english: TranslationSet = {
     open: 'Open',
     compare: 'Previous scan of this site:'
   },
-  vip: {
-    banner: 'VIP access: 1 Pro scan remaining on this link.',
-    used: 'Your VIP Pro scan has been used. Ask for a new VIP link or buy Pro.',
-    ownerTitle: 'VIP links (local only)',
-    ownerHint: 'Create a one-scan Pro link for friends. Copy and share the live URL — it works once on the public site.',
-    secretPlaceholder: 'Admin secret',
-    create: 'Create VIP link',
-    creating: 'Creating...',
-    copy: 'Copy share URL',
-    copied: 'Copied!',
-    created: 'Share URL ready — send it to a friend.',
-    createError: 'Could not create VIP link. Check VIP_ADMIN_SECRET in local .env.'
-  }
 };
 
 const localized: Record<Exclude<Language, 'en'>, TranslationSet> = {
   sv: {
-    ...english, languageName: 'Svenska', nav: { ...english.nav, scanner: 'Skanner', about: 'Om oss', contact: 'Kontakt', premium: 'Premium', removePremium: 'Ta bort Premium', removePremiumConfirm: 'Ta bort Premium från den här webbläsaren? Du kan aktivera din Pro-kod igen när som helst.' }, hero: { ...english.hero, secure: 'Säker och anonym analys', title: ['Analysera.', 'Säkra.', 'Optimera.'], description: 'Ange din webbadress för en heltäckande analys av kodkvalitet, säkerhet, prestanda och SEO.', urlPlaceholder: 'https://din-hemsida.se', scan: 'Skanna', steps: [{ title: 'Skanna', description: 'Vår motor hämtar din DOM-struktur och analyserar koden i realtid utan att påverka Core Web Vitals.' }, { title: 'Analysera', description: 'Regelmotorn utvärderar säkerhetsheaders, svarstider, metadata, tillgänglighet och kodkvalitet.' }, { title: 'Åtgärda', description: 'Få en prioriterad lista med exakta kodändringar för att stärka signaler och stänga säkerhetshål.' }] }, scanning: { target: 'Mål:', coldStartHint: 'Djupskanningar tar 20–40 sekunder. Om servern precis vaknat kan första skanningen ta upp till en minut.' }, scanSteps: ['INITIERAR ANSLUTNING...', 'HÄMTAR DOM-STRUKTUR...', 'ANALYSERAR KODKVALITET...', 'SÖKER EFTER SÄKERHETSBRISTER...', 'UTVÄRDERAR SEO-MÄTVÄRDEN...', 'SAMMANSTÄLLER RAPPORT...'], about: { title: 'Om oss', lead: 'SiteScanner Pro byggdes på en enkel övertygelse: varje webbplatsägare förtjänar att veta exakt hur frisk deras webbplats är – och precis hur den blir bättre.', sections: [{ heading: 'Vad vi gör', body: 'Vi är specialister på automatiserad webbanalys. Vår skanner granskar din webbplats inom fem kritiska områden – SEO, prestanda, säkerhet, tillgänglighet och kodkvalitet – och destillerar många tekniska kontroller till en tydlig, prioriterad rapport. Inga tillägg, ingen installation, ingen konfiguration: ange din webbadress och få en komplett hälsorapport på sekunder.' }, { heading: 'Så fungerar det', body: 'Vår skanningsmotor arbetar med deterministiska regler. De fångar mätbara problem som saknade metataggar, saknade alt-texter, långsamma serversvar och render-blockerande skript – och varje fynd kommer med en prioriterad rekommendation och en färdig kodfix.' }, { heading: 'Vårt löfte', body: 'Analys ska aldrig ske på bekostnad av förtroende. Skanningen är anonym, kräver inget konto och påverkar inte din webbplats alls medan den körs. Vi säljer aldrig dina data. Vårt enda mål är att du går därifrån med en snabbare, säkrare och synligare webbplats.' }] }, features: { heading: 'Enterprise-Grade', headingAccent: 'Funktioner', items: [{ title: 'Grundläggande SEO-taggar', description: 'Validering av Title-, H1- och Meta Description-taggar för maximal synlighet i sökmotorer.' }, { title: 'Serverresponskoll', description: 'Mäter hur snabbt servern svarar och flaggar långsamma svar som sänker laddningstid och Core Web Vitals.' }, { title: 'HTTPS och säkerhetsheaders', description: 'Kontrollerar kryptering samt HSTS- och clickjacking-skydd så att besökare landar på en säker anslutning.' }, { title: 'Tillgänglighet i grunden', description: 'Hittar saknade alt-texter och språkattribut som skapar hinder för hjälpmedel.' }, { title: 'Kodkvalitetskontroller', description: 'Flaggar inline-CSS, föråldrade HTML-taggar och render-blockerande JavaScript för renare, snabbare sidor.' }, { title: 'Ingen påverkan på din sajt', description: 'Skanningarna körs på våra servrar mot din publika HTML och headers – inget installeras och din sajt ändras aldrig.' }] }, history: { title: 'Tidigare skanningar', target: 'Mål', score: 'Poäng', date: 'Datum' }, dashboard: { ...english.dashboard, report: 'Analysrapport', exportPdf: 'Exportera till PDF', totalScore: 'Total poäng', details: 'Visar detaljer', clickForDetails: 'Klicka för detaljer', identifiedIssues: 'Identifierade problem', categoryIssues: '{category} problem', recommendation: 'Rekommendation', noIssues: 'Inga problem hittades i denna kategori.', categories: { SEO: 'SEO', Performance: 'Prestanda', Security: 'Säkerhet', Accessibility: 'Tillgänglighet', Code: 'Kod' } }, paywall: { title: 'Pro\nkrävs.', description: 'Du ser vilka fel som hittats. Lås upp Pro för livstidsåtkomst till kompletta lösningar, exakta kodfixar och djupare skanningar.', benefits: ['Livstids Pro-åtkomst', 'Kompletta kodlösningar', 'Obegränsade premiumskanningar'], buy: 'Köp Pro på Ko-fi – €10,99', codeTitle: 'Har du redan en Pro-kod?', afterPurchase: 'Efter Ko-fi-betalningen klistrar du in licenskoden från tack-sidan.', codePlaceholder: 'SSP-PRO-XXXX-XXXX-XXXX', activate: 'Aktivera', activating: 'Aktiverar...', activated: 'Pro är aktiverat.', cancel: 'Avbryt' }, contact: { ...english.contact, successTitle: 'Tack för ditt meddelande!', successDescription: 'Vi har tagit emot ditt mail och återkommer så snart vi kan.', sendAnother: 'Skicka ett till meddelande', name: 'Namn', namePlaceholder: 'Ditt namn', email: 'E-post', emailPlaceholder: 'din@email.se', subject: 'Ämne', subjectPlaceholder: 'Vad gäller det?', message: 'Meddelande', messagePlaceholder: 'Skriv ditt meddelande här...', sending: 'Skickar...', send: 'Skicka meddelande', sendError: 'Något gick fel vid sändning.' }, errors: { freeScan: 'Ett fel uppstod vid analysen.', premiumScan: 'Premiumanalysen misslyckades.', scanFailed: 'Kunde inte analysera webbplatsen.', payment: 'Kunde inte ansluta till betalningsservern.', licenseInvalid: 'Din Pro-licens kunde inte verifieras. Försök igen eller kontakta support.' }
+    ...english, languageName: 'Svenska', nav: { ...english.nav, scanner: 'Skanner', about: 'Om oss', contact: 'Kontakt' }, hero: { ...english.hero, secure: 'Säker och anonym analys', title: ['Analysera.', 'Säkra.', 'Optimera.'], description: 'Ange din webbadress för en heltäckande analys av kodkvalitet, säkerhet, prestanda och SEO.', urlPlaceholder: 'https://din-hemsida.se', scan: 'Skanna', steps: [{ title: 'Skanna', description: 'Vår motor hämtar din DOM-struktur och analyserar koden i realtid utan att påverka Core Web Vitals.' }, { title: 'Analysera', description: 'Regelmotorn utvärderar säkerhetsheaders, svarstider, metadata, tillgänglighet och kodkvalitet.' }, { title: 'Åtgärda', description: 'Få en prioriterad lista med exakta kodändringar för att stärka signaler och stänga säkerhetshål.' }] }, scanning: { target: 'Mål:', coldStartHint: 'Djupskanningar tar 20–40 sekunder. Om servern precis vaknat kan första skanningen ta upp till en minut.' }, scanSteps: ['INITIERAR ANSLUTNING...', 'HÄMTAR DOM-STRUKTUR...', 'ANALYSERAR KODKVALITET...', 'SÖKER EFTER SÄKERHETSBRISTER...', 'UTVÄRDERAR SEO-MÄTVÄRDEN...', 'SAMMANSTÄLLER RAPPORT...'], about: { title: 'Om oss', lead: 'SiteScanner Pro byggdes på en enkel övertygelse: varje webbplatsägare förtjänar att veta exakt hur frisk deras webbplats är – och precis hur den blir bättre.', sections: [{ heading: 'Vad vi gör', body: 'Vi är specialister på automatiserad webbanalys. Vår skanner granskar din webbplats inom fem kritiska områden – SEO, prestanda, säkerhet, tillgänglighet och kodkvalitet – och destillerar många tekniska kontroller till en tydlig, prioriterad rapport. Inga tillägg, ingen installation, ingen konfiguration: ange din webbadress och få en komplett hälsorapport på sekunder.' }, { heading: 'Så fungerar det', body: 'Vår skanningsmotor arbetar med deterministiska regler. De fångar mätbara problem som saknade metataggar, saknade alt-texter, långsamma serversvar och render-blockerande skript – och varje fynd kommer med en prioriterad rekommendation och en färdig kodfix.' }, { heading: 'Vårt löfte', body: 'Analys ska aldrig ske på bekostnad av förtroende. Skanningen är anonym, kräver inget konto och påverkar inte din webbplats alls medan den körs. Vi säljer aldrig dina data. Vårt enda mål är att du går därifrån med en snabbare, säkrare och synligare webbplats.' }] }, features: { heading: 'Enterprise-Grade', headingAccent: 'Funktioner', items: [{ title: 'Grundläggande SEO-taggar', description: 'Validering av Title-, H1- och Meta Description-taggar för maximal synlighet i sökmotorer.' }, { title: 'Serverresponskoll', description: 'Mäter hur snabbt servern svarar och flaggar långsamma svar som sänker laddningstid och Core Web Vitals.' }, { title: 'HTTPS och säkerhetsheaders', description: 'Kontrollerar kryptering samt HSTS- och clickjacking-skydd så att besökare landar på en säker anslutning.' }, { title: 'Tillgänglighet i grunden', description: 'Hittar saknade alt-texter och språkattribut som skapar hinder för hjälpmedel.' }, { title: 'Kodkvalitetskontroller', description: 'Flaggar inline-CSS, föråldrade HTML-taggar och render-blockerande JavaScript för renare, snabbare sidor.' }, { title: 'Ingen påverkan på din sajt', description: 'Skanningarna körs på våra servrar mot din publika HTML och headers – inget installeras och din sajt ändras aldrig.' }] }, history: { title: 'Tidigare skanningar', target: 'Mål', score: 'Poäng', date: 'Datum' }, dashboard: { ...english.dashboard, report: 'Analysrapport', exportPdf: 'Exportera till PDF', totalScore: 'Total poäng', details: 'Visar detaljer', clickForDetails: 'Klicka för detaljer', identifiedIssues: 'Identifierade problem', categoryIssues: '{category} problem', recommendation: 'Rekommendation', noIssues: 'Inga problem hittades i denna kategori.', categories: { SEO: 'SEO', Performance: 'Prestanda', Security: 'Säkerhet', Accessibility: 'Tillgänglighet', Code: 'Kod' } }, contact: { ...english.contact, successTitle: 'Tack för ditt meddelande!', successDescription: 'Vi har tagit emot ditt mail och återkommer så snart vi kan.', sendAnother: 'Skicka ett till meddelande', name: 'Namn', namePlaceholder: 'Ditt namn', email: 'E-post', emailPlaceholder: 'din@email.se', subject: 'Ämne', subjectPlaceholder: 'Vad gäller det?', message: 'Meddelande', messagePlaceholder: 'Skriv ditt meddelande här...', sending: 'Skickar...', send: 'Skicka meddelande', sendError: 'Något gick fel vid sändning.' },
+
   },
-  tr: { ...english, languageName: 'Türkçe', nav: { ...english.nav, scanner: 'Tarayıcı', about: 'Hakkımızda', contact: 'İletişim', premium: 'Premium' } },
-  es: { ...english, languageName: 'Español', nav: { ...english.nav, scanner: 'Escáner', about: 'Nosotros', contact: 'Contacto', premium: 'Premium' } },
-  fr: { ...english, languageName: 'Français', nav: { ...english.nav, scanner: 'Scanner', about: 'À propos', contact: 'Contact', premium: 'Premium' } },
-  ar: { ...english, languageName: 'العربية', nav: { ...english.nav, scanner: 'الفاحص', about: 'من نحن', contact: 'اتصل بنا', premium: 'مميز' } }
+  tr: { ...english, languageName: 'Türkçe', nav: { ...english.nav, scanner: 'Tarayıcı', about: 'Hakkımızda', contact: 'İletişim' } },
+  es: { ...english, languageName: 'Español', nav: { ...english.nav, scanner: 'Escáner', about: 'Nosotros', contact: 'Contacto' } },
+  fr: { ...english, languageName: 'Français', nav: { ...english.nav, scanner: 'Scanner', about: 'À propos', contact: 'Contact' } },
+  ar: { ...english, languageName: 'العربية', nav: { ...english.nav, scanner: 'الفاحص', about: 'من نحن', contact: 'اتصل بنا' } }
 };
 
 localized.tr.hero = { secure: 'Güvenli ve anonim analiz', title: ['Analiz et.', 'Güvenceye al.', 'Optimize et.'], description: 'Kod kalitesi, güvenlik, performans ve SEO için kapsamlı analiz.', urlPlaceholder: 'https://web-siteniz.com', scan: 'Tara', steps: [{ title: 'Tara', description: 'Motorumuz DOM yapınızı alır ve Core Web Vitals değerlerinizi etkilemeden kodu gerçek zamanlı analiz eder.' }, { title: 'Analiz', description: 'Kural motoru güvenlik başlıklarını, yanıt sürelerini, meta verileri, erişilebilirliği ve kod kalitesini değerlendirir.' }, { title: 'Düzelt', description: 'Güvenlik açıklarını kapatmak için önceliklendirilmiş kod önerileri alın.' }] };
@@ -388,10 +315,6 @@ localized.es.history = { title: 'Escaneos anteriores', target: 'Objetivo', score
 localized.fr.history = { title: 'Analyses précédentes', target: 'Cible', score: 'Score', date: 'Date' };
 localized.ar.history = { title: 'الفحوصات السابقة', target: 'الهدف', score: 'النتيجة', date: 'التاريخ' };
 
-localized.tr.paywall = { ...english.paywall, title: 'Pro\nGerekli.', description: 'Sorunları görebilirsiniz. Eksiksiz çözümler, hazır kod ve sınırsız premium taramalar için Pro kilidini açın.', benefits: ['Ömür boyu Pro erişimi', 'Eksiksiz kod çözümleri', 'Sınırsız premium tarama'], buy: 'Ko-fi üzerinden Pro satın al – €10,99', codeTitle: 'Zaten Pro kodunuz var mı?', afterPurchase: 'Ko-fi ödemesinden sonra teşekkür sayfasındaki lisans kodunu yapıştırın.', activate: 'Etkinleştir', activating: 'Etkinleştiriliyor...', activated: 'Pro etkinleştirildi.', cancel: 'İptal' };
-localized.es.paywall = { ...english.paywall, title: 'Pro\nrequerido.', description: 'Puedes ver los problemas encontrados. Desbloquea Pro para obtener soluciones completas, código listo y escaneos premium ilimitados.', benefits: ['Acceso Pro de por vida', 'Soluciones de código completas', 'Escaneos premium ilimitados'], buy: 'Comprar Pro en Ko-fi – €10,99', codeTitle: '¿Ya tienes un código Pro?', afterPurchase: 'Tras pagar en Ko-fi, pega el código de licencia de la página de agradecimiento.', activate: 'Activar', activating: 'Activando...', activated: 'Pro activado.', cancel: 'Cancelar' };
-localized.fr.paywall = { ...english.paywall, title: 'Pro\nrequis.', description: 'Vous pouvez voir les problèmes détectés. Débloquez Pro pour obtenir les solutions complètes, le code prêt à l’emploi et des analyses premium illimitées.', benefits: ['Accès Pro à vie', 'Solutions de code complètes', 'Analyses premium illimitées'], buy: 'Acheter Pro sur Ko-fi – 10,99 €', codeTitle: 'Vous avez déjà un code Pro ?', afterPurchase: 'Après le paiement Ko-fi, collez le code de licence depuis la page de remerciement.', activate: 'Activer', activating: 'Activation...', activated: 'Pro activé.', cancel: 'Annuler' };
-localized.ar.paywall = { ...english.paywall, title: 'يلزم\nPro.', description: 'يمكنك رؤية المشكلات المكتشفة. افتح Pro للحصول على الحلول الكاملة والكود الجاهز وفحوصات Premium غير محدودة.', benefits: ['وصول Pro مدى الحياة', 'حلول كود كاملة', 'فحوصات Premium غير محدودة'], buy: 'شراء Pro عبر Ko-fi – €10.99', codeTitle: 'هل لديك كود Pro؟', afterPurchase: 'بعد الدفع عبر Ko-fi، الصق كود الترخيص من صفحة الشكر.', activate: 'تفعيل', activating: 'جارٍ التفعيل...', activated: 'تم تفعيل Pro.', cancel: 'إلغاء' };
 
 localized.sv.scanSteps = [
   'INITIERAR DJUPANALYS...',
@@ -411,12 +334,12 @@ localized.sv.features = {
     { title: 'Core Web Vitals', description: 'Riktiga LCP, CLS, INP, FCP och TTFB (med vitals API-nyckel).' },
     { title: 'WCAG-tillgänglighet (axe-core)', description: 'Branschstandard – hittar kontrast, etiketter, ARIA med mera.' },
     { title: 'Säkerhetsheader-audit', description: 'HTTPS, HSTS, CSP, X-Frame-Options, Referrer-Policy, mixed content och serverexponering.' },
-    { title: 'Konkreta kodfixar', description: 'Varje fynd har prioriterad rekommendation och färdig kod (Premium).' },
+    { title: 'Konkreta kodfixar', description: 'Varje fynd har prioriterad rekommendation och färdig kod.' },
     { title: 'Ingen påverkan på din sajt', description: 'Skanningarna körs på våra servrar – inget installeras och din sajt ändras aldrig.' }
   ]
 };
 
-localized.sv.dashboard = { ...english.dashboard, solutionLocked: 'Lösning låst', lockedHint: 'Få exakta åtgärder med steg-för-steg-instruktioner och färdig kod.', unlockCta: 'Lås upp – €10,99',
+localized.sv.dashboard = { ...english.dashboard,
   reportGenerated: 'Rapport genererad',
   scoreOverview: 'Poäng',
   filterActive: 'Visar {category}-granskningar',
@@ -453,30 +376,6 @@ localized.es.contact = { ...english.contact, successTitle: '¡Gracias por tu men
 localized.fr.contact = { ...english.contact, successTitle: 'Merci pour votre message !', successDescription: 'Nous avons reçu votre e-mail et vous répondrons dès que possible.', sendAnother: 'Envoyer un autre message', name: 'Nom', namePlaceholder: 'Votre nom', email: 'E-mail', emailPlaceholder: 'vous@email.com', subject: 'Objet', subjectPlaceholder: 'Quel est le sujet ?', message: 'Message', messagePlaceholder: 'Écrivez votre message ici...', sending: 'Envoi...', send: 'Envoyer le message', sendError: 'Une erreur est survenue lors de l’envoi.' };
 localized.ar.contact = { ...english.contact, successTitle: 'شكرًا لرسالتك!', successDescription: 'تلقينا بريدك الإلكتروني وسنرد عليك قريبًا.', sendAnother: 'إرسال رسالة أخرى', name: 'الاسم', namePlaceholder: 'اسمك', email: 'البريد الإلكتروني', emailPlaceholder: 'you@email.com', subject: 'الموضوع', subjectPlaceholder: 'ما الموضوع؟', message: 'الرسالة', messagePlaceholder: 'اكتب رسالتك هنا...', sending: 'جارٍ الإرسال...', send: 'إرسال الرسالة', sendError: 'حدث خطأ أثناء الإرسال.' };
 
-localized.sv.vip = {
-  banner: 'VIP-åtkomst: 1 Pro-skanning kvar på den här länken.',
-  used: 'Din VIP Pro-skanning är förbrukad. Be om en ny VIP-länk eller köp Pro.',
-  ownerTitle: 'VIP-länkar (endast lokalt)',
-  ownerHint: 'Skapa en engångs-Pro-länk till vänner. Kopiera och dela live-URL:n — den fungerar en gång på den publika sajten.',
-  secretPlaceholder: 'Admin-hemlighet',
-  create: 'Skapa VIP-länk',
-  creating: 'Skapar...',
-  copy: 'Kopiera delningslänk',
-  copied: 'Kopierad!',
-  created: 'Delningslänk klar — skicka den till en vän.',
-  createError: 'Kunde inte skapa VIP-länk. Kontrollera VIP_ADMIN_SECRET i lokal .env.'
-};
-localized.sv.errors = {
-  ...english.errors,
-  freeScan: 'Ett fel uppstod vid analysen.',
-  premiumScan: 'Premiumanalysen misslyckades.',
-  scanFailed: 'Kunde inte analysera webbplatsen.',
-  payment: 'Kunde inte ansluta till betalningsservern.',
-  licenseInvalid: 'Din Pro-licens kunde inte verifieras. Försök igen eller kontakta support.',
-  vipInvalid: 'VIP-länken är ogiltig eller kunde inte lösas in.',
-  vipUsed: 'VIP-länken är redan använd.'
-};
-
 localized.sv.share = {
   ready: 'Dela rapporten (länken går ut automatiskt):',
   copy: 'Kopiera länk',
@@ -491,7 +390,6 @@ localized.sv.dashboard.actionPlan = {
   subtitle: 'Börja med de tre viktigaste fynden för vald enhet.',
   whyItMatters: 'Varför det spelar roll',
   showAll: 'Visa alla fynd',
-  locked: 'Lås upp Pro för att se den exakta åtgärden.',
   severity: { High: 'Kritisk', Medium: 'Varning', Low: 'Förbättring' },
   categoryImpact: {
     SEO: 'Sökmotorer och sociala förhandsvisningar använder detta för att förstå och rangordna sidan. Åtgärden förbättrar synlighet och klickfrekvens.',
@@ -507,7 +405,6 @@ localized.tr.dashboard.actionPlan = {
   subtitle: 'Seçili cihaz için en yüksek öncelikli üç bulguyla başlayın.',
   whyItMatters: 'Neden önemli',
   showAll: 'Tüm bulguları göster',
-  locked: 'Tam düzeltmeyi görmek için Pro’yu açın.',
   severity: { High: 'Kritik', Medium: 'Uyarı', Low: 'İyileştirme' },
   categoryImpact: {
     SEO: 'Arama motorları ve sosyal önizlemeler sayfayı anlamak ve sıralamak için bunu kullanır. Düzeltmek görünürlüğü ve tıklama oranını artırır.',
@@ -523,7 +420,6 @@ localized.es.dashboard.actionPlan = {
   subtitle: 'Empieza por los tres hallazgos de mayor prioridad para el dispositivo seleccionado.',
   whyItMatters: 'Por qué importa',
   showAll: 'Ver todos los hallazgos',
-  locked: 'Desbloquea Pro para ver la corrección exacta.',
   severity: { High: 'Crítico', Medium: 'Aviso', Low: 'Mejora' },
   categoryImpact: {
     SEO: 'Los buscadores y las vistas previas sociales usan esto para entender y posicionar la página. Corregirlo mejora la visibilidad y el CTR.',
@@ -539,7 +435,6 @@ localized.fr.dashboard.actionPlan = {
   subtitle: 'Commencez par les trois constats les plus prioritaires pour l’appareil sélectionné.',
   whyItMatters: 'Pourquoi c’est important',
   showAll: 'Voir tous les constats',
-  locked: 'Débloquez Pro pour voir la correction exacte.',
   severity: { High: 'Critique', Medium: 'Avertissement', Low: 'Amélioration' },
   categoryImpact: {
     SEO: 'Les moteurs et les aperçus sociaux utilisent ces éléments pour comprendre et classer la page. Corriger améliore la visibilité et le taux de clic.',
@@ -555,7 +450,6 @@ localized.ar.dashboard.actionPlan = {
   subtitle: 'ابدأ بأهم ثلاث نتائج للجهاز المحدد.',
   whyItMatters: 'لماذا يهم',
   showAll: 'عرض كل النتائج',
-  locked: 'افتح Pro لرؤية الإصلاح الدقيق.',
   severity: { High: 'حرج', Medium: 'تحذير', Low: 'تحسين' },
   categoryImpact: {
     SEO: 'تستخدم محركات البحث والمعاينات الاجتماعية هذا لفهم الصفحة وترتيبها. الإصلاح يحسّن الظهور ونسبة النقر.',

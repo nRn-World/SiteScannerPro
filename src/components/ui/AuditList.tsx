@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, AlertTriangle, AlertCircle, Info, Lock } from 'lucide-react';
+import { ChevronDown, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import { ScannerIssue } from '../../rules/types';
 import { CategoryKey, TranslationSet } from '../../i18n/translations';
 import CodeSnippetDisplay from './CodeSnippetDisplay';
@@ -8,8 +8,6 @@ import IssueScreenshot from './IssueScreenshot';
 interface AuditListProps {
   issues: ScannerIssue[];
   t: TranslationSet;
-  isPremium?: boolean;
-  onUpgradeClick: () => void;
 }
 
 function AuditIcon({ severity }: { severity: string }) {
@@ -25,12 +23,10 @@ function AuditIcon({ severity }: { severity: string }) {
 interface AuditRowProps {
   issue: ScannerIssue;
   t: TranslationSet;
-  isPremium?: boolean;
-  onUpgradeClick: () => void;
   defaultOpen?: boolean;
 }
 
-const AuditRow: React.FC<AuditRowProps> = ({ issue, t, isPremium, onUpgradeClick, defaultOpen = false }) => {
+const AuditRow: React.FC<AuditRowProps> = ({ issue, t, defaultOpen = false }) => {
   const [open, setOpen] = useState(defaultOpen);
   const categoryLabel = t.dashboard.categories[issue.category as CategoryKey] ?? issue.category;
 
@@ -68,31 +64,14 @@ const AuditRow: React.FC<AuditRowProps> = ({ issue, t, isPremium, onUpgradeClick
             />
           )}
 
-          {issue.recommendation ? (
+          {issue.recommendation && (
             <div className="rounded-lg border border-gray-200 bg-white p-4">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                 {t.dashboard.howToFix}
               </p>
               <p className="text-sm text-gray-800 leading-relaxed">{issue.recommendation}</p>
             </div>
-          ) : !isPremium ? (
-            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-              <div className="flex items-start gap-2">
-                <Lock className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{t.dashboard.solutionLocked}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{t.dashboard.lockedHint}</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={onUpgradeClick}
-                className="shrink-0 px-4 py-2 bg-[#1a73e8] text-white text-xs font-medium rounded-md hover:bg-[#1765cc] transition-colors"
-              >
-                {t.dashboard.unlockCta}
-              </button>
-            </div>
-          ) : null}
+          )}
 
           {issue.agentFix && (
             <div className="rounded-lg border border-[#1a73e8]/20 bg-white p-4 space-y-2">
@@ -117,7 +96,7 @@ const AuditRow: React.FC<AuditRowProps> = ({ issue, t, isPremium, onUpgradeClick
 
 const SEVERITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
-const AuditList: React.FC<AuditListProps> = ({ issues, t, isPremium, onUpgradeClick }) => {
+const AuditList: React.FC<AuditListProps> = ({ issues, t }) => {
   const sorted = [...issues].sort(
     (a, b) => (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9)
   );
@@ -144,8 +123,6 @@ const AuditList: React.FC<AuditListProps> = ({ issues, t, isPremium, onUpgradeCl
             key={`${issue.title}-${idx}`}
             issue={issue}
             t={t}
-            isPremium={isPremium}
-            onUpgradeClick={onUpgradeClick}
             defaultOpen={defaultOpenFirst && idx === 0}
           />
         ))}

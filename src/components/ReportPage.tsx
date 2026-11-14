@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { AlertTriangle, ArrowLeft, Check, Download, Link2, Loader2, Lock, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, Download, Link2, Loader2, RefreshCw } from 'lucide-react';
 import Dashboard from './Dashboard';
 import DataNotice from './DataNotice';
 import { ScanResult } from '../rules/types';
@@ -13,7 +13,6 @@ interface SharedReportMeta {
   rulesetVersion: string;
   url: string;
   host: string;
-  unlocked: boolean;
 }
 
 interface ReportResponse {
@@ -25,9 +24,6 @@ interface ReportPageProps {
   reportId: string;
   language: Language;
   t: TranslationSet;
-  licenseToken: string | null;
-  refreshKey: number;
-  onUpgradeClick: () => void;
   onRescan?: (result: ScanResult, url: string) => void;
   onOpenPrivacy?: () => void;
 }
@@ -40,10 +36,6 @@ const COPY = {
     back: 'Skanna din egen sajt',
     saved: 'Sparad rapport',
     version: 'Regelversion',
-    lockedTitle: 'Lösningarna är låsta',
-    lockedBody:
-      'Alla fynd, skärmdumpar och mätvärden är synliga. Aktivera Pro för att se rekommendationer, kod och agent-fixar.',
-    unlock: 'Lås upp Pro',
     copy: 'Kopiera länk',
     copied: 'Länk kopierad',
     print: 'Skriv ut / PDF',
@@ -57,10 +49,6 @@ const COPY = {
     back: 'Scan your own site',
     saved: 'Saved report',
     version: 'Ruleset version',
-    lockedTitle: 'Solutions are locked',
-    lockedBody:
-      'Every finding, screenshot and measurement is visible. Activate Pro to see recommendations, code and agent fixes.',
-    unlock: 'Unlock Pro',
     copy: 'Copy link',
     copied: 'Link copied',
     print: 'Print / PDF',
@@ -78,9 +66,6 @@ const ReportPage: React.FC<ReportPageProps> = ({
   reportId,
   language,
   t,
-  licenseToken,
-  refreshKey,
-  onUpgradeClick,
   onRescan,
   onOpenPrivacy
 }) => {
@@ -100,11 +85,7 @@ const ReportPage: React.FC<ReportPageProps> = ({
       setFailed(false);
 
       try {
-        const headers: Record<string, string> = {};
-        if (licenseToken) headers['x-license-token'] = licenseToken;
-
         const res = await fetch(apiUrl(`/api/reports/${encodeURIComponent(reportId)}`), {
-          headers,
           signal: controller.signal
         });
 
@@ -128,7 +109,7 @@ const ReportPage: React.FC<ReportPageProps> = ({
       cancelled = true;
       controller.abort();
     };
-  }, [reportId, licenseToken, refreshKey]);
+  }, [reportId]);
 
   const copyLink = async () => {
     try {
@@ -226,34 +207,12 @@ const ReportPage: React.FC<ReportPageProps> = ({
         <DataNotice kind="report" language={language} onOpenPrivacy={onOpenPrivacy} className="mt-3" />
       </div>
 
-      {!report.unlocked && (
-        <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <Lock className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-gray-900">{text.lockedTitle}</p>
-              <p className="text-sm text-gray-600 mt-1">{text.lockedBody}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onUpgradeClick}
-            className="shrink-0 px-4 py-2.5 bg-[#1a73e8] text-white text-sm font-medium rounded-lg hover:bg-[#1765cc] transition-colors"
-          >
-            {text.unlock}
-          </button>
-        </div>
-      )}
-
       <Dashboard
         result={result}
         url={report.url}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
-        onUpgradeClick={onUpgradeClick}
-        isPremium={report.unlocked}
         language={language}
-        licenseToken={licenseToken}
         t={t}
         onRescan={onRescan ? () => onRescan(result, report.url) : undefined}
       />

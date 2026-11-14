@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
-import { AnimatePresence } from 'motion/react';
 
 import Header from './components/Header';
 import Hero from './components/Hero';
 import ContactForm from './components/ContactForm';
 import Dashboard from './components/Dashboard';
 import ScanningState from './components/ScanningState';
-import Paywall from './components/Paywall';
 import FeatureList from './components/FeatureList';
 import HistoryList from './components/HistoryList';
 import DataFlowBackground from './components/DataFlowBackground';
-import VipOwnerPanel from './components/VipOwnerPanel';
 import Footer from './components/Footer';
 import LegalPage from './components/LegalPage';
 import ReportPage from './components/ReportPage';
@@ -105,24 +102,6 @@ interface ShareInfo {
   badgeUrlPath?: string;
 }
 
-const readErrorMessage = async (res: Response, fallback: string): Promise<string> => {
-  try {
-    const payload = await res.json();
-    if (typeof payload?.error === 'string' && payload.error.trim()) return payload.error;
-  } catch {
-    // Non-JSON errors still get the local fallback.
-  }
-  return fallback;
-};
-
-const stripVipParam = () => {
-  const url = new URL(window.location.href);
-  if (!url.searchParams.has('vip')) return;
-  url.searchParams.delete('vip');
-  const next = `${url.pathname}${url.search}${url.hash}`;
-  window.history.replaceState({}, document.title, next || url.pathname);
-};
-
 /** A rescan should compare like with like: reuse the previous scan's scope. */
 function optionsFromResult(result: ScanResult | null): ScanRunOptions | null {
   if (!result?.analysis) return null;
@@ -144,9 +123,6 @@ function optionsFromResult(result: ScanResult | null): ScanRunOptions | null {
 }
 
 export default function App() {
-  const LICENSE_STORAGE_KEY = 'siteScannerLicenseToken';
-  const VIP_FLAG_KEY = 'siteScannerVipSession';
-
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
@@ -159,22 +135,7 @@ export default function App() {
   const [scanOptions, setScanOptions] = useState<ScanRunOptions>(DEFAULT_SCAN_OPTIONS);
   const [reportId, setReportId] = useState<string | null>(() => getReportIdFromLocation());
   const [comparisonId] = useState<string | null>(() => getComparisonIdFromLocation());
-  const [reportRefreshKey, setReportRefreshKey] = useState(0);
 
-  const [isPremium, setIsPremium] = useState(false);
-  const [isVip, setIsVip] = useState(false);
-  const [vipBanner, setVipBanner] = useState<string | null>(null);
-  const [licenseToken, setLicenseToken] = useState<string | null>(null);
-  const [licenseInput, setLicenseInput] = useState('');
-  const [licenseMessage, setLicenseMessage] = useState<string | null>(null);
-  const [isActivatingLicense, setIsActivatingLicense] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [showVipOwner, setShowVipOwner] = useState(false);
-  const [vipBootstrapping, setVipBootstrapping] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return new URLSearchParams(window.location.search).has('vip');
-  });
-  
   const [view, setView] = useState<AppView>(getInitialView);
   const [user, setUser] = useState<AccountUser | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -192,39 +153,6 @@ export default function App() {
     const target = /^https?:\/\//i.test(url) ? url : `https://${url}`;
     return scanHistory.find((h) => h.url === target && h.score !== result?.overallScore) ?? null;
   })();
-
-  const clearVipSession = (message?: string) => {
-    localStorage.removeItem(LICENSE_STORAGE_KEY);
-    localStorage.removeItem(VIP_FLAG_KEY);
-    setLicenseToken(null);
-    setIsPremium(false);
-    setIsVip(false);
-    if (message) {
-      setVipBanner(message);
-    }
-  };
-
-  const handleRemovePremium = () => {
-    if (!window.confirm(t.nav.removePremiumConfirm)) return;
-
-    localStorage.removeItem(LICENSE_STORAGE_KEY);
-    localStorage.removeItem(VIP_FLAG_KEY);
-    setLicenseToken(null);
-    setIsPremium(false);
-    setIsVip(false);
-    setLicenseMessage(null);
-    setVipBanner(null);
-    setShareInfo(null);
-    if (reportId) setReportRefreshKey((value) => value + 1);
-    // Strip Pro-only fields so solutions do not remain after removing Premium.
-    setResult((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        issues: prev.issues.map(({ recommendation: _r, codeSnippet: _c, agentFix: _a, ...issue }) => issue)
-      };
-    });
-  };
 
   useEffect(() => {
     // Keep ?lang= as an entry point, but do not leave it in the address bar
@@ -246,7 +174,6 @@ export default function App() {
     setResult(null);
     setSelectedCategory(null);
     setError(null);
-    setLicenseMessage(null);
     setScanFailure(null);
     setRetryNotice(null);
     setPreviousResult(null);
@@ -292,19 +219,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Remove credentials from earlier paid versions; the scanner needs no
+    // activation, and old ?vip= links should land on the normal scanner.
     localStorage.removeItem('siteScannerPremium');
+    localStorage.removeItem('siteScannerLicenseToken');
+    localStorage.removeItem('siteScannerVipSession');
 
     const urlParams = new URLSearchParams(window.location.search);
-    const vipCode = urlParams.get('vip')?.trim();
-
-    const savedToken = localStorage.getItem(LICENSE_STORAGE_KEY);
-    const savedVip = localStorage.getItem(VIP_FLAG_KEY) === '1';
-    const isLocalHost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
-
-    if (urlParams.get('canceled') === 'true') {
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if (urlParams.has('vip') || urlParams.has('canceled')) {
+      urlParams.delete('vip');
+      urlParams.delete('canceled');
+      const query = urlParams.toString();
+      window.history.replaceState(
+        {},
+        document.title,
+        `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
+      );
     }
 
     const savedHistory = localStorage.getItem('siteScannerHistory');
@@ -316,85 +246,6 @@ export default function App() {
       }
     }
 
-    // VIP redeem takes precedence over localhost auto-pro when ?vip= is present
-    if (vipCode) {
-      setVipBootstrapping(true);
-      void (async () => {
-        try {
-          const res = await fetch(apiUrl('/api/vip/redeem'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: vipCode })
-          });
-
-          stripVipParam();
-
-          if (res.status === 403) {
-            clearVipSession(t.errors.vipUsed ?? t.vip.used);
-            return;
-          }
-
-          if (!res.ok) {
-            setVipBanner(t.errors.vipInvalid ?? t.vip.used);
-            return;
-          }
-
-          const data = await res.json();
-          if (!data?.token) {
-            setVipBanner(t.errors.vipInvalid ?? t.vip.used);
-            return;
-          }
-
-          localStorage.setItem(LICENSE_STORAGE_KEY, data.token);
-          localStorage.setItem(VIP_FLAG_KEY, '1');
-          setLicenseToken(data.token);
-          setIsPremium(true);
-          setIsVip(true);
-          setVipBanner(t.vip.banner);
-        } catch (e) {
-          console.error('VIP redeem failed', e);
-          stripVipParam();
-          setVipBanner(t.errors.vipInvalid ?? t.vip.used);
-        } finally {
-          setVipBootstrapping(false);
-        }
-      })();
-      return;
-    }
-
-    setVipBootstrapping(false);
-
-    if (savedVip && savedToken) {
-      setLicenseToken(savedToken);
-      setIsPremium(true);
-      setIsVip(true);
-      setVipBanner(t.vip.banner);
-      return;
-    }
-
-    if (isLocalHost) {
-      void (async () => {
-        try {
-          const res = await fetch(apiUrl('/api/dev-activate-pro'), { method: 'POST' });
-          if (!res.ok) return;
-          const data = await res.json();
-          if (!data?.token) return;
-          localStorage.setItem(LICENSE_STORAGE_KEY, data.token);
-          localStorage.removeItem(VIP_FLAG_KEY);
-          setLicenseToken(data.token);
-          setIsPremium(true);
-          setIsVip(false);
-        } catch (e) {
-          console.error('Local Pro auto-activate failed', e);
-        }
-      })();
-    } else if (savedToken) {
-      setLicenseToken(savedToken);
-      setIsPremium(true);
-      setIsVip(false);
-    }
-  // Intentionally run once on mount; language strings for VIP banner refresh via later renders
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -411,14 +262,8 @@ export default function App() {
 
   const runScan = async (
     targetUrl: string,
-    activeToken?: string | null,
     priorResult?: ScanResult | null
   ) => {
-    const storedToken = localStorage.getItem(LICENSE_STORAGE_KEY);
-    const token =
-      activeToken !== undefined
-        ? activeToken
-        : storedToken || (isPremium ? licenseToken : null);
     const rescanBase = priorResult ?? null;
     const rescanOptions = optionsFromResult(rescanBase);
     const activeScanOptions = rescanOptions ?? scanOptions;
@@ -443,81 +288,23 @@ export default function App() {
       for (let attempt = 0; attempt < 2; attempt += 1) {
         data = null;
         try {
-          if (!token) {
-            const res = await fetch(apiUrl('/api/scan-free'), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                url: targetUrl,
-                language,
-                ...activeScanOptions,
-                force: Boolean(rescanBase)
-              }),
-              signal: AbortSignal.timeout(130000)
-            });
+          const res = await fetch(apiUrl('/api/scan-free'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: targetUrl,
+              language,
+              ...activeScanOptions,
+              force: Boolean(rescanBase)
+            }),
+            signal: AbortSignal.timeout(130000)
+          });
 
             if (!res.ok) {
               throw new ScanFailureError(await failureFromResponse(res, language));
             }
 
             data = (await res.json()) as ScanResult;
-            setIsPremium(false);
-            setIsVip(false);
-          } else {
-            // Pro-djupläge: kräver giltig licens-token
-            const res = await fetch(apiUrl('/api/scan-premium'), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-license-token': token
-              },
-              body: JSON.stringify({
-                url: targetUrl,
-                language,
-                ...activeScanOptions,
-                force: Boolean(rescanBase)
-              }),
-              signal: AbortSignal.timeout(130000)
-            });
-
-            if (res.status === 403 || res.status === 401) {
-              const wasVip = isVip || localStorage.getItem(VIP_FLAG_KEY) === '1';
-              if (wasVip) {
-                clearVipSession(t.vip.used);
-              } else {
-                localStorage.removeItem(LICENSE_STORAGE_KEY);
-                setLicenseToken(null);
-                setIsPremium(false);
-              }
-              throw new ScanFailureError(
-                createScanFailure(
-                  'license',
-                  language,
-                  wasVip ? (t.errors.vipUsed ?? t.vip.used) : t.errors.licenseInvalid
-                )
-              );
-            }
-
-            if (!res.ok) {
-              throw new ScanFailureError(await failureFromResponse(res, language));
-            }
-
-            data = (await res.json()) as ScanResult;
-            setIsPremium(true);
-
-            const vipConsumed =
-              isVip ||
-              localStorage.getItem(VIP_FLAG_KEY) === '1' ||
-              res.headers.get('X-Vip-Consumed') === '1';
-            if (vipConsumed) {
-              localStorage.removeItem(LICENSE_STORAGE_KEY);
-              localStorage.removeItem(VIP_FLAG_KEY);
-              setLicenseToken(null);
-              setIsVip(false);
-              // Keep isPremium so this report stays unlocked; next scan without token goes free.
-              setVipBanner(t.vip.used);
-            }
-          }
           break;
         } catch (err) {
           const nextFailure = failureFromException(err, language);
@@ -593,14 +380,14 @@ export default function App() {
   const handleRescanCurrent = () => {
     if (!result) return;
     const targetUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-    void runScan(targetUrl, undefined, result);
+    void runScan(targetUrl, result);
   };
 
   const handleRescanFromReport = (prior: ScanResult, targetUrl: string) => {
     setReportId(null);
     setUrl(targetUrl);
     window.history.replaceState({}, document.title, `${getAppBasePath()}/`);
-    void runScan(targetUrl, undefined, prior);
+    void runScan(targetUrl, prior);
   };
 
   const handleClearHistory = () => {
@@ -640,85 +427,9 @@ export default function App() {
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
-    if (vipBootstrapping) {
-      setError(t.vip.banner);
-      return;
-    }
 
     const targetUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
     await runScan(targetUrl);
-  };
-
-  const handleCheckout = async () => {
-    try {
-      const res = await fetch(apiUrl('/api/create-checkout-session'), { method: 'POST' });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(t.errors.payment);
-      }
-    } catch (err) {
-      console.error(err);
-      alert(t.errors.payment);
-    }
-  };
-
-  const handleActivateLicense = async () => {
-    const licenseKey = licenseInput.trim();
-    if (!licenseKey) {
-      setLicenseMessage(t.errors.licenseInvalid);
-      return;
-    }
-
-    setIsActivatingLicense(true);
-    setLicenseMessage(null);
-
-    try {
-      const res = await fetch(apiUrl('/api/verify-license'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ licenseKey })
-      });
-
-      if (!res.ok) {
-        const serverMessage = await readErrorMessage(res, t.errors.licenseInvalid);
-        // Server-side licence errors are Swedish; keep them for the Swedish UI
-        // and fall back to localized copy everywhere else.
-        const message =
-          language === 'sv'
-            ? serverMessage
-            : res.status === 429
-              ? verifyCopy.errors.rate_limit.title
-              : t.errors.licenseInvalid;
-        throw new Error(message);
-      }
-
-      const data = await res.json();
-      if (!data?.token) {
-        throw new Error(t.errors.licenseInvalid);
-      }
-
-      localStorage.setItem(LICENSE_STORAGE_KEY, data.token);
-      localStorage.removeItem(VIP_FLAG_KEY);
-      setLicenseToken(data.token);
-      setIsPremium(true);
-      setIsVip(false);
-      setVipBanner(null);
-      setLicenseInput('');
-      setLicenseMessage(t.paywall.activated ?? 'Pro activated.');
-      setShowPaywall(false);
-      if (reportId) setReportRefreshKey((value) => value + 1);
-
-      if (result && url) {
-        const targetUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-        await runScan(targetUrl, data.token);
-      }
-    } catch (err: any) {
-      setLicenseMessage(err.message || t.errors.licenseInvalid);
-    } finally {
-      setIsActivatingLicense(false);
-    }
   };
 
   return (
@@ -747,7 +458,7 @@ export default function App() {
           ))}
           <link rel="alternate" hrefLang="x-default" href={getCanonicalBase()} />
           <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230A0A0A'/%3E%3Cpath d='M6 20l5-8 4 5 4-9 7 12' stroke='%23FF4E00' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
-          {/* FAS 2.5: strukturerad data – SoftwareApplication med pris */}
+          {/* FAS 2.5: strukturerad data – kostnadsfri webbapplikation */}
           <script type="application/ld+json">{JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'SoftwareApplication',
@@ -755,11 +466,6 @@ export default function App() {
             applicationCategory: 'BusinessApplication',
             operatingSystem: 'Web',
             description: t.hero.description,
-            offers: {
-              '@type': 'Offer',
-              price: '10.99',
-              priceCurrency: 'EUR'
-            },
             aggregateRating: undefined
           })}</script>
         </Helmet>
@@ -767,19 +473,9 @@ export default function App() {
         <Header
           view={view}
           setView={handleSetView}
-          isPremium={isPremium}
-          isVip={isVip}
           language={language}
           setLanguage={setLanguage}
           t={t}
-          onRemovePremium={handleRemovePremium}
-          onOpenVipOwner={
-            typeof window !== 'undefined' &&
-            (window.location.hostname === 'localhost' ||
-              window.location.hostname === '127.0.0.1')
-              ? () => setShowVipOwner(true)
-              : undefined
-          }
           userEmail={user?.email}
           onOpenAccount={() => setAccountOpen(true)}
           onOpenMonitors={() => handleSetView('monitors')}
@@ -787,38 +483,6 @@ export default function App() {
         <DataFlowBackground paused={isScanning} />
 
         <main className="flex-1 max-w-7xl mx-auto px-6 py-12 md:py-24 w-full relative z-10">
-          {vipBanner && (
-            <div className="mb-8 tech-border bg-ink/5 px-4 py-3 font-mono text-xs md:text-sm text-ink/80 flex items-start justify-between gap-4">
-              <span>{vipBanner}</span>
-              <button
-                type="button"
-                onClick={() => setVipBanner(null)}
-                className="uppercase text-[10px] tracking-wider text-ink/50 hover:text-accent shrink-0"
-              >
-                OK
-              </button>
-            </div>
-          )}
-
-          <AnimatePresence mode="wait">
-            {showPaywall && (
-              <Paywall 
-                onClose={() => setShowPaywall(false)} 
-                onCheckout={handleCheckout} 
-                onActivateLicense={handleActivateLicense}
-                licenseInput={licenseInput}
-                setLicenseInput={setLicenseInput}
-                licenseMessage={licenseMessage}
-                isActivatingLicense={isActivatingLicense}
-                t={t}
-              />
-            )}
-          </AnimatePresence>
-
-          {showVipOwner && (
-            <VipOwnerPanel t={t} onClose={() => setShowVipOwner(false)} />
-          )}
-
           <AccountDialog
             open={accountOpen}
             language={language}
@@ -854,9 +518,6 @@ export default function App() {
               reportId={reportId}
               language={language}
               t={t}
-              licenseToken={licenseToken}
-              refreshKey={reportRefreshKey}
-              onUpgradeClick={() => setShowPaywall(true)}
               onRescan={handleRescanFromReport}
               onOpenPrivacy={() => handleSetView('privacy')}
             />
@@ -871,7 +532,7 @@ export default function App() {
                   hasPreviousResult={Boolean(result)}
                   onRetry={() => {
                     const targetUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-                    void runScan(targetUrl, undefined, result ?? undefined);
+                    void runScan(targetUrl, result ?? undefined);
                   }}
                   onDismiss={() => setScanFailure(null)}
                 />
@@ -957,10 +618,7 @@ export default function App() {
                     url={url} 
                     selectedCategory={selectedCategory} 
                     setSelectedCategory={setSelectedCategory}
-                    onUpgradeClick={() => setShowPaywall(true)}
-                    isPremium={isPremium}
                     language={language}
-                    licenseToken={licenseToken}
                     t={t}
                     onRescan={handleRescanCurrent}
                     previousResult={diffVisible ? previousResult : null}

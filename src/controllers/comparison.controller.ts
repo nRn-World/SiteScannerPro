@@ -40,20 +40,15 @@ export class ComparisonController {
 
   /**
    * POST /api/compare
-   * Pro-only: scan the base site plus one or two competitors and persist a
-   * compact, shareable comparison. Results are reused from the 15-minute scan
-   * cache when possible.
+   * Scan the base site plus one or two competitors and persist a compact,
+   * shareable comparison. Results are reused from the 15-minute scan cache
+   * when possible.
    */
   public compare = async (req: Request, res: Response): Promise<void> => {
     const language: Language = parseScanLanguage(req.body?.language);
     const copy = getCompareCopy(language);
 
     try {
-      if (req.license?.kind === 'vip' || req.license?.source === 'vip') {
-        res.status(403).json({ error: copy.errorVip });
-        return;
-      }
-
       const rawBase = typeof req.body?.url === 'string' ? req.body.url.trim() : '';
       const rawCompetitors = Array.isArray(req.body?.competitors)
         ? req.body.competitors

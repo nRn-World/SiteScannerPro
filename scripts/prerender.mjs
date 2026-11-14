@@ -19,7 +19,7 @@ const SITE_URL = 'https://nrn-world.github.io/SiteScannerPro';
 const LANGUAGES = ['en', 'sv', 'tr', 'es', 'fr', 'ar'];
 
 const DESCRIPTION =
-  'Analyze any public website across SEO, performance, security, accessibility, and code quality — in seconds. Free health scan, Pro unlocks exact code fixes.';
+  'Analyze any public website across SEO, performance, security, accessibility, and code quality — in seconds. Free health scan with complete recommendations and code fixes.';
 const TITLE = 'SiteScanner Pro | Website Health Analysis';
 const OG_IMAGE = `${SITE_URL}/og-image.svg`;
 
@@ -30,12 +30,7 @@ const JSON_LD = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   url: SITE_URL,
-  description: DESCRIPTION,
-  offers: {
-    '@type': 'Offer',
-    price: '10.99',
-    priceCurrency: 'EUR'
-  }
+  description: DESCRIPTION
 };
 
 function prerender() {
