@@ -37,6 +37,11 @@ import {
   failureFromResponse,
   type ScanFailure
 } from './utils/scanErrors';
+import {
+  isPermalinkPath,
+  pathForViewChange,
+  type AppView
+} from './utils/viewNavigation';
 
 /** FAS 2.3: canonical sätts dynamiskt utifrån faktisk driftsättningsadress. */
 function getCanonicalOrigin(): string {
@@ -70,8 +75,6 @@ function getAppBasePath(): string {
   const base = (import.meta.env.BASE_URL as string | undefined) || '/';
   return base.replace(/\/$/, '');
 }
-
-type AppView = 'home' | 'about' | 'contact' | 'api' | 'pricing' | 'terms' | 'privacy' | 'cookies' | 'monitors';
 
 /** Direct /monitors visits should open the monitoring page, not the scanner. */
 function getInitialView(): AppView {
@@ -610,28 +613,26 @@ export default function App() {
     // The URL can point at a saved report even when this component does not
     // hold reportId (a fresh scan replaces the URL without remounting), so
     // detect the permalink path as well.
-    const onPermalink = /\/(?:r|c)\/[a-f0-9]{8,64}\/?$/i.test(window.location.pathname);
+    const onPermalink = isPermalinkPath(window.location.pathname);
     if (nextView === 'home' && (reportId || comparisonId || onPermalink)) {
       window.location.assign(`${getCanonicalBase()}/`);
       return;
     }
 
     const base = getAppBasePath();
+    const nextPath = pathForViewChange(nextView, window.location.pathname, base);
+
     if (nextView === 'monitors') {
       setView('monitors');
-      const target = `${base}/monitors`;
-      if (window.location.pathname !== target) {
-        window.history.pushState({}, document.title, target);
+      if (nextPath && window.location.pathname !== nextPath) {
+        window.history.pushState({}, document.title, nextPath);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // Contact/About/Terms (and the other footer views) are not routes. Drop a
-    // saved report/comparison permalink from the URL so a refresh lands on the
-    // normal entry page instead of reopening the report.
-    if (onPermalink || /\/monitors\/?$/i.test(window.location.pathname)) {
-      window.history.pushState({}, document.title, `${base}/`);
+    if (nextPath) {
+      window.history.pushState({}, document.title, nextPath);
     }
     setView(nextView);
   };
