@@ -1128,6 +1128,11 @@ function matchTemplate(template: string, actual: string): Params | null {
 
 function findMsgIdBySwedishTitle(title: string): { id: string; params: Params } | null {
   for (const [id, msg] of Object.entries(sv)) {
+    // Entries such as a11y.axe.fix use a title that is only a placeholder
+    // ("{title}"). That matches every title and would replace every issue's
+    // recommendation with the axe fallback ("Fix according to WCAG: ").
+    // Never use placeholder-only titles for source matching.
+    if (/^\{[^}]+\}$/.test(msg.title)) continue;
     const params = matchTemplate(msg.title, title);
     if (params) return { id, params };
   }

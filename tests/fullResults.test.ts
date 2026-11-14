@@ -24,6 +24,7 @@ process.env.SCAN_CACHE_TTL_SECONDS = '0';
 const { ScanController } = await import('../src/controllers/scan.controller');
 const { ReportShareController } = await import('../src/controllers/reportShare.controller');
 const { saveReport } = await import('../src/services/reportStore.service');
+const { localizeHardcodedIssue } = await import('../src/i18n/scanLocale');
 
 after(() => {
   fs.rmSync(dataDir, { recursive: true, force: true });
@@ -137,6 +138,28 @@ const scanRequest = {
     return undefined;
   }
 } as any;
+
+test('localizing an English issue does not replace its recommendation with the axe fallback', () => {
+  const localized = localizeHardcodedIssue('en', { ...issue });
+
+  assert.equal(localized.title, issue.title);
+  assert.equal(localized.description, issue.description);
+  assert.equal(localized.recommendation, issue.recommendation);
+  assert.equal(localized.codeSnippet, issue.codeSnippet);
+});
+
+test('localizing a Swedish rule issue still produces English copy', () => {
+  const localized = localizeHardcodedIssue('en', {
+    ...issue,
+    title: 'Saknad Meta Description',
+    description: 'Sidan saknar en metabeskrivning.',
+    recommendation: 'Lägg till en metabeskrivning.'
+  });
+
+  assert.equal(localized.title, 'Missing meta description');
+  assert.equal(localized.description, 'The page is missing a meta description.');
+  assert.match(localized.recommendation, /meta name="description"/);
+});
 
 test('scan returns recommendations, code and agent fixes in production', async () => {
   const controller = new ScanController();

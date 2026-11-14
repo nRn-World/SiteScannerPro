@@ -324,6 +324,11 @@ export async function runBrowserAnalysis(
   try {
     const browser = await getSharedBrowser();
     page = await browser.newPage();
+    // The browser is shared between scans. Its HTTP cache can answer a fresh
+    // navigation with 304, which has no body and used to abort the browser
+    // analysis (and drop screenshots/runtime data from comparisons). Always
+    // fetch the page itself so every scan measures the current response.
+    await page.setCacheEnabled(false);
     // Under free-tier minnesgräns: blockera tunga resurser som inte påverkar
     // DOM/headers-analysen nämnvärt (bilder, video, typsnitt).
     const lowMemory = !!process.env.RENDER || process.env.LOW_MEMORY === '1';
